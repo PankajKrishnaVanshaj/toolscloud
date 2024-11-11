@@ -80,25 +80,14 @@ export default WaffleMenu;
 
 const apps: App[] = [
   {
-    name: "PanKri",
-    url: "https://pankri.com/",
+    name: "Blogify",
+    url: "https://blogify.pankri.com/",
     icon: "/appicons/pankri.png",
   },
   {
-    name: "FacePin",
-    url: "https://facepin.pankri.com/",
+    name: "Facefeed",
+    url: "https://facefeed.pankri.com/",
     icon: "/appicons/facepin.png",
-  },
-  {
-    name: "SpyHub",
-    url: "https://spyhub.pankri.com/",
-    icon: "/appicons/spyhub.png",
-  },
-
-  {
-    name: "SkillGrow",
-    url: "https://skillgrow.pankri.com/",
-    icon: "/appicons/skillgrow.png",
   },
   {
     name: "DigMark",
@@ -106,26 +95,38 @@ const apps: App[] = [
     icon: "/appicons/digmark.png",
   },
   {
+    name: "ToolsCloud",
+    url: "https://toolscloud.pankri.com/",
+    icon: "/appicons/toolscloud.png",
+  },
+
+  {
+    name: "SkillGrow",
+    url: "https://skillgrow.pankri.com/",
+    icon: "/appicons/skillgrow.png",
+  },
+
+  {
     name: "ChaSpo",
     url: "https://chaspo.pankri.com/",
     icon: "/appicons/chaspo.png",
   },
   {
-    name: "LinkHub",
-    url: "https://linkhub.pankri.com/",
-    icon: "/appicons/linkhub.png",
+    name: "Jobhive",
+    url: "https://jobhive.pankri.com/",
+    icon: "/appicons/jobhive.png",
   },
-  {
-    name: "WorkBoard",
-    url: "https://workboard.pankri.com/",
-    icon: "/appicons/workboard.png",
-  },
+  // {
+  //   name: "WorkBoard",
+  //   url: "https://workboard.pankri.com/",
+  //   icon: "/appicons/workboard.png",
+  // },
 
-  {
-    name: "QR code",
-    url: "https://qrcode.pankri.com/",
-    icon: "/appicons/qrcodepoint.png",
-  },
+  // {
+  //   name: "QR code",
+  //   url: "https://qrcode.pankri.com/",
+  //   icon: "/appicons/qrcodepoint.png",
+  // },
   {
     name: "DraSpo",
     url: "https://draspo.pankri.com/",
