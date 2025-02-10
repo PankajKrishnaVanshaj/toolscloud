@@ -139,7 +139,7 @@ const WordCharacterCounter = () => {
       </div>
 
       <textarea
-        className="w-full h-56 p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+        className="w-full h-56 p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
         placeholder="Type or paste text here..."
         value={text}
         onChange={(e) => setText(e.target.value)}

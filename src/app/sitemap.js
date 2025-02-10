@@ -3,15 +3,16 @@ export default function sitemap() {
   
     const pages = [
       '/word-character-counter/tool',
-      '/find-replace/tool',
+      '/find-and-replace/tool',
       '/text-case-converter/tool',
+      '/text-to-speech/tool',
+      '/text-editor/tool',
       '/text-beautifier/tool',
-      '/json-formatter/tool',
-      '/url-encoder/tool',
-      '/url-decoder/tool',
-      '/html-formatter/tool',
-      '/base64-encoder/tool',
-      '/base64-decoder/tool',
+      '/spell-checker/tool',
+      '/grammar-checker/tool',
+      '/quote-validator/tool',
+      '/text-duplicator-checker/tool',
+      
     ];
   
     return pages.map((page) => ({

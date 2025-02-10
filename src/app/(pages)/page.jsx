@@ -2,9 +2,8 @@
 
 import Link from "next/link";
 import { FaCode } from "react-icons/fa";
-import { VscRobot } from "react-icons/vsc";
-import { IoMdTrendingUp } from "react-icons/io";
 import ToolList from "@/staticData/ToolList";
+import { MdPalette, MdTransform } from "react-icons/md";
 
 export default function Home() {
   return (
@@ -39,20 +38,21 @@ export default function Home() {
         <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-6">
           {[
             {
-              title: "AI Tools",
-              description: "Generate high-quality AI-powered content.",
-              icon: <VscRobot className="text-6xl text-primary" />,
-              slug: "/ai-tools",
+              title: "Color Tools",
+              description: "Explore and generate beautiful color palettes.",
+              icon: <MdPalette className="text-6xl text-primary" />,
+              slug: "/color-tools",
             },
             {
-              title: "SEO Analyzer",
-              description: "Optimize your website for better search ranking.",
-              icon: <IoMdTrendingUp className="text-6xl text-secondary" />,
-              slug: "/seo-tools",
+              title: "Data Converter",
+              description: "Easily convert data formats with powerful tools.",
+              icon: <MdTransform className="text-6xl text-secondary" />,
+              slug: "/data-converter-tools",
             },
             {
               title: "Developer Tools",
-              description: "Beautify and format your code with ease.",
+              description:
+                "Enhance your coding experience with essential utilities.",
               icon: <FaCode className="text-6xl text-primary" />,
               slug: "/developer-tools",
             },

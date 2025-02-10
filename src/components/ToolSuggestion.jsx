@@ -29,7 +29,7 @@ const ToolSuggestion = () => {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {relatedTools.map((tool) => (
           <Link key={tool.slug} href={`/${tool.slug}/tool`} className="group">
-            <div className="p-4 bg-white shadow rounded-lg flex items-center space-x-3 cursor-pointer hover:bg-blue-50 transition duration-300">
+            <div className="p-4 bg-white shadow rounded-lg flex items-center space-x-3 cursor-pointer hover:bg-blue-50 transition-all duration-300 transform hover:-translate-y-1">
               <span className="text-primary text-2xl group-hover:scale-110 transition-transform">
                 {tool.icon}
               </span>

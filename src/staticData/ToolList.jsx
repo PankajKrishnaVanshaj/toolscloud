@@ -37,6 +37,15 @@ import {
 } from "react-icons/md";
 import { LuScanBarcode } from "react-icons/lu";
 import WordCharacterCounter from "./seoData/WordCharacterCounter";
+import FindAndReplace from "./seoData/FindAndReplace";
+import TextCaseConverter from "./seoData/TextCaseConverter";
+import TextToSpeech from "./seoData/TextToSpeech";
+import TextEditor from "./seoData/TextEditor";
+import TextBeautifier from "./seoData/TextBeautifier";
+import SpellChecker from "./seoData/SpellChecker";
+import GrammarChecker from "./seoData/GrammarChecker";
+import QuoteValidator from "./seoData/QuoteValidator";
+import TextDuplicatorChecker from "./seoData/TextDuplicatorChecker";
 
 const ToolList = [
   {
@@ -55,73 +64,76 @@ const ToolList = [
       },
       {
         name: "Find and Replace",
-        slug: "find-replace",
+        slug: "find-and-replace",
         icon: <MdOutlineFindReplace />,
         desc: "Easily find and replace text within your content.",
-        code: "findReplaceTool",
+        code: "TextFindandReplace",
+        seo: FindAndReplace,
       },
       {
         name: "Text Case Converter",
         slug: "text-case-converter",
         icon: <MdOutlineTextFormat />,
         desc: "Convert text to uppercase, lowercase, title case, and more.",
-        code: "textCaseConverter",
+        code: "TextCaseConverter",
+        seo:TextCaseConverter
       },
       {
         name: "Text to Speech",
         slug: "text-to-speech",
         icon: <MdOutlineSubtitles />,
         desc: "Convert written text into natural-sounding speech.",
-        code: "textToSpeechTool",
+        code: "TextToSpeech",
+        seo:TextToSpeech
       },
       {
         name: "Text Editor",
         slug: "text-editor",
         icon: <MdOutlineEdit />,
         desc: "A simple and powerful text editor for writing and formatting.",
-        code: "textEditorTool",
+        code: "TextEditor",
+        seo:TextEditor
       },
       {
         name: "Text Beautifier",
         slug: "text-beautifier",
         icon: <MdOutlineWrapText />,
         desc: "Enhance and beautify text formatting instantly.",
-        code: "textBeautifierTool",
+        code: "TextBeautifier",
+        seo:TextBeautifier
       },
       {
         name: "Spell Checker",
         slug: "spell-checker",
         icon: <MdOutlineSpellcheck />,
         desc: "Check and correct spelling mistakes in your text.",
-        code: "spellCheckerTool",
+        code: "SpellChecker",
+        seo:SpellChecker
       },
       {
         name: "Grammar Checker",
         slug: "grammar-checker",
         icon: <MdOutlineSpellcheck />,
         desc: "Analyze and correct grammar errors in your writing.",
-        code: "grammarCheckerTool",
+        code: "GrammarChecker",
+        seo:GrammarChecker
       },
-      {
-        name: "Plagiarism Checker",
-        slug: "plagiarism-checker",
-        icon: <MdOutlinePlagiarism />,
-        desc: "Detect and prevent plagiarism in your text.",
-        code: "plagiarismCheckerTool",
-      },
+
       {
         name: "Quote Validator",
         slug: "quote-validator",
         icon: <MdFormatQuote />,
         desc: "Verify and validate quotes for authenticity.",
-        code: "quoteValidatorTool",
+        code: "QuoteValidator",
+        seo:QuoteValidator
       },
       {
         name: "Text Duplicator Checker",
         slug: "text-duplicator-checker",
         icon: <MdOutlineTextFormat />,
         desc: "Identify duplicate text within your content.",
-        code: "textDuplicatorCheckerTool",
+        code: "TextDuplicatorChecker",
+        seo:TextDuplicatorChecker
       },
     ],
   },
@@ -136,49 +148,56 @@ const ToolList = [
         slug: "uuid-generator",
         icon: <MdAutorenew />,
         desc: "Generate unique UUIDs for identifiers and security purposes.",
-        code: "uuidGeneratorTool",
+        code: "UUIDGenerator",
+        // seo:UUIDGenerator
       },
       {
         name: "Barcode Generator",
         slug: "barcode-generator",
         icon: <LuScanBarcode />,
         desc: "Create barcodes for products, tracking, and inventory management.",
-        code: "barcodeGeneratorTool",
+        code: "BarcodeGenerator",
+        // seo:BarcodeGenerator
       },
       {
         name: "QR Code Generator",
         slug: "qr-code-generator",
         icon: <MdBuild />,
         desc: "Generate QR codes for links, contact details, and more.",
-        code: "qrCodeGeneratorTool",
+        code: "QRCodeGenerator",
+        // seo:QRCodeGenerator
       },
       {
         name: "Lorem Ipsum Generator",
         slug: "lorem-ipsum-generator",
         icon: <MdAutorenew />,
         desc: "Generate placeholder text for designs and mockups.",
-        code: "loremIpsumGeneratorTool",
+        code: "LoremIpsumGenerator",
+        // seo:LoremIpsumGenerator
       },
       {
         name: "Random Number Generator",
         slug: "random-number-generator",
         icon: <MdBuild />,
         desc: "Generate random numbers within a given range.",
-        code: "randomNumberGeneratorTool",
+        code: "RandomNumberGenerator",
+        // seo:RandomNumberGenerator
       },
       {
         name: "Hash Generator",
         slug: "hash-generator",
         icon: <MdSecurity />,
         desc: "Generate secure hash values using various algorithms.",
-        code: "hashGeneratorTool",
+        code: "HashGenerator",
+        // seo:HashGenerator
       },
       {
         name: "Random Password Generator",
         slug: "password-generator",
         icon: <MdSecurity />,
         desc: "Create strong and secure passwords instantly.",
-        code: "passwordGeneratorTool",
+        code: "RandomPasswordGenerator",
+        // seo:RandomPasswordGenerator
       },
     ],
   },
@@ -193,14 +212,16 @@ const ToolList = [
         slug: "json-formatter",
         icon: <MdCode />,
         desc: "Format and beautify JSON data for better readability.",
-        code: "jsonFormatterTool",
+        code: "JSONFormatter",
+        // seo:JSONFormatter
       },
       {
         name: "Regex Tester",
         slug: "regex-tester",
         icon: <MdCode />,
         desc: "Test and debug regular expressions interactively.",
-        code: "regexTesterTool",
+        code: "RegexTester",
+        // soe:RegexTester
       },
       {
         name: "Code Minifier",
@@ -229,35 +250,40 @@ const ToolList = [
         slug: "image-resizer",
         icon: <MdStraighten />,
         desc: "Resize images to custom dimensions while maintaining quality.",
-        code: "imageResizerTool",
+        code: "ImageResizer",
+        // seo:ImageResizer
       },
       {
         name: "Image Converter",
         slug: "image-converter",
         icon: <MdTransform />,
         desc: "Convert images between different formats such as JPG, PNG, and WebP.",
-        code: "imageConverterTool",
+        code: "ImageConverter",
+        // seo:ImageConverter
       },
       {
         name: "Image Compressor",
         slug: "image-compressor",
         icon: <MdImage />,
         desc: "Compress images to reduce file size without losing quality.",
-        code: "imageCompressorTool",
+        code: "ImageCompressor",
+        // seo:ImageCompressor
       },
       {
         name: "Image Cropper",
         slug: "image-cropper",
         icon: <MdImage />,
         desc: "Crop images to specific dimensions or aspect ratios.",
-        code: "imageCropperTool",
+        code: "ImageCropper",
+        // seo:ImageCropper
       },
       {
         name: "Image Enhancer",
         slug: "image-enhancer",
         icon: <MdImage />,
         desc: "Enhance image quality with AI-powered adjustments.",
-        code: "imageEnhancerTool",
+        code: "ImageEnhancer",
+        // seo:ImageEnhancer
       },
     ],
   },
@@ -272,35 +298,40 @@ const ToolList = [
         slug: "pdf-to-word",
         icon: <MdOutlineCreate />,
         desc: "Convert PDF files into editable Word documents.",
-        code: "pdfToWordTool",
+        code: "PDFToWord",
+        // seo:PDFToWord
       },
       {
         name: "PDF to Image",
         slug: "pdf-to-image",
         icon: <MdPictureAsPdf />,
         desc: "Convert PDF pages into high-quality images.",
-        code: "pdfToImageTool",
+        code: "PDFToImage",
+        // seo:PDFToImage
       },
       {
         name: "Merge PDFs",
         slug: "merge-pdfs",
         icon: <MdPictureAsPdf />,
         desc: "Combine multiple PDF files into a single document.",
-        code: "mergePdfsTool",
+        code: "MergePDFs",
+        // seo:MergePDFs
       },
       {
         name: "Split PDF",
         slug: "split-pdf",
         icon: <MdPictureAsPdf />,
         desc: "Extract pages or split large PDFs into smaller files.",
-        code: "splitPdfTool",
+        code: "SplitPDF",
+        // seo:SplitPDF
       },
       {
         name: "Compress PDF",
         slug: "compress-pdf",
         icon: <MdPictureAsPdf />,
         desc: "Reduce the file size of PDFs without losing quality.",
-        code: "compressPdfTool",
+        code: "CompressPDF",
+        // seo:CompressPDF
       },
     ],
   },
@@ -315,35 +346,40 @@ const ToolList = [
         slug: "length-converter",
         icon: <MdStraighten />,
         desc: "Convert length measurements between different units such as meters, feet, and inches.",
-        code: "lengthConverterTool",
+        code: "LengthConverter",
+        // seo:LengthConverter
       },
       {
         name: "Weight Converter",
         slug: "weight-converter",
         icon: <MdStraighten />,
         desc: "Easily convert weight units like kilograms, pounds, and grams.",
-        code: "weightConverterTool",
+        code: "WeightConverter",
+        // seo:WeightConverter
       },
       {
         name: "Temperature Converter",
         slug: "temperature-converter",
         icon: <MdStraighten />,
         desc: "Convert temperatures between Celsius, Fahrenheit, and Kelvin.",
-        code: "temperatureConverterTool",
+        code: "TemperatureConverter",
+        // seo:TemperatureConverter
       },
       {
         name: "Volume Converter",
         slug: "volume-converter",
         icon: <MdStraighten />,
         desc: "Convert volume units such as liters, milliliters, and gallons.",
-        code: "volumeConverterTool",
+        code: "VolumeConverter",
+        // seo:VolumeConverter
       },
       {
         name: "Speed Converter",
         slug: "speed-converter",
         icon: <MdStraighten />,
         desc: "Convert speed units like kilometers per hour, miles per hour, and meters per second.",
-        code: "speedConverterTool",
+        code: "SpeedConverter",
+        // seo:SpeedConverter
       },
     ],
   },
@@ -358,35 +394,40 @@ const ToolList = [
         slug: "time-zone-converter",
         icon: <MdAccessTime />,
         desc: "Convert time between different time zones worldwide.",
-        code: "timeZoneConverterTool",
+        code: "TimeZoneConverter",
+        // seo:TimeZoneConverter
       },
       {
         name: "Epoch Time Converter",
         slug: "epoch-time-converter",
         icon: <MdAccessTime />,
         desc: "Convert Unix epoch timestamps to human-readable dates and vice versa.",
-        code: "epochTimeConverterTool",
+        code: "EpochTimeConverter",
+        // seo:EpochTimeConverter
       },
       {
         name: "Date to Timestamp",
         slug: "date-to-timestamp",
         icon: <MdAccessTime />,
         desc: "Generate a timestamp from a given date and time.",
-        code: "dateToTimestampTool",
+        code: "DateToTimestamp",
+        // seo:DateToTimestamp
       },
       {
         name: "Stopwatch",
         slug: "stopwatch",
         icon: <MdAccessTime />,
         desc: "A simple online stopwatch to track time accurately.",
-        code: "stopwatchTool",
+        code: "Stopwatch",
+        // seo:Stopwatch
       },
       {
         name: "Countdown Timer",
         slug: "countdown-timer",
         icon: <MdAccessTime />,
         desc: "Set a countdown timer for any duration with alerts.",
-        code: "countdownTimerTool",
+        code: "CountdownTimer",
+        // seo:CountdownTimer
       },
     ],
   },
@@ -401,49 +442,56 @@ const ToolList = [
         slug: "csv-to-json",
         icon: <MdTransform />,
         desc: "Convert CSV data to JSON format easily.",
-        code: "csvToJsonTool",
+        code: "CsvToJson",
+        // seo: CsvToJson
       },
       {
         name: "JSON to XML",
         slug: "json-to-xml",
         icon: <MdTransform />,
         desc: "Convert JSON data to XML format for seamless integration.",
-        code: "jsonToXmlTool",
+        code: "JsonToXml",
+        // seo:JsonToXml
       },
       {
-        name: "YAML to JSON Converter",
+        name: "YAML to JSON",
         slug: "yaml-to-json",
         icon: <MdTransform />,
         desc: "Convert YAML data to JSON format effortlessly.",
-        code: "yamlToJsonTool",
+        code: "YamlToJson",
+        // seo:YamlToJson
       },
       {
         name: "Base64 Encoder",
         slug: "base64-encoder",
         icon: <MdSecurity />,
         desc: "Encode text or files to Base64 format.",
-        code: "base64EncoderTool",
+        code: "Base64Encoder",
+        // seo:Base64Encoder
       },
       {
         name: "Base64 Decoder",
         slug: "base64-decoder",
         icon: <MdTransform />,
         desc: "Decode Base64-encoded text or files back to their original form.",
-        code: "base64DecoderTool",
+        code: "Base64Decoder",
+        // seo:Base64Decoder
       },
       {
         name: "URL Encoder",
         slug: "url-encoder",
         icon: <MdTransform />,
         desc: "Encode special characters in URLs to make them safe for web use.",
-        code: "urlEncoderTool",
+        code: "URLEncoder",
+        // seo:URLEncoder
       },
       {
         name: "URL Decoder",
         slug: "url-decoder",
         icon: <MdTransform />,
         desc: "Decode encoded URLs back to their original readable format.",
-        code: "urlDecoderTool",
+        code: "URLDecoder",
+        // seo:URLDecoder
       },
     ],
   },
@@ -458,81 +506,44 @@ const ToolList = [
         slug: "molecular-weight-calculator",
         icon: <MdScience />,
         desc: "Calculate the molecular weight of chemical compounds based on their molecular formulas.",
-        code: "molecularWeightCalculatorTool",
+        code: "MolecularWeightCalculator",
+        // seo:MolecularWeightCalculator
       },
       {
         name: "Physics Unit Converter",
         slug: "physics-unit-converter",
         icon: <MdScience />,
         desc: "Convert between different physics units for length, mass, energy, and more.",
-        code: "physicsUnitConverterTool",
+        code: "PhysicsUnitConverter",
+        // seo:PhysicsUnitConverter
       },
       {
         name: "Chemical Equation Balancer",
         slug: "chemical-equation-balancer",
         icon: <MdScience />,
         desc: "Balance chemical equations automatically for accurate reactions.",
-        code: "chemicalEquationBalancerTool",
+        code: "ChemicalEquationBalancer",
+        // seo:ChemicalEquationBalancer
       },
       {
         name: "Astronomical Unit Converter",
         slug: "astronomical-unit-converter",
         icon: <MdScience />,
         desc: "Convert astronomical units such as light-years, parsecs, and AU.",
-        code: "astronomicalUnitConverterTool",
+        code: "AstronomicalUnitConverter",
+        // seo:AstronomicalUnitConverter
       },
       {
         name: "Periodic Table Explorer",
         slug: "periodic-table-explorer",
         icon: <MdScience />,
         desc: "Explore detailed information about elements in the periodic table.",
-        code: "periodicTableExplorerTool",
+        code: "PeriodicTableExplorer",
+        // seo:PeriodicTableExplorer
       },
     ],
   },
-  {
-    category: "SEO Tools",
-    slug: "seo-tools",
-    desc: "Tools for search engine optimization",
-    icon: <MdTrendingUp />,
-    tools: [
-      {
-        name: "Keyword Research Tool",
-        slug: "keyword-research-tool",
-        icon: <MdTrendingUp />,
-        desc: "Discover high-performing keywords for SEO and digital marketing.",
-        code: "keywordResearchTool",
-      },
-      {
-        name: "Backlink Checker",
-        slug: "backlink-checker",
-        icon: <MdTrendingUp />,
-        desc: "Analyze backlinks to your website and track link-building efforts.",
-        code: "backlinkCheckerTool",
-      },
-      {
-        name: "Meta Tag Analyzer",
-        slug: "meta-tag-analyzer",
-        icon: <MdTrendingUp />,
-        desc: "Analyze meta tags for SEO optimization and better search rankings.",
-        code: "metaTagAnalyzerTool",
-      },
-      {
-        name: "Page Speed Checker",
-        slug: "page-speed-checker",
-        icon: <MdTrendingUp />,
-        desc: "Measure website loading speed and performance metrics.",
-        code: "pageSpeedCheckerTool",
-      },
-      {
-        name: "Domain Authority Checker",
-        slug: "domain-authority-checker",
-        icon: <MdTrendingUp />,
-        desc: "Check the domain authority (DA) and page authority (PA) of any website.",
-        code: "domainAuthorityCheckerTool",
-      },
-    ],
-  },
+
   {
     category: "Security Tools",
     slug: "security-tools",
@@ -544,88 +555,21 @@ const ToolList = [
         slug: "password-strength-checker",
         icon: <MdSecurity />,
         desc: "Evaluate the strength of your password and get security recommendations.",
-        code: "passwordStrengthChecker",
+        code: "PasswordStrengthChecker",
+        // seo: PasswordStrengthChecker
       },
-      {
-        name: "SSL Checker",
-        slug: "ssl-checker",
-        icon: <MdSecurity />,
-        desc: "Verify the validity and expiration of SSL certificates on websites.",
-        code: "sslChecker",
-      },
-      {
-        name: "IP Lookup",
-        slug: "ip-lookup",
-        icon: <MdSecurity />,
-        desc: "Find geographical and network details associated with an IP address.",
-        code: "ipLookup",
-      },
-      {
-        name: "DNS Lookup",
-        slug: "dns-lookup",
-        icon: <MdDns />,
-        desc: "Retrieve DNS records, including A, MX, CNAME, and TXT records.",
-        code: "dnsLookup",
-      },
+
       {
         name: "Email Validator",
         slug: "email-validator",
         icon: <MdSecurity />,
         desc: "Check if an email address is valid, properly formatted, and exists.",
-        code: "emailValidator",
-      },
-      {
-        name: "HTTP Header Checker",
-        slug: "http-header-checker",
-        icon: <MdHttp />,
-        desc: "Analyze HTTP headers for security, caching, and redirection details.",
-        code: "httpHeaderChecker",
+        code: "EmailValidator",
+        // seo:EmailValidator
       },
     ],
   },
-  {
-    category: "AI Tools",
-    slug: "ai-tools",
-    desc: "AI-powered tools",
-    icon: <MdSmartToy />,
-    tools: [
-      {
-        name: "AI Text Generator",
-        slug: "ai-text-generator",
-        icon: <MdSmartToy />,
-        desc: "Generate AI-powered text for blogs, articles, and creative writing.",
-        code: "aiTextGenerator",
-      },
-      {
-        name: "AI Image Generator",
-        slug: "ai-image-generator",
-        icon: <MdPalette />,
-        desc: "Generate AI-based images from text prompts using deep learning.",
-        code: "aiImageGenerator",
-      },
-      {
-        name: "AI Code Generator",
-        slug: "ai-code-generator",
-        icon: <MdCode />,
-        desc: "Generate code snippets and full programs using AI assistance.",
-        code: "aiCodeGenerator",
-      },
-      {
-        name: "AI Summary Generator",
-        slug: "ai-summary-generator",
-        icon: <MdOutlineTitle />,
-        desc: "Summarize lengthy articles, documents, or research papers with AI.",
-        code: "aiSummaryGenerator",
-      },
-      {
-        name: "AI Story Writer",
-        slug: "ai-story-writer",
-        icon: <MdOutlineCreate />,
-        desc: "Create AI-generated short stories, novels, and creative content.",
-        code: "aiStoryWriter",
-      },
-    ],
-  },
+
   {
     category: "Math Tools",
     slug: "math-tools",
@@ -637,35 +581,40 @@ const ToolList = [
         slug: "scientific-calculator",
         icon: <MdCalculate />,
         desc: "Perform advanced mathematical calculations with a scientific calculator.",
-        code: "scientificCalculator",
+        code: "ScientificCalculator",
+        // seo:ScientificCalculator
       },
       {
         name: "Equation Solver",
         slug: "equation-solver",
         icon: <MdCalculate />,
         desc: "Solve linear and quadratic equations instantly.",
-        code: "equationSolver",
+        code: "EquationSolver",
+        // seo:EquationSolver
       },
       {
         name: "Factorial Calculator",
         slug: "factorial-calculator",
         icon: <MdCalculate />,
         desc: "Calculate the factorial of any number easily.",
-        code: "factorialCalculator",
+        code: "FactorialCalculator",
+        // seo:FactorialCalculator
       },
       {
         name: "Matrix Calculator",
         slug: "matrix-calculator",
         icon: <MdCalculate />,
         desc: "Perform matrix operations like addition, multiplication, and inverses.",
-        code: "matrixCalculator",
+        code: "MatrixCalculator",
+        // seo:MatrixCalculator
       },
       {
         name: "Percentage Calculator",
         slug: "percentage-calculator",
         icon: <MdCalculate />,
         desc: "Easily compute percentages for discounts, taxes, and profit margins.",
-        code: "percentageCalculator",
+        code: "PercentageCalculator",
+        // seo:PercentageCalculator
       },
     ],
   },
@@ -680,35 +629,40 @@ const ToolList = [
         slug: "color-picker",
         icon: <MdPalette />,
         desc: "Pick and preview colors with HEX, RGB, and HSL values.",
-        code: "colorPicker",
+        code: "ColorPicker",
+        // seo:ColorPicker
       },
       {
-        name: "Hex to RGB Converter",
+        name: "Hex to RGB",
         slug: "hex-to-rgb",
         icon: <MdPalette />,
         desc: "Convert HEX color codes to RGB and vice versa.",
-        code: "hexToRgb",
+        code: "HexToRGB",
+        // seo:HexToRGB
       },
       {
         name: "Color Gradient Generator",
         slug: "color-gradient-generator",
         icon: <MdPalette />,
         desc: "Create beautiful color gradients with CSS code output.",
-        code: "gradientGenerator",
+        code: "GradientGenerator",
+        // seo:GradientGenerator
       },
       {
         name: "Contrast Checker",
         slug: "contrast-checker",
         icon: <MdPalette />,
         desc: "Check color contrast for accessibility and readability compliance.",
-        code: "contrastChecker",
+        code: "ContrastChecker",
+        // seo:ContrastChecker
       },
       {
         name: "Palette Generator",
         slug: "palette-generator",
         icon: <MdPalette />,
         desc: "Generate harmonious color palettes for design projects.",
-        code: "paletteGenerator",
+        code: "PaletteGenerator",
+        // seo:PaletteGenerator
       },
     ],
   },
@@ -723,103 +677,44 @@ const ToolList = [
         slug: "currency-converter",
         icon: <MdAttachMoney />,
         desc: "Convert currencies with real-time exchange rates.",
-        code: "currencyConverter",
+        code: "CurrencyConverter",
+        // seo:CurrencyConverter
       },
       {
         name: "Loan Calculator",
         slug: "loan-calculator",
         icon: <MdAttachMoney />,
         desc: "Calculate monthly payments and total interest for loans.",
-        code: "loanCalculator",
+        code: "LoanCalculator",
+        // seo:LoanCalculator
       },
       {
         name: "Tax Calculator",
         slug: "tax-calculator",
         icon: <MdAttachMoney />,
         desc: "Compute taxes based on income and deductions.",
-        code: "taxCalculator",
+        code: "TaxCalculator",
+        // seo:TaxCalculator
       },
       {
         name: "Investment Calculator",
         slug: "investment-calculator",
         icon: <MdAttachMoney />,
         desc: "Project potential investment growth over time.",
-        code: "investmentCalculator",
+        code: "InvestmentCalculator",
+        // seo:InvestmentCalculator
       },
       {
         name: "Retirement Savings Calculator",
         slug: "retirement-savings-calculator",
         icon: <MdAttachMoney />,
         desc: "Plan your retirement savings and estimate future value.",
-        code: "retirementCalculator",
+        code: "RetirementCalculator",
+        // seo:RetirementCalculator
       },
     ],
   },
-  {
-    category: "Social Media Tools",
-    slug: "social-media-tools",
-    desc: "Tools for social media management",
-    icon: <MdShare />,
-    tools: [
-      {
-        name: "Hashtag Generator",
-        slug: "hashtag-generator",
-        icon: <MdShare />,
-        desc: "Generate trending and relevant hashtags for social media.",
-        code: "hashtagGenerator",
-      },
-      {
-        name: "Username Checker",
-        slug: "username-checker",
-        icon: <MdShare />,
-        desc: "Check username availability across multiple platforms.",
-        code: "usernameChecker",
-      },
-    ],
-  },
-  {
-    category: "Weather Tools",
-    slug: "weather-tools",
-    desc: "Weather forecasting and climate data",
-    icon: <MdWbSunny />,
-    tools: [
-      {
-        name: "Current Weather",
-        slug: "current-weather",
-        icon: <MdWbSunny />,
-        desc: "Get real-time weather updates for any location.",
-        code: "currentWeather",
-      },
-      {
-        name: "7-Day Forecast",
-        slug: "7-day-forecast",
-        icon: <MdWbSunny />,
-        desc: "View the weekly weather forecast with temperature trends.",
-        code: "sevenDayForecast",
-      },
-      {
-        name: "Air Quality Index",
-        slug: "air-quality-index",
-        icon: <MdWbSunny />,
-        desc: "Check air pollution levels and health advisories.",
-        code: "airQualityIndex",
-      },
-      {
-        name: "UV Index Checker",
-        slug: "uv-index-checker",
-        icon: <MdWbSunny />,
-        desc: "Find out the UV radiation risk for your location.",
-        code: "uvIndexChecker",
-      },
-      {
-        name: "Wind Speed Calculator",
-        slug: "wind-speed-calculator",
-        icon: <MdWbSunny />,
-        desc: "Measure wind speed and get accurate wind data.",
-        code: "windSpeedCalculator",
-      },
-    ],
-  },
+  
   {
     category: "Misc Tools",
     slug: "misc-tools",
@@ -831,7 +726,8 @@ const ToolList = [
         slug: "barcode-scanner",
         icon: <MdBuild />,
         desc: "Scan barcodes and retrieve product details instantly.",
-        code: "barcodeScanner",
+        code: "BarcodeScanner",
+        // seo:BarcodeScanner
       },
       {
         name: "Clipboard Manager",

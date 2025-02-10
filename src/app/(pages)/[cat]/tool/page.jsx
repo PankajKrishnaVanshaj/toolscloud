@@ -1,8 +1,9 @@
 import dynamic from "next/dynamic";
 import ToolList from "@/staticData/ToolList";
 import ToolSuggestion from "@/components/ToolSuggestion";
+import Link from "next/link";
 
-// ✅ No need to `await` params
+// ✅ need to `await` params
 export async function generateMetadata({ params }) {
   const { cat } = await params;
   if (!cat) return {};
@@ -21,7 +22,7 @@ const findMatchedTool = (toolSlug) => {
 };
 
 const Tool = async ({ params }) => {
-  const { cat } = await params; // ✅ No need for await
+  const { cat } = await params; // ✅  need to await
   const matchedTool = findMatchedTool(cat);
 
   if (!matchedTool) {
@@ -63,14 +64,35 @@ const Tool = async ({ params }) => {
           </p>
         </div>
 
-        {/* ✅ Correct usage of DynamicComponent */}
+        {/*  usage of DynamicComponent */}
         <div className="mt-6 p-4 lg:p-6 bg-gray-50 rounded-lg shadow-inner">
           <DynamicComponent />
         </div>
 
         {/* Tool Suggestions */}
-        <div className="mt-8">
+        <div className="my-8">
           <ToolSuggestion />
+        </div>
+
+        {/* Categories Section */}
+        <div className="py-12 px-6 max-w-6xl mx-auto">
+          <h2 className="text-3xl font-bold text-center bg-gradient-to-r from-primary to-secondary text-transparent bg-clip-text">
+            Browse by Categories
+          </h2>
+          <div className="mt-6 flex flex-wrap justify-center gap-4">
+            {ToolList.map((category) => (
+              <Link
+                key={category.slug}
+                href={`/${category.slug}`}
+                className="flex items-center gap-2 px-4 py-1.5 bg-white text-secondary shadow-md border border-gray-300 rounded-xl hover:text-primary hover:border-primary hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1"
+              >
+                <span className="text-xl">{category.icon}</span>
+                <span className="font-medium bg-gradient-to-r from-primary to-secondary text-transparent bg-clip-text">
+                  {category.category}
+                </span>
+              </Link>
+            ))}
+          </div>
         </div>
       </div>
     </section>
