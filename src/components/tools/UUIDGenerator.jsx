@@ -106,7 +106,7 @@ const UUIDGenerator = () => {
         </div>
 
         {/* Right Actions */}
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 flex-wrap">
           <div className="relative">
             <FiSearch
               className="absolute left-3 top-2 text-gray-400"

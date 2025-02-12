@@ -129,21 +129,21 @@ const TextDuplicatorChecker = () => {
       ></textarea>
 
       {/* Buttons */}
-      <div className="flex gap-3 mt-3">
+      <div className="flex flex-wrap gap-3 mt-3">
         <button
-          className="flex-1 bg-gradient-to-r from-primary to-secondary text-transparent bg-clip-text px-4 py-2 shadow-md border border-gray-300 rounded-xl hover:border-primary hover:shadow-lg"
+          className="bg-gradient-to-r from-primary to-secondary text-transparent bg-clip-text px-4 py-2 shadow-md border border-gray-300 rounded-xl hover:border-primary hover:shadow-lg"
           onClick={copyToClipboard}
         >
           <FaCopy className="inline mr-2 text-secondary" /> Copy
         </button>
         <button
-          className="flex-1 bg-gradient-to-r from-primary to-secondary text-transparent bg-clip-text px-4 py-2 shadow-md border border-gray-300 rounded-xl hover:border-primary hover:shadow-lg"
+          className=" bg-gradient-to-r from-primary to-secondary text-transparent bg-clip-text px-4 py-2 shadow-md border border-gray-300 rounded-xl hover:border-primary hover:shadow-lg"
           onClick={exportTextFile}
         >
           <FaFileExport className="inline mr-2 text-secondary" /> Export
         </button>
         <button
-          className="flex-1 bg-gradient-to-r from-primary to-secondary text-transparent bg-clip-text px-4 py-2 shadow-md border border-gray-300 rounded-xl hover:border-primary hover:shadow-lg"
+          className=" bg-gradient-to-r from-primary to-secondary text-transparent bg-clip-text px-4 py-2 shadow-md border border-gray-300 rounded-xl hover:border-primary hover:shadow-lg"
           onClick={clearText}
         >
           <FaTrash className="inline mr-2 text-secondary" /> Clear

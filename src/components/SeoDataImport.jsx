@@ -1,12 +1,16 @@
 import BarcodeGenerator from "@/staticData/seoData/BarcodeGenerator";
+import CodeMinifier from "@/staticData/seoData/CodeMinifier";
 import FindAndReplace from "@/staticData/seoData/FindAndReplace";
 import GrammarChecker from "@/staticData/seoData/GrammarChecker";
 import HashGenerator from "@/staticData/seoData/HashGenerator";
+import JSONFormatter from "@/staticData/seoData/JSONFormatter";
 import LoremIpsumGenerator from "@/staticData/seoData/LoremIpsumGenerator";
+import MarkdownPreviewer from "@/staticData/seoData/MarkdownPreviewer";
 import QRCodeGenerator from "@/staticData/seoData/QRCodeGenerator";
 import QuoteValidator from "@/staticData/seoData/QuoteValidator";
 import RandomNumberGenerator from "@/staticData/seoData/RandomNumberGenerator";
 import RandomPasswordGenerator from "@/staticData/seoData/RandomPasswordGenerator";
+import RegexTester from "@/staticData/seoData/RegexTester";
 import SpellChecker from "@/staticData/seoData/SpellChecker";
 import TextBeautifier from "@/staticData/seoData/TextBeautifier";
 import TextCaseConverter from "@/staticData/seoData/TextCaseConverter";
@@ -33,7 +37,11 @@ const SeoDataImport = {
   LoremIpsumGenerator,
   RandomNumberGenerator,
   HashGenerator,
-  RandomPasswordGenerator
+  RandomPasswordGenerator,
+  JSONFormatter,
+  RegexTester,
+  CodeMinifier,
+  MarkdownPreviewer
 };
 
 export default SeoDataImport;

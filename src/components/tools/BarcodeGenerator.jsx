@@ -4,11 +4,12 @@ import JsBarcode from "jsbarcode";
 
 const BarcodeGenerator = () => {
   const [barcode, setBarcode] = useState("123456789012");
-  const [format, setFormat] = useState("CODE128");
+  const [format, setFormat] = useState("UPC");
   const [fontSize, setFontSize] = useState(14);
   const [foregroundColor, setForegroundColor] = useState("#000000");
   const [backgroundColor, setBackgroundColor] = useState("#ffffff");
   const [error, setError] = useState("");
+  const [downloadFormat, setDownloadFormat] = useState("png");
   const [history, setHistory] = useState([]);
 
   const canvasRef = useRef(null);
@@ -82,26 +83,15 @@ const BarcodeGenerator = () => {
     }
   };
 
-  const downloadBarcode = (format = "png") => {
+  const downloadBarcode = () => {
     const canvas = canvasRef.current;
     const link = document.createElement("a");
-    link.download = `${barcode}.${format}`;
+    link.download = `${barcode}.${downloadFormat}`;
     link.href =
-      format === "png" ? canvas.toDataURL("image/png") : canvas.toDataURL("image/jpeg");
+      downloadFormat === "png"
+        ? canvas.toDataURL("image/png")
+        : canvas.toDataURL("image/jpeg");
     link.click();
-  };
-
-  const copyBarcode = () => {
-    navigator.clipboard.writeText(barcode).then(() => alert("Barcode copied to clipboard!"));
-  };
-
-  const resetBarcode = () => {
-    setBarcode("123456789012");
-    setFormat("CODE128");
-    setForegroundColor("#000000");
-    setBackgroundColor("#ffffff");
-    setFontSize(14);
-    setError("");
   };
 
   useEffect(() => {
@@ -112,102 +102,121 @@ const BarcodeGenerator = () => {
   }, []);
 
   return (
-    <div className="mx-auto p-4 bg-white shadow-lg rounded-2xl">
+    <div className="mx-auto p-4 bg-white shadow-lg rounded-lg">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <div>
+          <input
+            type="text"
+            className="border border-gray-300 p-3 w-full rounded-lg mb-4"
+            placeholder="Enter barcode value"
+            value={barcode}
+            onChange={(e) => setBarcode(e.target.value)}
+            aria-label="Barcode Value"
+          />
+          {error && <p className="text-red-600 mb-4 font-medium">{error}</p>}
 
-      <input
-        type="text"
-        className="border border-gray-300 p-3 w-full rounded-lg mb-4 focus:ring-2 focus:ring-blue-400"
-        placeholder="Enter barcode value"
-        value={barcode}
-        onChange={(e) => setBarcode(e.target.value)}
-        aria-label="Barcode Value"
-      />
+          <div className="flex items-center mb-4">
+            <label className="font-medium text-secondary w-1/3">
+              Barcode Format:
+            </label>
+            <select
+              value={format}
+              onChange={(e) => setFormat(e.target.value)}
+              className="border border-gray-300 p-3 w-2/3 rounded-lg"
+              aria-label="Barcode Format"
+            >
+              {barcodeFormats.map((formatOption) => (
+                <option key={formatOption} value={formatOption}>
+                  {formatOption}
+                </option>
+              ))}
+            </select>
+          </div>
 
-      {error && <p className="text-red-600 mb-2 font-medium">{error}</p>}
+          <div className="flex items-center mb-4">
+            <label className="font-medium text-secondary w-1/3">
+              Font Size:
+            </label>
+            <input
+              type="number"
+              min="10"
+              max="20"
+              value={fontSize}
+              onChange={(e) => setFontSize(Number(e.target.value))}
+              className="border border-gray-300 p-3 w-2/3 rounded-lg"
+            />
+          </div>
 
-      <label className="block mb-2 font-medium text-gray-700">Select Barcode Format:</label>
-      <select
-        value={format}
-        onChange={(e) => setFormat(e.target.value)}
-        className="border border-gray-300 p-3 w-full rounded-lg mb-4 focus:ring-2 focus:ring-blue-400"
-        aria-label="Barcode Format"
-      >
-        {barcodeFormats.map((formatOption) => (
-          <option key={formatOption} value={formatOption}>
-            {formatOption}
-          </option>
-        ))}
-      </select>
+          <div className="flex items-center mb-4">
+            <label className="font-medium text-secondary w-1/3">
+              Foreground Color:
+            </label>
+            <input
+              type="color"
+              className="w-2/3 p-1 border border-gray-300 rounded-lg"
+              value={foregroundColor}
+              onChange={(e) => setForegroundColor(e.target.value)}
+            />
+          </div>
 
-      <label className="block mb-2 font-medium text-gray-700">Font Size:</label>
-      <input
-        type="number"
-        min="10"
-        max="20"
-        value={fontSize}
-        onChange={(e) => setFontSize(Number(e.target.value))}
-        className="border border-gray-300 p-3 w-full rounded-lg mb-4 focus:ring-2 focus:ring-blue-400"
-      />
+          <div className="flex items-center mb-4">
+            <label className="font-medium text-secondary w-1/3">
+              Background Color:
+            </label>
+            <input
+              type="color"
+              className="w-2/3 p-1 border border-gray-300 rounded-lg"
+              value={backgroundColor}
+              onChange={(e) => setBackgroundColor(e.target.value)}
+            />
+          </div>
 
-      <label className="block mb-2 font-medium text-gray-700">Foreground Color:</label>
-      <input
-        type="color"
-        className="w-full mb-4"
-        value={foregroundColor}
-        onChange={(e) => setForegroundColor(e.target.value)}
-      />
+          <div className="flex items-center mb-4">
+            <label className="font-medium text-secondary w-1/3">
+              Download Format:
+            </label>
+            <select
+              value={downloadFormat}
+              onChange={(e) => setDownloadFormat(e.target.value)}
+              className="border border-gray-300 p-3 w-2/3 rounded-lg"
+            >
+              <option value="png">PNG</option>
+              <option value="jpg">JPG</option>
+            </select>
+          </div>
 
-      <label className="block mb-2 font-medium text-gray-700">Background Color:</label>
-      <input
-        type="color"
-        className="w-full mb-4"
-        value={backgroundColor}
-        onChange={(e) => setBackgroundColor(e.target.value)}
-      />
+          <button
+            onClick={generateBarcode}
+            className="w-full px-4 py-3 border text-primary font-semibold rounded-lg hover:border-secondary"
+          >
+            Generate Barcode
+          </button>
+        </div>
 
-      <button
-        onClick={generateBarcode}
-        className="w-full px-4 py-3 bg-blue-600 text-white font-semibold rounded-lg mb-4 hover:bg-blue-700"
-      >
-        Generate Barcode
-      </button>
+        <div>
+          <canvas
+            ref={canvasRef}
+            className="border rounded-lg shadow-md w-full"
+          ></canvas>
 
-      <canvas ref={canvasRef} className="mt-4 border rounded-lg shadow-md"></canvas>
-
-      <div className="flex gap-2 mt-4">
-        <button
-          onClick={() => downloadBarcode("png")}
-          className="w-1/2 px-4 py-3 bg-green-500 text-white font-semibold rounded-lg hover:bg-green-600"
-        >
-          Download PNG
-        </button>
-        <button
-          onClick={() => downloadBarcode("jpg")}
-          className="w-1/2 px-4 py-3 bg-green-500 text-white font-semibold rounded-lg hover:bg-green-600"
-        >
-          Download JPG
-        </button>
+          <button
+            onClick={downloadBarcode}
+            className="w-full px-4 py-3 mt-4 border text-secondary font-semibold rounded-lg hover:border-primary"
+          >
+            Download Barcode
+          </button>
+        </div>
       </div>
 
-      <button
-        onClick={copyBarcode}
-        className="w-full px-4 py-3 bg-purple-600 text-white font-semibold rounded-lg mt-4 hover:bg-purple-700"
-      >
-        Copy Barcode Value
-      </button>
-
-      <button
-        onClick={resetBarcode}
-        className="w-full px-4 py-3 bg-gray-500 text-white font-semibold rounded-lg mt-4 hover:bg-gray-600"
-      >
-        Reset
-      </button>
-
-      <h3 className="text-xl font-bold mt-6 mb-2 text-gray-800">Barcode History</h3>
-      <ul className="list-disc pl-6 text-gray-700">
+      {/* Barcode History */}
+      <h3 className="text-xl font-bold mt-8 mb-4 text-secondary">
+        Barcode History
+      </h3>
+      <ul className="list-disc pl-6 text-secondary max-h-40 overflow-auto border border-gray-200 rounded-lg p-4 shadow-sm bg-gray-50">
         {history.map((item, index) => (
           <li key={index} className="mb-2">
-            <span className="font-semibold">{item.barcode}</span> - {item.format}
+            <span className="font-semibold">{item.barcode}</span> -{" "}
+            {item.format}
           </li>
         ))}
       </ul>

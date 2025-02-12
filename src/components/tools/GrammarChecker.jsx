@@ -131,7 +131,7 @@ const GrammarChecker = () => {
       ></textarea>
 
       {/* Buttons */}
-      <div className="flex gap-3 mt-3">
+      <div className="flex flex-wrap gap-3 mt-3">
         <button
           className="flex-1 px-4 py-2 rounded-lg border hover:border-secondary transition flex items-center justify-center"
           onClick={copyToClipboard}

@@ -189,7 +189,7 @@ const ToolList = [
         icon: <MdSecurity />,
         desc: "Create strong and secure passwords instantly.",
         code: "RandomPasswordGenerator",
-        seo:SeoDataImport.RandomPasswordGenerator
+        seo: SeoDataImport.RandomPasswordGenerator,
       },
     ],
   },
@@ -205,7 +205,7 @@ const ToolList = [
         icon: <MdCode />,
         desc: "Format and beautify JSON data for better readability.",
         code: "JSONFormatter",
-        // seo:JSONFormatter
+        seo: SeoDataImport.JSONFormatter,
       },
       {
         name: "Regex Tester",
@@ -213,21 +213,23 @@ const ToolList = [
         icon: <MdCode />,
         desc: "Test and debug regular expressions interactively.",
         code: "RegexTester",
-        // soe:RegexTester
+        seo: SeoDataImport.RegexTester,
       },
       {
         name: "Code Minifier",
         slug: "code-minifier",
         icon: <MdBuild />,
         desc: "Minify JavaScript, CSS, and HTML code for better performance.",
-        code: "codeMinifierTool",
+        code: "CodeMinifier",
+        seo: SeoDataImport.CodeMinifier,
       },
       {
         name: "Markdown Previewer",
         slug: "markdown-previewer",
         icon: <MdCode />,
         desc: "Preview and render Markdown files in real time.",
-        code: "markdownPreviewerTool",
+        code: "MarkdownPreviewer",
+        seo: SeoDataImport.MarkdownPreviewer,
       },
     ],
   },

@@ -20,6 +20,11 @@ export default function sitemap() {
     "/lorem-ipsum-generator/tool",
     "/random-number-generator/tool",
     "/random-password-generator/tool",
+
+    "/json-formatter/tool",
+    "/regex-tester/tool",
+    "/code-minifier/tool",
+    "/markdown-previewer/tool",
   ];
 
   return pages.map((page) => ({
