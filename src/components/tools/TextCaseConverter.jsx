@@ -1,7 +1,15 @@
 "use client";
 
 import { useState } from "react";
-
+import {
+  FaCopy,
+  FaEraser,
+  FaSortAlphaDown,
+  FaSortAlphaUp,
+  FaRedo,
+  FaAlignJustify,
+  FaFont,
+} from "react-icons/fa";
 
 const TextCaseConverter = () => {
   const [text, setText] = useState("");
@@ -36,8 +44,6 @@ const TextCaseConverter = () => {
     setText(text.replace(/\s+/g, " ").trim());
   };
 
-  
-
   // Copy to Clipboard
   const copyToClipboard = () => {
     navigator.clipboard.writeText(text);
@@ -60,62 +66,61 @@ const TextCaseConverter = () => {
       {/* Word & Character Count */}
       <div className="text-secondary mt-2 text-sm">
         <span>
+          {" "}
           Words: {text.trim() ? text.trim().split(/\s+/).length : 0} |{" "}
         </span>
         <span>Characters: {text.length}</span>
       </div>
 
       {/* Buttons */}
-      <div className="flex flex-wrap gap-2 items-center mt-1">
+      <div className="flex flex-wrap gap-2 items-center mt-4">
         <button
-          className="px-6 py-1.5 bg-gradient-to-r from-primary to-secondary text-transparent bg-clip-text shadow-md border border-gray-300 rounded-xl hover:border-primary hover:shadow-lg"
+          className="flex items-center gap-2 px-6 py-1.5 bg-gradient-to-r from-primary to-secondary text-transparent bg-clip-text shadow-md border border-gray-300 rounded-xl hover:border-primary hover:shadow-lg"
           onClick={toUpperCase}
         >
-          UPPERCASE
+          <FaSortAlphaUp className="text-secondary"/> UPPERCASE
         </button>
         <button
-          className="px-6 py-1.5 bg-gradient-to-r from-primary to-secondary text-transparent bg-clip-text shadow-md border border-gray-300 rounded-xl hover:border-primary hover:shadow-lg"
+          className="flex items-center gap-2 px-6 py-1.5 bg-gradient-to-r from-primary to-secondary text-transparent bg-clip-text shadow-md border border-gray-300 rounded-xl hover:border-primary hover:shadow-lg"
           onClick={toLowerCase}
         >
-          lowercase
+          <FaSortAlphaDown className="text-secondary"/> lowercase
         </button>
         <button
-          className="px-6 py-1.5 bg-gradient-to-r from-primary to-secondary text-transparent bg-clip-text shadow-md border border-gray-300 rounded-xl hover:border-primary hover:shadow-lg"
+          className="flex items-center gap-2 px-6 py-1.5 bg-gradient-to-r from-primary to-secondary text-transparent bg-clip-text shadow-md border border-gray-300 rounded-xl hover:border-primary hover:shadow-lg"
           onClick={toTitleCase}
         >
-          Title Case
+          <FaFont className="text-secondary"/> Title Case
         </button>
         <button
-          className="px-6 py-1.5 bg-gradient-to-r from-primary to-secondary text-transparent bg-clip-text shadow-md border border-gray-300 rounded-xl hover:border-primary hover:shadow-lg"
+          className="flex items-center gap-2 px-6 py-1.5 bg-gradient-to-r from-primary to-secondary text-transparent bg-clip-text shadow-md border border-gray-300 rounded-xl hover:border-primary hover:shadow-lg"
           onClick={toSentenceCase}
         >
-          Sentence case
+          <FaAlignJustify className="text-secondary"/> Sentence case
         </button>
         <button
-          className="px-6 py-1.5 bg-gradient-to-r from-primary to-secondary text-transparent bg-clip-text shadow-md border border-gray-300 rounded-xl hover:border-primary hover:shadow-lg"
+          className="flex items-center gap-2 px-6 py-1.5 bg-gradient-to-r from-primary to-secondary text-transparent bg-clip-text shadow-md border border-gray-300 rounded-xl hover:border-primary hover:shadow-lg"
           onClick={toReverseText}
         >
-          Reverse Text
+          <FaRedo className="text-secondary"/> Reverse Text
         </button>
-        
         <button
-          className="px-6 py-1.5 bg-gradient-to-r from-primary to-secondary text-transparent bg-clip-text shadow-md border border-gray-300 rounded-xl hover:border-primary hover:shadow-lg"
+          className="flex items-center gap-2 px-6 py-1.5 bg-gradient-to-r from-primary to-secondary text-transparent bg-clip-text shadow-md border border-gray-300 rounded-xl hover:border-primary hover:shadow-lg"
           onClick={removeExtraSpaces}
         >
-          Remove Extra Spaces
+          <FaAlignJustify className="text-secondary"/> Remove Spaces
         </button>
-     
         <button
-          className="px-6 py-1.5 bg-gradient-to-r from-primary to-secondary text-transparent bg-clip-text shadow-md border border-gray-300 rounded-xl hover:border-primary hover:shadow-lg"
+          className="flex items-center gap-2 px-6 py-1.5 bg-gradient-to-r from-primary to-secondary text-transparent bg-clip-text shadow-md border border-gray-300 rounded-xl hover:border-primary hover:shadow-lg"
           onClick={copyToClipboard}
         >
-           Copy
+          <FaCopy className="text-secondary"/> Copy
         </button>
         <button
-          className="px-6 py-1.5 bg-gradient-to-r from-primary to-secondary text-transparent bg-clip-text shadow-md border border-gray-300 rounded-xl hover:border-primary hover:shadow-lg"
+          className="flex items-center gap-2 px-6 py-1.5 bg-gradient-to-r from-primary to-secondary text-transparent bg-clip-text shadow-md border border-gray-300 rounded-xl hover:border-primary hover:shadow-lg"
           onClick={clearText}
         >
-          Clear
+          <FaEraser className="text-secondary"/> Clear
         </button>
       </div>
     </div>

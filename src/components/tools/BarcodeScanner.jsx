@@ -46,8 +46,7 @@ const BarcodeScanner = () => {
   };
 
   return (
-    <div className="max-w-md mx-auto p-6 bg-white shadow-lg rounded-lg text-center">
-      <h2 className="text-xl font-semibold mb-4">📷 Barcode Scanner</h2>
+    <div className="mx-auto p-4 bg-white shadow-lg rounded-2xl">
       <video ref={videoRef} autoPlay className="w-full rounded-lg border mb-2"></video>
       <canvas ref={canvasRef} className="hidden"></canvas>
       <button onClick={scanBarcode} className="px-4 py-2 bg-blue-600 text-white font-semibold rounded-lg">

@@ -79,7 +79,7 @@ const TextEditor = () => {
   return (
     <div className="mx-auto p-6 bg-white shadow-lg rounded-2xl">
       {/* Toolbar */}
-      <div className="flex flex-wrap gap-2 mb-3">
+      <div className="flex flex-wrap justify-center gap-2">
         <button
           className="bg-gray-200 p-2 rounded-md"
           onClick={() => applyFormat("bold")}
@@ -212,30 +212,34 @@ const TextEditor = () => {
           <option value="Courier New">Courier New</option>
           <option value="Verdana">Verdana</option>
         </select>
-
+      </div>
+      <div className="flex flex-wrap justify-center gap-4 my-2">
         <button
-          className="font-bold px-6 py-1 bg-gradient-to-r from-primary to-secondary text-transparent bg-clip-text shadow-md border border-gray-300 rounded-xl hover:border-primary hover:shadow-lg"
+          className="flex items-center gap-2 font-bold px-6 py-1 bg-gradient-to-r from-primary to-secondary text-transparent bg-clip-text shadow-md border border-gray-300 rounded-xl hover:border-primary hover:shadow-lg"
           onClick={handleUndo}
         >
-          Undo 
+          <FaUndo className="text-primary" /> Undo
         </button>
+
         <button
-          className="font-bold px-6 py-1 bg-gradient-to-r from-primary to-secondary text-transparent bg-clip-text shadow-md border border-gray-300 rounded-xl hover:border-primary hover:shadow-lg"
+          className="flex items-center gap-2 font-bold px-6 py-1 bg-gradient-to-r from-primary to-secondary text-transparent bg-clip-text shadow-md border border-gray-300 rounded-xl hover:border-primary hover:shadow-lg"
           onClick={handleRedo}
         >
-          Redo 
+          <FaRedo className="text-primary" /> Redo
         </button>
+
         <button
-          className="font-bold px-6 py-1 bg-gradient-to-r from-primary to-secondary text-transparent bg-clip-text shadow-md border border-gray-300 rounded-xl hover:border-primary hover:shadow-lg"
+          className="flex items-center gap-2 font-bold px-6 py-1 bg-gradient-to-r from-primary to-secondary text-transparent bg-clip-text shadow-md border border-gray-300 rounded-xl hover:border-primary hover:shadow-lg"
           onClick={handleClear}
         >
-          Eraser 
+          <FaEraser className="text-primary" /> Eraser
         </button>
+
         <button
-          className="font-bold px-6 py-1 bg-gradient-to-r from-primary to-secondary text-transparent bg-clip-text shadow-md border border-gray-300 rounded-xl hover:border-primary hover:shadow-lg"
+          className="flex items-center gap-2 font-bold px-6 py-1 bg-gradient-to-r from-primary to-secondary text-transparent bg-clip-text shadow-md border border-gray-300 rounded-xl hover:border-primary hover:shadow-lg"
           onClick={handleCopy}
         >
-          Copy 
+          <FaCopy className="text-primary" /> Copy
         </button>
       </div>
 

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import {  FaExchangeAlt, FaUndo, FaTrash } from "react-icons/fa";
 
 const TextFindandReplace = () => {
   const [text, setText] = useState("");
@@ -81,27 +82,33 @@ const TextFindandReplace = () => {
       </div>
 
       {/* Buttons & Toggle */}
-      <div className="flex flex-wrap gap-2 items-center">
-        <button className="px-6 py-1.5 bg-gradient-to-r from-primary to-secondary text-transparent bg-clip-text shadow-md border border-gray-300 rounded-xl hover:border-primary hover:shadow-lg">
-          Find
-        </button>
+      <div className="flex flex-wrap gap-2">
         <button
-          className="px-6 py-1.5 bg-gradient-to-r from-primary to-secondary text-transparent bg-clip-text shadow-md border border-gray-300 rounded-xl hover:border-primary hover:shadow-lg"
+          className="flex-1 px-4 py-2 rounded-lg border hover:border-secondary transition flex items-center justify-center"
           onClick={handleReplace}
         >
-          Replace
+          <FaExchangeAlt className="mr-2 text-secondary" />{" "}
+          <span className="bg-gradient-to-r from-primary to-secondary text-transparent bg-clip-text">
+            Replace
+          </span>
         </button>
         <button
-          className="px-6 py-1.5 bg-gradient-to-r from-primary to-secondary text-transparent bg-clip-text shadow-md border border-gray-300 rounded-xl hover:border-primary hover:shadow-lg"
+          className="flex-1 px-4 py-2 rounded-lg border hover:border-secondary transition flex items-center justify-center"
           onClick={handleUndo}
         >
-          Undo
+          <FaUndo className="mr-2 text-secondary" />{" "}
+          <span className="bg-gradient-to-r from-primary to-secondary text-transparent bg-clip-text">
+            Undo
+          </span>
         </button>
         <button
-          className="px-6 py-1.5 bg-gradient-to-r from-primary to-secondary text-transparent bg-clip-text shadow-md border border-gray-300 rounded-xl hover:border-primary hover:shadow-lg"
+          className="flex-1 px-4 py-2 rounded-lg border hover:border-secondary transition flex items-center justify-center"
           onClick={handleClearAll}
         >
-          Clear All
+          <FaTrash className="mr-2 text-secondary" />{" "}
+          <span className="bg-gradient-to-r from-primary to-secondary text-transparent bg-clip-text">
+            Clear All
+          </span>
         </button>
       </div>
 

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import { FaPlay, FaPause, FaStop, FaTrash, FaSave } from "react-icons/fa";
 
 const TextToSpeech = () => {
   const [text, setText] = useState("");
@@ -30,8 +31,6 @@ const TextToSpeech = () => {
       setText(savedText);
     }
   }, []);
-
- 
 
   const speakText = () => {
     if (text.trim() === "") return;
@@ -153,36 +152,40 @@ const TextToSpeech = () => {
         </p>
       </div>
 
-      <div className="flex flex-wrap gap-3 mt-4">
+      <div className="flex flex-wrap justify-center gap-4 mt-4">
         <button
-          className="px-6 py-1.5 bg-gradient-to-r from-primary to-secondary text-transparent bg-clip-text shadow-md border border-gray-300 rounded-xl hover:border-primary hover:shadow-lg"
+          className="flex items-center gap-2 px-6 py-2 bg-gradient-to-r from-primary to-secondary text-transparent bg-clip-text shadow-md border border-gray-300 rounded-xl hover:border-primary hover:shadow-lg"
           onClick={speakText}
         >
-          {isPaused ? "Resume" : "Speak"}
+          <FaPlay className="text-primary" /> {isPaused ? "Resume" : "Speak"}
         </button>
+
         <button
-          className="px-6 py-1.5 bg-gradient-to-r from-primary to-secondary text-transparent bg-clip-text shadow-md border border-gray-300 rounded-xl hover:border-primary hover:shadow-lg"
+          className="flex items-center gap-2 px-6 py-2 bg-gradient-to-r from-primary to-secondary text-transparent bg-clip-text shadow-md border border-gray-300 rounded-xl hover:border-primary hover:shadow-lg"
           onClick={pauseSpeech}
         >
-          Pause
+          <FaPause className="text-primary" /> Pause
         </button>
+
         <button
-          className="px-6 py-1.5 bg-gradient-to-r from-primary to-secondary text-transparent bg-clip-text shadow-md border border-gray-300 rounded-xl hover:border-primary hover:shadow-lg"
+          className="flex items-center gap-2 px-6 py-2 bg-gradient-to-r from-primary to-secondary text-transparent bg-clip-text shadow-md border border-gray-300 rounded-xl hover:border-primary hover:shadow-lg"
           onClick={stopSpeech}
         >
-          Stop
+          <FaStop className="text-primary" /> Stop
         </button>
+
         <button
-          className="px-6 py-1.5 bg-gradient-to-r from-primary to-secondary text-transparent bg-clip-text shadow-md border border-gray-300 rounded-xl hover:border-primary hover:shadow-lg"
+          className="flex items-center gap-2 px-6 py-2 bg-gradient-to-r from-primary to-secondary text-transparent bg-clip-text shadow-md border border-gray-300 rounded-xl hover:border-primary hover:shadow-lg"
           onClick={clearText}
         >
-          Clear
+          <FaTrash className="text-primary" /> Clear
         </button>
+
         <button
-          className="px-6 py-1.5 bg-gradient-to-r from-primary to-secondary text-transparent bg-clip-text shadow-md border border-gray-300 rounded-xl hover:border-primary hover:shadow-lg"
+          className="flex items-center gap-2 px-6 py-2 bg-gradient-to-r from-primary to-secondary text-transparent bg-clip-text shadow-md border border-gray-300 rounded-xl hover:border-primary hover:shadow-lg"
           onClick={saveText}
         >
-          Save
+          <FaSave className="text-primary" /> Save
         </button>
       </div>
     </div>

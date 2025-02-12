@@ -34,18 +34,10 @@ import {
   MdDns,
   MdHttp,
   MdOutlineNumbers,
+  MdQrCode2,
 } from "react-icons/md";
 import { LuScanBarcode } from "react-icons/lu";
-import WordCharacterCounter from "./seoData/WordCharacterCounter";
-import FindAndReplace from "./seoData/FindAndReplace";
-import TextCaseConverter from "./seoData/TextCaseConverter";
-import TextToSpeech from "./seoData/TextToSpeech";
-import TextEditor from "./seoData/TextEditor";
-import TextBeautifier from "./seoData/TextBeautifier";
-import SpellChecker from "./seoData/SpellChecker";
-import GrammarChecker from "./seoData/GrammarChecker";
-import QuoteValidator from "./seoData/QuoteValidator";
-import TextDuplicatorChecker from "./seoData/TextDuplicatorChecker";
+import SeoDataImport from "@/components/SeoDataImport";
 
 const ToolList = [
   {
@@ -60,7 +52,7 @@ const ToolList = [
         icon: <MdOutlineNumbers />,
         desc: "Analyze your text effortlessly with real-time word, character, sentence, and readability statistics.",
         code: "WordCharacterCounter",
-        seo: WordCharacterCounter,
+        seo: SeoDataImport.WordCharacterCounter,
       },
       {
         name: "Find and Replace",
@@ -68,7 +60,7 @@ const ToolList = [
         icon: <MdOutlineFindReplace />,
         desc: "Easily find and replace text within your content.",
         code: "TextFindandReplace",
-        seo: FindAndReplace,
+        seo: SeoDataImport.FindAndReplace,
       },
       {
         name: "Text Case Converter",
@@ -76,7 +68,7 @@ const ToolList = [
         icon: <MdOutlineTextFormat />,
         desc: "Convert text to uppercase, lowercase, title case, and more.",
         code: "TextCaseConverter",
-        seo:TextCaseConverter
+        seo: SeoDataImport.TextCaseConverter,
       },
       {
         name: "Text to Speech",
@@ -84,7 +76,7 @@ const ToolList = [
         icon: <MdOutlineSubtitles />,
         desc: "Convert written text into natural-sounding speech.",
         code: "TextToSpeech",
-        seo:TextToSpeech
+        seo: SeoDataImport.TextToSpeech,
       },
       {
         name: "Text Editor",
@@ -92,7 +84,7 @@ const ToolList = [
         icon: <MdOutlineEdit />,
         desc: "A simple and powerful text editor for writing and formatting.",
         code: "TextEditor",
-        seo:TextEditor
+        seo: SeoDataImport.TextEditor,
       },
       {
         name: "Text Beautifier",
@@ -100,7 +92,7 @@ const ToolList = [
         icon: <MdOutlineWrapText />,
         desc: "Enhance and beautify text formatting instantly.",
         code: "TextBeautifier",
-        seo:TextBeautifier
+        seo: SeoDataImport.TextBeautifier,
       },
       {
         name: "Spell Checker",
@@ -108,7 +100,7 @@ const ToolList = [
         icon: <MdOutlineSpellcheck />,
         desc: "Check and correct spelling mistakes in your text.",
         code: "SpellChecker",
-        seo:SpellChecker
+        seo: SeoDataImport.SpellChecker,
       },
       {
         name: "Grammar Checker",
@@ -116,7 +108,7 @@ const ToolList = [
         icon: <MdOutlineSpellcheck />,
         desc: "Analyze and correct grammar errors in your writing.",
         code: "GrammarChecker",
-        seo:GrammarChecker
+        seo: SeoDataImport.GrammarChecker,
       },
 
       {
@@ -125,7 +117,7 @@ const ToolList = [
         icon: <MdFormatQuote />,
         desc: "Verify and validate quotes for authenticity.",
         code: "QuoteValidator",
-        seo:QuoteValidator
+        seo: SeoDataImport.QuoteValidator,
       },
       {
         name: "Text Duplicator Checker",
@@ -133,7 +125,7 @@ const ToolList = [
         icon: <MdOutlineTextFormat />,
         desc: "Identify duplicate text within your content.",
         code: "TextDuplicatorChecker",
-        seo:TextDuplicatorChecker
+        seo: SeoDataImport.TextDuplicatorChecker,
       },
     ],
   },
@@ -149,7 +141,7 @@ const ToolList = [
         icon: <MdAutorenew />,
         desc: "Generate unique UUIDs for identifiers and security purposes.",
         code: "UUIDGenerator",
-        // seo:UUIDGenerator
+        seo: SeoDataImport.UUIDGenerator,
       },
       {
         name: "Barcode Generator",
@@ -157,15 +149,15 @@ const ToolList = [
         icon: <LuScanBarcode />,
         desc: "Create barcodes for products, tracking, and inventory management.",
         code: "BarcodeGenerator",
-        // seo:BarcodeGenerator
+        seo: SeoDataImport.BarcodeGenerator,
       },
       {
         name: "QR Code Generator",
         slug: "qr-code-generator",
-        icon: <MdBuild />,
+        icon: <MdQrCode2 />,
         desc: "Generate QR codes for links, contact details, and more.",
         code: "QRCodeGenerator",
-        // seo:QRCodeGenerator
+        seo: SeoDataImport.QRCodeGenerator,
       },
       {
         name: "Lorem Ipsum Generator",
@@ -173,7 +165,7 @@ const ToolList = [
         icon: <MdAutorenew />,
         desc: "Generate placeholder text for designs and mockups.",
         code: "LoremIpsumGenerator",
-        // seo:LoremIpsumGenerator
+        seo: SeoDataImport.LoremIpsumGenerator,
       },
       {
         name: "Random Number Generator",
@@ -181,7 +173,7 @@ const ToolList = [
         icon: <MdBuild />,
         desc: "Generate random numbers within a given range.",
         code: "RandomNumberGenerator",
-        // seo:RandomNumberGenerator
+        seo: SeoDataImport.RandomNumberGenerator,
       },
       {
         name: "Hash Generator",
@@ -189,15 +181,15 @@ const ToolList = [
         icon: <MdSecurity />,
         desc: "Generate secure hash values using various algorithms.",
         code: "HashGenerator",
-        // seo:HashGenerator
+        seo: SeoDataImport.HashGenerator,
       },
       {
         name: "Random Password Generator",
-        slug: "password-generator",
+        slug: "random-password-generator",
         icon: <MdSecurity />,
         desc: "Create strong and secure passwords instantly.",
         code: "RandomPasswordGenerator",
-        // seo:RandomPasswordGenerator
+        seo:SeoDataImport.RandomPasswordGenerator
       },
     ],
   },
@@ -714,7 +706,7 @@ const ToolList = [
       },
     ],
   },
-  
+
   {
     category: "Misc Tools",
     slug: "misc-tools",
