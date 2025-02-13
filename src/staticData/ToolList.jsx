@@ -245,7 +245,7 @@ const ToolList = [
         icon: <MdStraighten />,
         desc: "Resize images to custom dimensions while maintaining quality.",
         code: "ImageResizer",
-        // seo:ImageResizer
+        seo: SeoDataImport.ImageResizer
       },
       {
         name: "Image Converter",
@@ -253,7 +253,7 @@ const ToolList = [
         icon: <MdTransform />,
         desc: "Convert images between different formats such as JPG, PNG, and WebP.",
         code: "ImageConverter",
-        // seo:ImageConverter
+        seo:SeoDataImport.ImageConverter
       },
       {
         name: "Image Compressor",
@@ -261,7 +261,7 @@ const ToolList = [
         icon: <MdImage />,
         desc: "Compress images to reduce file size without losing quality.",
         code: "ImageCompressor",
-        // seo:ImageCompressor
+        seo:SeoDataImport.ImageCompressor
       },
       {
         name: "Image Cropper",
@@ -269,7 +269,7 @@ const ToolList = [
         icon: <MdImage />,
         desc: "Crop images to specific dimensions or aspect ratios.",
         code: "ImageCropper",
-        // seo:ImageCropper
+        seo:SeoDataImport.ImageCropper
       },
       {
         name: "Image Enhancer",
@@ -277,7 +277,39 @@ const ToolList = [
         icon: <MdImage />,
         desc: "Enhance image quality with AI-powered adjustments.",
         code: "ImageEnhancer",
-        // seo:ImageEnhancer
+        seo:SeoDataImport.ImageEnhancer
+      },
+      {
+        name: "Image Watermarker",
+        slug: "image-watermarker",
+        icon: <MdImage />,
+        desc: "Add text or image watermarks to protect your images.",
+        code: "ImageWatermarker",
+        seo: SeoDataImport.ImageWatermarker
+      },
+      {
+        name: "Image Background Remover",
+        slug: "image-background-remover",
+        icon: <MdImage />,
+        desc: "Remove the background of images using AI for a transparent look.",
+        code: "ImageBackgroundRemover",
+        seo: SeoDataImport.ImageBackgroundRemover
+      },
+      {
+        name: "Image Collage Maker",
+        slug: "image-collage-maker",
+        icon: <MdImage />,
+        desc: "Combine multiple images into beautiful collages.",
+        code: "ImageCollageMaker",
+        seo:SeoDataImport.ImageCollageMaker
+      },
+      {
+        name: "Image Color Adjuster",
+        slug: "image-color-adjuster",
+        icon: <MdImage />,
+        desc: "Fine-tune colors, brightness, and contrast for perfect images.",
+        code: "ImageColorAdjuster",
+        seo: SeoDataImport.ImageColorAdjuster
       },
     ],
   },

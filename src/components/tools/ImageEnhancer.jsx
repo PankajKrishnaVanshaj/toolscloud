@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 
 const ImageEnhancer = () => {
   const [image, setImage] = useState(null);
@@ -9,50 +9,120 @@ const ImageEnhancer = () => {
     contrast: 100,
     saturation: 100,
     sharpen: 0,
+    hueRotate: 0,
+    grayscale: 0,
+    invert: 0,
+    blur: 0,
+    sepia: 0,
+    opacity: 100,
+    dropShadowSize: 0,
+    dropShadowColor: "#000000",
+    vignette: 0,
+    pixelate: 0,
   });
 
   const canvasRef = useRef(null);
   const imgRef = useRef(null);
+  const [originalSize, setOriginalSize] = useState({ width: 0, height: 0 });
 
   const handleImageUpload = (e) => {
     const file = e.target.files[0];
     if (file) {
       const reader = new FileReader();
-      reader.onload = (event) => {
-        setImage(event.target.result);
-      };
+      reader.onload = (event) => setImage(event.target.result);
       reader.readAsDataURL(file);
     }
   };
 
+  useEffect(() => {
+    if (image) {
+      const img = new Image();
+      img.src = image;
+      img.onload = () => {
+        setOriginalSize({ width: img.width, height: img.height });
+        applyEnhancements();
+      };
+    }
+  }, [image]);
+
+  useEffect(() => {
+    applyEnhancements();
+  }, [filters]);
+
   const applyEnhancements = () => {
-    if (!image) return;
+    if (!canvasRef.current || !imgRef.current) return;
 
     const canvas = canvasRef.current;
     const ctx = canvas.getContext("2d");
     const img = imgRef.current;
 
-    // Set canvas size
-    canvas.width = img.width;
-    canvas.height = img.height;
+    canvas.width = originalSize.width;
+    canvas.height = originalSize.height;
 
-    // Apply filters
-    ctx.filter = `brightness(${filters.brightness}%) contrast(${filters.contrast}%) saturate(${filters.saturation}%)`;
-    ctx.drawImage(img, 0, 0, img.width, img.height);
+    // Reset the canvas
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    // Apply sharpening if needed
-    if (filters.sharpen > 0) {
-      const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-      const data = imageData.data;
+    // Apply core filters
+    ctx.filter = `
+      brightness(${filters.brightness}%)
+      contrast(${filters.contrast}%)
+      saturate(${filters.saturation}%)
+      hue-rotate(${filters.hueRotate}deg)
+      grayscale(${filters.grayscale}%)
+      invert(${filters.invert}%)
+      blur(${filters.blur}px)
+      sepia(${filters.sepia}%)
+      opacity(${filters.opacity}%)
+      drop-shadow(${filters.dropShadowSize}px ${filters.dropShadowSize}px ${filters.dropShadowSize}px ${filters.dropShadowColor})
+    `;
 
-      for (let i = 0; i < data.length; i += 4) {
-        data[i] = Math.min(255, data[i] + filters.sharpen); // Red
-        data[i + 1] = Math.min(255, data[i + 1] + filters.sharpen); // Green
-        data[i + 2] = Math.min(255, data[i + 2] + filters.sharpen); // Blue
-      }
+    ctx.drawImage(img, 0, 0, originalSize.width, originalSize.height);
 
-      ctx.putImageData(imageData, 0, 0);
+    // Apply vignette effect
+    if (filters.vignette > 0) {
+      const gradient = ctx.createRadialGradient(
+        originalSize.width / 2,
+        originalSize.height / 2,
+        0,
+        originalSize.width / 2,
+        originalSize.height / 2,
+        Math.max(originalSize.width, originalSize.height) / 2
+      );
+      gradient.addColorStop(0, "rgba(0, 0, 0, 0)");
+      gradient.addColorStop(1, `rgba(0, 0, 0, ${filters.vignette / 100})`);
+      ctx.fillStyle = gradient;
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
     }
+
+    // Apply pixelation effect
+    if (filters.pixelate > 0) {
+      const pixelSize = filters.pixelate;
+      for (let y = 0; y < originalSize.height; y += pixelSize) {
+        for (let x = 0; x < originalSize.width; x += pixelSize) {
+          const pixel = ctx.getImageData(x, y, pixelSize, pixelSize);
+          const avgColor = averageColor(pixel.data); // Calculate average pixel color
+          ctx.fillStyle = `rgb(${avgColor.r}, ${avgColor.g}, ${avgColor.b})`;
+          ctx.fillRect(x, y, pixelSize, pixelSize);
+        }
+      }
+    }
+  };
+
+  const averageColor = (data) => {
+    let r = 0,
+      g = 0,
+      b = 0;
+    const length = data.length / 4;
+    for (let i = 0; i < data.length; i += 4) {
+      r += data[i];
+      g += data[i + 1];
+      b += data[i + 2];
+    }
+    return {
+      r: Math.round(r / length),
+      g: Math.round(g / length),
+      b: Math.round(b / length),
+    };
   };
 
   const handleDownload = () => {
@@ -64,10 +134,27 @@ const ImageEnhancer = () => {
     link.click();
   };
 
+  const resetFilters = () => {
+    setFilters({
+      brightness: 100,
+      contrast: 100,
+      saturation: 100,
+      sharpen: 0,
+      hueRotate: 0,
+      grayscale: 0,
+      invert: 0,
+      blur: 0,
+      sepia: 0,
+      opacity: 100,
+      dropShadowSize: 0,
+      dropShadowColor: "#000000",
+      vignette: 0,
+      pixelate: 0,
+    });
+  };
+
   return (
     <div className="mx-auto p-5 bg-white shadow-lg rounded-2xl">
-
-      {/* File input */}
       <input
         type="file"
         accept="image/*"
@@ -75,78 +162,74 @@ const ImageEnhancer = () => {
         onChange={handleImageUpload}
       />
 
-      {/* Image Preview */}
       {image && (
-        <div className="mb-3">
-          <img
-            ref={imgRef}
-            src={image}
-            alt="Uploaded"
-            className="w-full max-h-60 object-contain rounded-lg border mb-3"
-          />
+        <div className="grid grid-cols-2 gap-4 mb-4">
+          <div>
+            <h3 className="font-bold mb-2">Original Image</h3>
+            <img
+              ref={imgRef}
+              src={image}
+              alt="Uploaded"
+              className="w-full max-h-60 object-contain rounded-lg border"
+            />
+            <p className="text-sm mt-2">
+              Size: {originalSize.width} x {originalSize.height}px
+            </p>
+          </div>
+          <div>
+            <h3 className="font-bold mb-2">Enhanced Image</h3>
+            <canvas
+              ref={canvasRef}
+              className="w-full max-h-60 object-contain rounded-lg border"
+            ></canvas>
+          </div>
         </div>
       )}
 
-      {/* Enhancement Controls */}
-      <div className="mb-3">
-        <label className="block font-medium">Brightness:</label>
-        <input
-          type="range"
-          min="50"
-          max="200"
-          value={filters.brightness}
-          onChange={(e) => setFilters({ ...filters, brightness: e.target.value })}
-          className="w-full"
-        />
-
-        <label className="block font-medium">Contrast:</label>
-        <input
-          type="range"
-          min="50"
-          max="200"
-          value={filters.contrast}
-          onChange={(e) => setFilters({ ...filters, contrast: e.target.value })}
-          className="w-full"
-        />
-
-        <label className="block font-medium">Saturation:</label>
-        <input
-          type="range"
-          min="50"
-          max="200"
-          value={filters.saturation}
-          onChange={(e) => setFilters({ ...filters, saturation: e.target.value })}
-          className="w-full"
-        />
-
-        <label className="block font-medium">Sharpen:</label>
-        <input
-          type="range"
-          min="0"
-          max="50"
-          value={filters.sharpen}
-          onChange={(e) => setFilters({ ...filters, sharpen: parseInt(e.target.value) })}
-          className="w-full"
-        />
+      <div className="flex flex-wrap gap-4 justify-center">
+        {Object.keys(filters).map((filter) => (
+          <div key={filter} className="flex flex-row items-center gap-4">
+            <label className="block font-medium capitalize text-gray-700">
+              {filter.replace(/([A-Z])/g, " $1")}:
+            </label>
+            <input
+              type="range"
+              min="0"
+              max={filter === "hueRotate" ? "360" : "200"}
+              value={filters[filter]}
+              onChange={(e) =>
+                setFilters({ ...filters, [filter]: e.target.value })
+              }
+              className="flex-1 h-2 bg-gray-300 rounded-lg appearance-none cursor-pointer accent-primary"
+            />
+            {filter === "dropShadowColor" && (
+              <input
+                type="color"
+                value={filters.dropShadowColor}
+                onChange={(e) =>
+                  setFilters({ ...filters, dropShadowColor: e.target.value })
+                }
+                className="w-10 h-10 p-0 border rounded-md"
+              />
+            )}
+          </div>
+        ))}
       </div>
 
-      {/* Apply & Download Buttons */}
-      <button
-        className="w-full bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition mb-2"
-        onClick={applyEnhancements}
-      >
-        Apply Enhancements
-      </button>
-
-      <button
-        className="w-full bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition"
-        onClick={handleDownload}
-      >
-        Download Enhanced Image
-      </button>
-
-      {/* Hidden Canvas */}
-      <canvas ref={canvasRef} className="hidden"></canvas>
+      <div className="flex flex-row gap-4 mt-2">
+        <button
+          className="flex-1 bg-gradient-to-r from-primary to-secondary text-transparent bg-clip-text border hover:border-secondary p-2 rounded-lg"
+          onClick={resetFilters}
+        >
+          Reset Filters
+        </button>
+        <button
+          className="flex-1 bg-gradient-to-r from-primary to-secondary text-transparent bg-clip-text border hover:border-secondary p-2 rounded-lg"
+          onClick={handleDownload}
+        >
+          Download Image
+        </button>
+      </div>
     </div>
   );
 };

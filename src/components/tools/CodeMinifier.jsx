@@ -174,14 +174,14 @@ const CodeMinifier = () => {
       </div>
       <div className="flex flex-wrap gap-2">
         <button
-          className="px-4 py-2 bg-primary/90 text-white rounded-lg hover:bg-primary"
+          className="px-4 py-2 bg-gradient-to-r from-primary to-secondary text-transparent bg-clip-text rounded-lg border hover:border-secondary"
           onClick={handleMinify}
         >
           Minify Code
         </button>
 
         <button
-          className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
+          className="px-4 py-2 bg-gradient-to-r from-primary to-secondary text-transparent bg-clip-text rounded-lg border hover:border-secondary"
           onClick={() => {
             setCode("");
             setMinifiedCode("");
@@ -191,14 +191,14 @@ const CodeMinifier = () => {
           Clear
         </button>
         <button
-          className="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600"
+          className="px-4 py-2 bg-gradient-to-r from-primary to-secondary text-transparent bg-clip-text rounded-lg border hover:border-secondary"
           onClick={copyToClipboard}
           disabled={!minifiedCode}
         >
           Copy Minified Code
         </button>
       </div>
-      <h3 className="text-lg font-semibold mt-4">Minified Code:</h3>
+      <h3 className="text-lg font-semibold mt-4 text-secondary">Minified Code:</h3>
       <textarea
         className="w-full p-2 border rounded-lg h-40 mt-2"
         readOnly

@@ -1,15 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import {
-  FaClipboard,
-  FaEraser,
-  FaCheckCircle,
-  FaDownload,
-  FaSync,
-  FaSun,
-  FaMoon,
-} from "react-icons/fa";
+import { useState } from "react";
+import { FaClipboard, FaEraser, FaDownload } from "react-icons/fa";
 
 // Grammar correction rules
 const grammarRules = [
@@ -23,33 +15,17 @@ const grammarRules = [
     pattern: /\byour\b/gi,
     replacement: "you're (or your, depending on context)",
   },
-  {
-    pattern: /\btheir\b/gi,
-    replacement: "they're (or their, depending on context)",
-  },
   { pattern: /\bshould of\b/gi, replacement: "should have" },
   { pattern: /\bcould of\b/gi, replacement: "could have" },
   { pattern: /\bwould of\b/gi, replacement: "would have" },
-  {
-    pattern: /\bthere\b/gi,
-    replacement: "they're (or there, depending on context)",
-  },
   { pattern: /\bwhos\b/gi, replacement: "who's" },
 ];
-
-// Dictionary for synonyms
-const synonyms = {
-  happy: ["joyful", "cheerful", "content", "glad"],
-  sad: ["unhappy", "depressed", "downcast", "gloomy"],
-  fast: ["quick", "speedy", "swift", "rapid"],
-  slow: ["lethargic", "sluggish", "unhurried"],
-};
 
 const GrammarChecker = () => {
   const [text, setText] = useState("");
   const [correctedText, setCorrectedText] = useState("");
 
-  // Function to check grammar and highlight errors
+  // Function to check grammar
   const checkGrammar = (input) => {
     let corrected = input;
     grammarRules.forEach(({ pattern, replacement }) => {
@@ -58,28 +34,16 @@ const GrammarChecker = () => {
         `<span class="text-red-500 underline cursor-pointer">${replacement}</span>`
       );
     });
-
     return corrected;
   };
 
-  // Handle text input and live grammar checking
   const handleInputChange = (e) => {
     const newText = e.target.value;
     setText(newText);
     setCorrectedText(checkGrammar(newText));
   };
 
-  // Right-click correction
-  const handleCorrectionClick = (event) => {
-    event.preventDefault();
-    if (event.target.tagName === "SPAN") {
-      const correctedWord = event.target.innerText.trim();
-      const originalText = text;
-      setText(originalText.replace(event.target.innerText, correctedWord));
-    }
-  };
-
-  // Copy text to clipboard
+  // Copy to clipboard
   const copyToClipboard = () => {
     navigator.clipboard.writeText(text);
     alert("Text copied to clipboard!");
@@ -91,7 +55,7 @@ const GrammarChecker = () => {
     setCorrectedText("");
   };
 
-  // Download text as .txt file
+  // Download as text file
   const downloadTextFile = () => {
     const blob = new Blob([text], { type: "text/plain" });
     const link = document.createElement("a");
@@ -100,24 +64,6 @@ const GrammarChecker = () => {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-  };
-
-  // Get word count, sentence count, and readability score
-  const getStats = () => {
-    const words = text
-      .trim()
-      .split(/\s+/)
-      .filter((word) => word !== "").length;
-    const sentences = text
-      .split(/[.!?]+/)
-      .filter((sentence) => sentence.trim() !== "").length;
-    const readability = words > 0 ? (words / sentences).toFixed(2) : "N/A";
-    return { words, sentences, readability };
-  };
-
-  // Get synonyms
-  const getSynonyms = (word) => {
-    return synonyms[word.toLowerCase()] || [];
   };
 
   return (
@@ -161,23 +107,21 @@ const GrammarChecker = () => {
         </button>
       </div>
 
-      {/* Display corrected text */}
+      {/* Corrected text */}
       <div
         className="mt-3 p-3 border rounded-lg bg-gray-100 cursor-pointer min-h-[50px] h-40 overflow-auto"
         dangerouslySetInnerHTML={{ __html: correctedText || text }}
-        onContextMenu={handleCorrectionClick}
       ></div>
 
-      {/* Synonyms */}
-      <p className="mt-3 text-sm text-gray-600">
-        Right-click on a red word to accept the correction.
-      </p>
-
-      {/* Stats */}
-      <div className="mt-3 flex justify-between text-sm text-gray-500">
-        <p>Words: {getStats().words}</p>
-        <p>Sentences: {getStats().sentences}</p>
-        <p>Readability: {getStats().readability}</p>
+      {/* Coming Soon Section */}
+      <div className="mt-5 p-4 bg-blue-100 rounded-lg border border-blue-300">
+        <h3 className="font-semibold text-blue-700">
+          Dictionary (Coming Soon)
+        </h3>
+        <p className="text-sm text-blue-600">
+          A built-in dictionary feature will be added soon to help you explore
+          word definitions and synonyms.
+        </p>
       </div>
     </div>
   );

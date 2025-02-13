@@ -25,6 +25,16 @@ export default function sitemap() {
     "/regex-tester/tool",
     "/code-minifier/tool",
     "/markdown-previewer/tool",
+
+    "/image-resizer/tool",
+    "/image-converter/tool",
+    "/image-compressor/tool",
+    "/image-cropper/tool",
+    "/image-enhancer/tool",
+    "/image-watermarker/tool",
+    "/image-collage-maker/tool",
+    "/image-color-adjuster/tool",
+    "/image-background-remover/tool",
   ];
 
   return pages.map((page) => ({

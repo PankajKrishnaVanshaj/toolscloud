@@ -41,12 +41,10 @@ const SpellChecker = () => {
       .join(" ");
   };
 
-  // Handle spell-checking on button click
   const handleCheckSpelling = () => {
     setCheckedText(checkSpelling(text));
   };
 
-  // Handle clicking on a misspelled word
   const handleMisspelledClick = (event) => {
     if (event.target.tagName === "SPAN") {
       const incorrectWord = event.target.innerText.trim();
@@ -58,21 +56,19 @@ const SpellChecker = () => {
         setCustomDictionary((prev) =>
           new Set(prev).add(userCorrection.toLowerCase())
         );
-        setText((prev) => prev.replace(incorrectWord, userCorrection)); // Replace incorrect word
+        setText((prev) => prev.replace(incorrectWord, userCorrection));
         setCheckedText(
           checkSpelling(text.replace(incorrectWord, userCorrection))
-        ); // Update checked text
+        );
       }
     }
   };
 
-  // Function to clear text
   const clearText = () => {
     setText("");
     setCheckedText("");
   };
 
-  // Function to copy text to clipboard
   const copyText = () => {
     navigator.clipboard.writeText(text);
     alert("Text copied to clipboard!");
@@ -80,7 +76,6 @@ const SpellChecker = () => {
 
   return (
     <div className="mx-auto p-4 bg-white shadow-lg rounded-2xl">
-      {/* Textarea */}
       <textarea
         className="w-full h-40 p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
         placeholder="Type or paste text here..."
@@ -88,7 +83,6 @@ const SpellChecker = () => {
         onChange={(e) => setText(e.target.value)}
       ></textarea>
 
-      {/* Buttons */}
       <div className="flex flex-wrap gap-3 mt-3">
         <button
           className="flex-1 px-4 py-2 rounded-lg border hover:border-secondary transition flex items-center justify-center"
@@ -119,17 +113,28 @@ const SpellChecker = () => {
         </button>
       </div>
 
-      {/* Display corrected text */}
       <div
         className="mt-3 p-3 border rounded-lg bg-gray-50 cursor-pointer h-40 overflow-auto"
         dangerouslySetInnerHTML={{ __html: checkedText }}
         onClick={handleMisspelledClick}
       ></div>
 
-      {/* Dictionary Info */}
       <p className="mt-3 text-sm text-gray-600">
         Click on a red word to correct it or add it to the dictionary.
       </p>
+
+      {/* Coming Soon Section */}
+      <div className="mt-5 p-4 bg-blue-100 rounded-lg border border-blue-300">
+        <h3 className="font-semibold text-blue-700">New Features Coming Soon</h3>
+        <p className="text-sm text-blue-600">
+          Stay tuned for future updates including:
+        </p>
+        <ul className="list-disc list-inside text-blue-600">
+          <li>Synonym Suggestions</li>
+          <li>Dictionary Integration</li>
+          <li>Improved Correction Algorithms</li>
+        </ul>
+      </div>
     </div>
   );
 };

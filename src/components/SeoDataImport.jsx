@@ -3,6 +3,15 @@ import CodeMinifier from "@/staticData/seoData/CodeMinifier";
 import FindAndReplace from "@/staticData/seoData/FindAndReplace";
 import GrammarChecker from "@/staticData/seoData/GrammarChecker";
 import HashGenerator from "@/staticData/seoData/HashGenerator";
+import ImageBackgroundRemover from "@/staticData/seoData/ImageBackgroundRemover";
+import ImageCollageMaker from "@/staticData/seoData/ImageCollageMaker";
+import ImageColorAdjuster from "@/staticData/seoData/ImageColorAdjuster";
+import ImageCompressor from "@/staticData/seoData/ImageCompressor";
+import ImageConverter from "@/staticData/seoData/ImageConverter";
+import ImageCropper from "@/staticData/seoData/ImageCropper";
+import ImageEnhancer from "@/staticData/seoData/ImageEnhancer";
+import ImageResizer from "@/staticData/seoData/ImageResizer";
+import ImageWatermarker from "@/staticData/seoData/ImageWatermarker";
 import JSONFormatter from "@/staticData/seoData/JSONFormatter";
 import LoremIpsumGenerator from "@/staticData/seoData/LoremIpsumGenerator";
 import MarkdownPreviewer from "@/staticData/seoData/MarkdownPreviewer";
@@ -41,7 +50,17 @@ const SeoDataImport = {
   JSONFormatter,
   RegexTester,
   CodeMinifier,
-  MarkdownPreviewer
+  MarkdownPreviewer,
+  ImageResizer,
+  ImageConverter,
+  ImageCompressor,
+  ImageCropper,
+  ImageEnhancer,
+  ImageWatermarker,
+  ImageBackgroundRemover,
+  ImageCollageMaker,
+  ImageColorAdjuster,
+  
 };
 
 export default SeoDataImport;
