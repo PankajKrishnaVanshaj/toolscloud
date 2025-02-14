@@ -35,6 +35,15 @@ export default function sitemap() {
     "/image-collage-maker/tool",
     "/image-color-adjuster/tool",
     "/image-background-remover/tool",
+
+    '/pdf-to-word/tool',
+    '/pdf-to-image/tool',
+    '/merge-pdfs/tool',
+    '/split-pdf/tool',
+    '/compress-pdf/tool',
+    '/pdf-editor/tool',
+    '/pdf-watermark/tool',
+    '/pdf-converter/tool'
   ];
 
   return pages.map((page) => ({
