@@ -1,5 +1,6 @@
 import BarcodeGenerator from "@/staticData/seoData/BarcodeGenerator";
 import CodeMinifier from "@/staticData/seoData/CodeMinifier";
+import CompressPDF from "@/staticData/seoData/CompressPDF";
 import FindAndReplace from "@/staticData/seoData/FindAndReplace";
 import GrammarChecker from "@/staticData/seoData/GrammarChecker";
 import HashGenerator from "@/staticData/seoData/HashGenerator";
@@ -15,12 +16,19 @@ import ImageWatermarker from "@/staticData/seoData/ImageWatermarker";
 import JSONFormatter from "@/staticData/seoData/JSONFormatter";
 import LoremIpsumGenerator from "@/staticData/seoData/LoremIpsumGenerator";
 import MarkdownPreviewer from "@/staticData/seoData/MarkdownPreviewer";
+import MergePDFs from "@/staticData/seoData/MergePDFs";
+import PDFConverter from "@/staticData/seoData/PDFConverter";
+import PDFEditor from "@/staticData/seoData/PDFEditor";
+import PDFToImage from "@/staticData/seoData/PDFToImage";
+import PdfToWord from "@/staticData/seoData/PdfToWord";
+import PDFWatermark from "@/staticData/seoData/PDFWatermark";
 import QRCodeGenerator from "@/staticData/seoData/QRCodeGenerator";
 import QuoteValidator from "@/staticData/seoData/QuoteValidator";
 import RandomNumberGenerator from "@/staticData/seoData/RandomNumberGenerator";
 import RandomPasswordGenerator from "@/staticData/seoData/RandomPasswordGenerator";
 import RegexTester from "@/staticData/seoData/RegexTester";
 import SpellChecker from "@/staticData/seoData/SpellChecker";
+import SplitPDF from "@/staticData/seoData/SplitPDF";
 import TextBeautifier from "@/staticData/seoData/TextBeautifier";
 import TextCaseConverter from "@/staticData/seoData/TextCaseConverter";
 import TextDuplicatorChecker from "@/staticData/seoData/TextDuplicatorChecker";
@@ -60,7 +68,14 @@ const SeoDataImport = {
   ImageBackgroundRemover,
   ImageCollageMaker,
   ImageColorAdjuster,
-  
+  PdfToWord,
+  PDFToImage,
+  MergePDFs,
+  SplitPDF,
+  CompressPDF,
+  PDFEditor,
+  PDFWatermark,
+  PDFConverter,
 };
 
 export default SeoDataImport;

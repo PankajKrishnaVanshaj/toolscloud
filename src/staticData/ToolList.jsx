@@ -35,6 +35,8 @@ import {
   MdHttp,
   MdOutlineNumbers,
   MdQrCode2,
+  MdEditDocument,
+  MdWaterDrop,
 } from "react-icons/md";
 import { LuScanBarcode } from "react-icons/lu";
 import SeoDataImport from "@/components/SeoDataImport";
@@ -325,7 +327,7 @@ const ToolList = [
         icon: <MdOutlineCreate />,
         desc: "Convert PDF files into editable Word documents.",
         code: "PDFToWord",
-        // seo:PDFToWord
+        seo:SeoDataImport.PdfToWord
       },
       {
         name: "PDF to Image",
@@ -333,7 +335,7 @@ const ToolList = [
         icon: <MdPictureAsPdf />,
         desc: "Convert PDF pages into high-quality images.",
         code: "PDFToImage",
-        // seo:PDFToImage
+        seo:SeoDataImport.PDFToImage
       },
       {
         name: "Merge PDFs",
@@ -341,7 +343,7 @@ const ToolList = [
         icon: <MdPictureAsPdf />,
         desc: "Combine multiple PDF files into a single document.",
         code: "MergePDFs",
-        // seo:MergePDFs
+        seo:SeoDataImport.MergePDFs
       },
       {
         name: "Split PDF",
@@ -349,7 +351,7 @@ const ToolList = [
         icon: <MdPictureAsPdf />,
         desc: "Extract pages or split large PDFs into smaller files.",
         code: "SplitPDF",
-        // seo:SplitPDF
+        seo:SeoDataImport.SplitPDF
       },
       {
         name: "Compress PDF",
@@ -357,8 +359,33 @@ const ToolList = [
         icon: <MdPictureAsPdf />,
         desc: "Reduce the file size of PDFs without losing quality.",
         code: "CompressPDF",
-        // seo:CompressPDF
+        seo:SeoDataImport.CompressPDF
       },
+      {
+        name: "PDF Editor",
+        slug: "pdf-editor",
+        icon: <MdEditDocument />,
+        desc: "Edit text, images, and annotations within PDFs.",
+        code: "PDFEditor",
+        seo:SeoDataImport.PDFEditor
+      },
+      {
+        name: "PDF Watermark",
+        slug: "pdf-watermark",
+        icon: <MdWaterDrop />,
+        desc: "Add watermarks to PDFs for branding or copyright protection.",
+        code: "PDFWatermark",
+        seo:SeoDataImport.PDFWatermark
+      },
+      {
+        name: "PDF Converter",
+        slug: "pdf-converter",
+        icon: <MdOutlineCreate />,
+        desc: "Convert PDF files into various formats like Word, Excel, and images.",
+        code: "PDFConverter",
+        seo:SeoDataImport.PDFConverter
+      }
+      
     ],
   },
   {
