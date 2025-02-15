@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 
-// Atomic weights for common elements
+// Comprehensive atomic weights list
 const atomicWeights = {
   H: 1.008,
   He: 4.0026,
@@ -24,15 +24,81 @@ const atomicWeights = {
   Ar: 39.948,
   K: 39.098,
   Ca: 40.078,
+  Sc: 44.955,
+  Ti: 47.867,
+  V: 50.942,
+  Cr: 51.996,
+  Mn: 54.938,
   Fe: 55.845,
+  Co: 58.933,
+  Ni: 58.693,
   Cu: 63.546,
   Zn: 65.38,
+  Ga: 69.723,
+  Ge: 72.63,
+  As: 74.922,
+  Se: 78.971,
+  Br: 79.904,
+  Kr: 83.798,
+  Rb: 85.468,
+  Sr: 87.62,
+  Y: 88.906,
+  Zr: 91.224,
+  Nb: 92.906,
+  Mo: 95.95,
+  Tc: 98,
+  Ru: 101.07,
+  Rh: 102.91,
+  Pd: 106.42,
   Ag: 107.87,
+  Cd: 112.41,
+  In: 114.82,
+  Sn: 118.71,
+  Sb: 121.76,
+  Te: 127.60,
+  I: 126.90,
+  Xe: 131.29,
+  Cs: 132.91,
+  Ba: 137.33,
+  La: 138.91,
+  Ce: 140.12,
+  Pr: 140.91,
+  Nd: 144.24,
+  Pm: 145,
+  Sm: 150.36,
+  Eu: 151.96,
+  Gd: 157.25,
+  Tb: 158.93,
+  Dy: 162.50,
+  Ho: 164.93,
+  Er: 167.26,
+  Tm: 168.93,
+  Yb: 173.05,
+  Lu: 174.97,
+  Hf: 178.49,
+  Ta: 180.95,
+  W: 183.84,
+  Re: 186.21,
+  Os: 190.23,
+  Ir: 192.22,
+  Pt: 195.08,
   Au: 196.97,
+  Hg: 200.59,
+  Tl: 204.38,
   Pb: 207.2,
+  Bi: 208.98,
+  Po: 209,
+  At: 210,
+  Rn: 222,
+  Fr: 223,
+  Ra: 226,
+  Ac: 227,
+  Th: 232.04,
+  Pa: 231.04,
+  U: 238.03,
 };
 
-// Function to parse chemical formula and calculate molecular weight
+// Function to calculate molecular weight
 const calculateMolecularWeight = (formula) => {
   const elementRegex = /([A-Z][a-z]?)(\d*)/g;
   let molecularWeight = 0;
@@ -61,12 +127,14 @@ const MolecularWeightCalculator = () => {
   };
 
   return (
-    <div className="mx-auto p-6 bg-white shadow-lg rounded-lg">
+    <div className="mx-auto max-w-md p-6 bg-white shadow-lg rounded-lg border border-gray-200">
+      {/* Title */}
+      <h1 className="text-2xl font-bold mb-4 text-gray-800">Molecular Weight Calculator</h1>
 
       {/* Formula Input */}
       <input
         type="text"
-        className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+        className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:outline-none"
         placeholder="Enter chemical formula (e.g., H2O, CO2, C6H12O6)"
         value={formula}
         onChange={(e) => setFormula(e.target.value)}
@@ -75,14 +143,15 @@ const MolecularWeightCalculator = () => {
       {/* Calculate Button */}
       <button
         onClick={handleCalculate}
-        className="mt-3 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
+        className="mt-4 w-full px-4 py-2 bg-primary text-white font-semibold rounded-lg hover:bg-primary/90 transition"
       >
         Calculate
       </button>
 
       {/* Result */}
-      <div className="mt-4 p-3 border rounded-lg bg-gray-100">
-        Molecular Weight: <strong>{result ? result + " g/mol" : "N/A"}</strong>
+      <div className="mt-4 p-4 border rounded-lg bg-gray-100">
+        <span className="text-gray-800 font-medium">Molecular Weight:</span>{" "}
+        <strong className="text-gray-900">{result ? `${result} g/mol` : "N/A"}</strong>
       </div>
     </div>
   );

@@ -37,6 +37,7 @@ import {
   MdQrCode2,
   MdEditDocument,
   MdWaterDrop,
+  MdQrCodeScanner,
 } from "react-icons/md";
 import { LuScanBarcode } from "react-icons/lu";
 import SeoDataImport from "@/components/SeoDataImport";
@@ -400,7 +401,7 @@ const ToolList = [
         icon: <MdStraighten />,
         desc: "Convert length measurements between different units such as meters, feet, and inches.",
         code: "LengthConverter",
-        // seo:LengthConverter
+        seo:SeoDataImport.LengthConverter
       },
       {
         name: "Weight Converter",
@@ -408,7 +409,7 @@ const ToolList = [
         icon: <MdStraighten />,
         desc: "Easily convert weight units like kilograms, pounds, and grams.",
         code: "WeightConverter",
-        // seo:WeightConverter
+        seo:SeoDataImport.WeightConverter
       },
       {
         name: "Temperature Converter",
@@ -416,7 +417,7 @@ const ToolList = [
         icon: <MdStraighten />,
         desc: "Convert temperatures between Celsius, Fahrenheit, and Kelvin.",
         code: "TemperatureConverter",
-        // seo:TemperatureConverter
+        seo:SeoDataImport.TemperatureConverter
       },
       {
         name: "Volume Converter",
@@ -424,7 +425,7 @@ const ToolList = [
         icon: <MdStraighten />,
         desc: "Convert volume units such as liters, milliliters, and gallons.",
         code: "VolumeConverter",
-        // seo:VolumeConverter
+        seo:SeoDataImport.VolumeConverter
       },
       {
         name: "Speed Converter",
@@ -432,7 +433,7 @@ const ToolList = [
         icon: <MdStraighten />,
         desc: "Convert speed units like kilometers per hour, miles per hour, and meters per second.",
         code: "SpeedConverter",
-        // seo:SpeedConverter
+        seo:SeoDataImport.SpeedConverter
       },
     ],
   },
@@ -448,7 +449,7 @@ const ToolList = [
         icon: <MdAccessTime />,
         desc: "Convert time between different time zones worldwide.",
         code: "TimeZoneConverter",
-        // seo:TimeZoneConverter
+        seo:SeoDataImport.TimeZoneConverter
       },
       {
         name: "Epoch Time Converter",
@@ -456,7 +457,7 @@ const ToolList = [
         icon: <MdAccessTime />,
         desc: "Convert Unix epoch timestamps to human-readable dates and vice versa.",
         code: "EpochTimeConverter",
-        // seo:EpochTimeConverter
+        seo:SeoDataImport.EpochTimeConverter
       },
       {
         name: "Date to Timestamp",
@@ -464,7 +465,7 @@ const ToolList = [
         icon: <MdAccessTime />,
         desc: "Generate a timestamp from a given date and time.",
         code: "DateToTimestamp",
-        // seo:DateToTimestamp
+        seo:SeoDataImport.DateToTimestamp
       },
       {
         name: "Stopwatch",
@@ -472,7 +473,7 @@ const ToolList = [
         icon: <MdAccessTime />,
         desc: "A simple online stopwatch to track time accurately.",
         code: "Stopwatch",
-        // seo:Stopwatch
+        seo:SeoDataImport.Stopwatch
       },
       {
         name: "Countdown Timer",
@@ -480,7 +481,7 @@ const ToolList = [
         icon: <MdAccessTime />,
         desc: "Set a countdown timer for any duration with alerts.",
         code: "CountdownTimer",
-        // seo:CountdownTimer
+        seo:SeoDataImport.CountdownTimer
       },
     ],
   },
@@ -496,7 +497,7 @@ const ToolList = [
         icon: <MdTransform />,
         desc: "Convert CSV data to JSON format easily.",
         code: "CsvToJson",
-        // seo: CsvToJson
+        seo: SeoDataImport.CsvToJsonConverter
       },
       {
         name: "JSON to XML",
@@ -504,7 +505,7 @@ const ToolList = [
         icon: <MdTransform />,
         desc: "Convert JSON data to XML format for seamless integration.",
         code: "JsonToXml",
-        // seo:JsonToXml
+        seo:SeoDataImport.JsonToXmlConverter
       },
       {
         name: "YAML to JSON",
@@ -512,7 +513,7 @@ const ToolList = [
         icon: <MdTransform />,
         desc: "Convert YAML data to JSON format effortlessly.",
         code: "YamlToJson",
-        // seo:YamlToJson
+        seo:SeoDataImport.YamlToJsonConverter
       },
       {
         name: "Base64 Encoder",
@@ -520,7 +521,7 @@ const ToolList = [
         icon: <MdSecurity />,
         desc: "Encode text or files to Base64 format.",
         code: "Base64Encoder",
-        // seo:Base64Encoder
+        seo:SeoDataImport.Base64Encoder
       },
       {
         name: "Base64 Decoder",
@@ -528,7 +529,7 @@ const ToolList = [
         icon: <MdTransform />,
         desc: "Decode Base64-encoded text or files back to their original form.",
         code: "Base64Decoder",
-        // seo:Base64Decoder
+        seo:SeoDataImport.Base64Decoder
       },
       {
         name: "URL Encoder",
@@ -536,7 +537,7 @@ const ToolList = [
         icon: <MdTransform />,
         desc: "Encode special characters in URLs to make them safe for web use.",
         code: "URLEncoder",
-        // seo:URLEncoder
+        seo:SeoDataImport.URLEncoder
       },
       {
         name: "URL Decoder",
@@ -544,7 +545,7 @@ const ToolList = [
         icon: <MdTransform />,
         desc: "Decode encoded URLs back to their original readable format.",
         code: "URLDecoder",
-        // seo:URLDecoder
+        seo:SeoDataImport.URLDecoder
       },
     ],
   },
@@ -560,7 +561,7 @@ const ToolList = [
         icon: <MdScience />,
         desc: "Calculate the molecular weight of chemical compounds based on their molecular formulas.",
         code: "MolecularWeightCalculator",
-        // seo:MolecularWeightCalculator
+        seo:SeoDataImport.MolecularWeightCalculator
       },
       {
         name: "Physics Unit Converter",
@@ -568,7 +569,7 @@ const ToolList = [
         icon: <MdScience />,
         desc: "Convert between different physics units for length, mass, energy, and more.",
         code: "PhysicsUnitConverter",
-        // seo:PhysicsUnitConverter
+        seo:SeoDataImport.PhysicsUnitConverter
       },
       {
         name: "Chemical Equation Balancer",
@@ -584,7 +585,7 @@ const ToolList = [
         icon: <MdScience />,
         desc: "Convert astronomical units such as light-years, parsecs, and AU.",
         code: "AstronomicalUnitConverter",
-        // seo:AstronomicalUnitConverter
+        seo:SeoDataImport.AstronomicalUnitConverter
       },
       {
         name: "Periodic Table Explorer",
@@ -592,7 +593,7 @@ const ToolList = [
         icon: <MdScience />,
         desc: "Explore detailed information about elements in the periodic table.",
         code: "PeriodicTableExplorer",
-        // seo:PeriodicTableExplorer
+        seo:SeoDataImport.PeriodicTableExplorer
       },
     ],
   },
@@ -609,7 +610,7 @@ const ToolList = [
         icon: <MdSecurity />,
         desc: "Evaluate the strength of your password and get security recommendations.",
         code: "PasswordStrengthChecker",
-        // seo: PasswordStrengthChecker
+        seo: SeoDataImport.PasswordStrengthChecker
       },
 
       {
@@ -618,7 +619,7 @@ const ToolList = [
         icon: <MdSecurity />,
         desc: "Check if an email address is valid, properly formatted, and exists.",
         code: "EmailValidator",
-        // seo:EmailValidator
+        seo:SeoDataImport.EmailValidator
       },
     ],
   },
@@ -635,7 +636,7 @@ const ToolList = [
         icon: <MdCalculate />,
         desc: "Perform advanced mathematical calculations with a scientific calculator.",
         code: "ScientificCalculator",
-        // seo:ScientificCalculator
+        seo:SeoDataImport.ScientificCalculator
       },
       {
         name: "Equation Solver",
@@ -643,7 +644,7 @@ const ToolList = [
         icon: <MdCalculate />,
         desc: "Solve linear and quadratic equations instantly.",
         code: "EquationSolver",
-        // seo:EquationSolver
+        seo:SeoDataImport.EquationSolver
       },
       {
         name: "Factorial Calculator",
@@ -651,7 +652,7 @@ const ToolList = [
         icon: <MdCalculate />,
         desc: "Calculate the factorial of any number easily.",
         code: "FactorialCalculator",
-        // seo:FactorialCalculator
+        seo:SeoDataImport.FactorialCalculator
       },
       {
         name: "Matrix Calculator",
@@ -659,7 +660,7 @@ const ToolList = [
         icon: <MdCalculate />,
         desc: "Perform matrix operations like addition, multiplication, and inverses.",
         code: "MatrixCalculator",
-        // seo:MatrixCalculator
+        seo:SeoDataImport.MatrixCalculator
       },
       {
         name: "Percentage Calculator",
@@ -667,7 +668,7 @@ const ToolList = [
         icon: <MdCalculate />,
         desc: "Easily compute percentages for discounts, taxes, and profit margins.",
         code: "PercentageCalculator",
-        // seo:PercentageCalculator
+        seo:SeoDataImport.PercentageCalculator
       },
     ],
   },
@@ -683,7 +684,7 @@ const ToolList = [
         icon: <MdPalette />,
         desc: "Pick and preview colors with HEX, RGB, and HSL values.",
         code: "ColorPicker",
-        // seo:ColorPicker
+        seo:SeoDataImport.ColorPicker
       },
       {
         name: "Hex to RGB",
@@ -691,7 +692,7 @@ const ToolList = [
         icon: <MdPalette />,
         desc: "Convert HEX color codes to RGB and vice versa.",
         code: "HexToRGB",
-        // seo:HexToRGB
+        seo:SeoDataImport.HexToRgbConverter
       },
       {
         name: "Color Gradient Generator",
@@ -699,7 +700,7 @@ const ToolList = [
         icon: <MdPalette />,
         desc: "Create beautiful color gradients with CSS code output.",
         code: "GradientGenerator",
-        // seo:GradientGenerator
+        seo:SeoDataImport.ColorGradientGenerator
       },
       {
         name: "Contrast Checker",
@@ -707,7 +708,7 @@ const ToolList = [
         icon: <MdPalette />,
         desc: "Check color contrast for accessibility and readability compliance.",
         code: "ContrastChecker",
-        // seo:ContrastChecker
+        seo:SeoDataImport.ContrastChecker
       },
       {
         name: "Palette Generator",
@@ -715,7 +716,7 @@ const ToolList = [
         icon: <MdPalette />,
         desc: "Generate harmonious color palettes for design projects.",
         code: "PaletteGenerator",
-        // seo:PaletteGenerator
+        seo:SeoDataImport.PaletteGenerator
       },
     ],
   },
@@ -731,7 +732,7 @@ const ToolList = [
         icon: <MdAttachMoney />,
         desc: "Convert currencies with real-time exchange rates.",
         code: "CurrencyConverter",
-        // seo:CurrencyConverter
+        seo:SeoDataImport.CurrencyConverter
       },
       {
         name: "Loan Calculator",
@@ -739,7 +740,7 @@ const ToolList = [
         icon: <MdAttachMoney />,
         desc: "Calculate monthly payments and total interest for loans.",
         code: "LoanCalculator",
-        // seo:LoanCalculator
+        seo:SeoDataImport.LoanCalculator
       },
       {
         name: "Tax Calculator",
@@ -747,7 +748,7 @@ const ToolList = [
         icon: <MdAttachMoney />,
         desc: "Compute taxes based on income and deductions.",
         code: "TaxCalculator",
-        // seo:TaxCalculator
+        seo:SeoDataImport.TaxCalculator
       },
       {
         name: "Investment Calculator",
@@ -755,7 +756,7 @@ const ToolList = [
         icon: <MdAttachMoney />,
         desc: "Project potential investment growth over time.",
         code: "InvestmentCalculator",
-        // seo:InvestmentCalculator
+        seo:SeoDataImport.InvestmentCalculator
       },
       {
         name: "Retirement Savings Calculator",
@@ -763,7 +764,7 @@ const ToolList = [
         icon: <MdAttachMoney />,
         desc: "Plan your retirement savings and estimate future value.",
         code: "RetirementCalculator",
-        // seo:RetirementCalculator
+        seo:SeoDataImport.RetirementSavingsCalculator
       },
     ],
   },
@@ -780,15 +781,17 @@ const ToolList = [
         icon: <MdBuild />,
         desc: "Scan barcodes and retrieve product details instantly.",
         code: "BarcodeScanner",
-        // seo:BarcodeScanner
+        seo:SeoDataImport.BarcodeScanner
       },
       {
-        name: "Clipboard Manager",
-        slug: "clipboard-manager",
-        icon: <MdBuild />,
-        desc: "Manage and organize your copied text efficiently.",
-        code: "clipboardManager",
+        name: "QR Code Scanner",
+        slug: "qr-code-scanner",
+        icon: <MdQrCodeScanner />,
+        desc: "Scan QR codes to access links, product info, or promotions.",
+        code: "QRCodeScanner",
+        seo: SeoDataImport.QRCodeScanner
       },
+     
     ],
   },
 ];

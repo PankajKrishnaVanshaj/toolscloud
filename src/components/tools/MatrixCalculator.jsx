@@ -3,40 +3,46 @@
 import { useState } from "react";
 
 const MatrixCalculator = () => {
-  const [matrixA, setMatrixA] = useState([
-    [0, 0],
-    [0, 0],
-  ]);
-  const [matrixB, setMatrixB] = useState([
-    [0, 0],
-    [0, 0],
-  ]);
+  const [rows, setRows] = useState(2);
+  const [cols, setCols] = useState(2);
+  const [matrixA, setMatrixA] = useState(Array.from({ length: 2 }, () => Array(2).fill(0)));
+  const [matrixB, setMatrixB] = useState(Array.from({ length: 2 }, () => Array(2).fill(0)));
   const [result, setResult] = useState(null);
   const [operation, setOperation] = useState("add");
 
-  // Function to handle input change
+  // Function to handle input change for matrix values
   const handleInputChange = (matrix, row, col, value) => {
-    const newMatrix = matrix === "A" ? [...matrixA] : [...matrixB];
+    const newMatrix = matrix === "A" 
+      ? matrixA.map((r) => [...r]) 
+      : matrixB.map((r) => [...r]);
     newMatrix[row][col] = parseFloat(value) || 0;
     matrix === "A" ? setMatrixA(newMatrix) : setMatrixB(newMatrix);
   };
 
-  // Function to add matrices
-  const addMatrices = () => {
-    return matrixA.map((row, i) => row.map((val, j) => val + matrixB[i][j]));
+  // Function to resize matrices
+  const resizeMatrices = () => {
+    const newMatrixA = Array.from({ length: rows }, (_, i) =>
+      Array.from({ length: cols }, (_, j) => (matrixA[i]?.[j] || 0))
+    );
+    const newMatrixB = Array.from({ length: rows }, (_, i) =>
+      Array.from({ length: cols }, (_, j) => (matrixB[i]?.[j] || 0))
+    );
+    setMatrixA(newMatrixA);
+    setMatrixB(newMatrixB);
   };
 
+  // Function to add matrices
+  const addMatrices = () => matrixA.map((row, i) => row.map((val, j) => val + matrixB[i][j]));
+
   // Function to subtract matrices
-  const subtractMatrices = () => {
-    return matrixA.map((row, i) => row.map((val, j) => val - matrixB[i][j]));
-  };
+  const subtractMatrices = () => matrixA.map((row, i) => row.map((val, j) => val - matrixB[i][j]));
 
   // Function to multiply matrices
   const multiplyMatrices = () => {
-    const rowsA = matrixA.length,
-      colsA = matrixA[0].length;
-    const rowsB = matrixB.length,
-      colsB = matrixB[0].length;
+    const rowsA = matrixA.length;
+    const colsA = matrixA[0].length;
+    const rowsB = matrixB.length;
+    const colsB = matrixB[0].length;
 
     if (colsA !== rowsB) return "Invalid Dimensions for Multiplication";
 
@@ -54,7 +60,7 @@ const MatrixCalculator = () => {
     return resultMatrix;
   };
 
-  // Function to perform selected operation
+  // Function to perform the selected operation
   const calculate = () => {
     let res;
     switch (operation) {
@@ -73,8 +79,16 @@ const MatrixCalculator = () => {
     setResult(res);
   };
 
+  // Function to clear matrices and result
+  const clearMatrices = () => {
+    setMatrixA(Array.from({ length: rows }, () => Array(cols).fill(0)));
+    setMatrixB(Array.from({ length: rows }, () => Array(cols).fill(0)));
+    setResult(null); // Clear the result
+  };
+
   return (
-    <div className="mx-auto p-6 bg-white shadow-lg rounded-lg">
+    <div className="mx-auto p-6 bg-white shadow-lg rounded-lg max-w-lg">
+      <h1 className="text-2xl font-bold mb-4">Matrix Calculator</h1>
 
       <div className="mb-4">
         <label className="font-medium">Select Operation:</label>
@@ -89,8 +103,35 @@ const MatrixCalculator = () => {
         </select>
       </div>
 
+      <div className="mb-4">
+        <label className="font-medium">Matrix Size:</label>
+        <div className="flex space-x-2 mt-2">
+          <input
+            type="number"
+            min="1"
+            value={rows}
+            onChange={(e) => setRows(Number(e.target.value))}
+            className="w-20 p-2 border rounded text-center"
+            placeholder="Rows"
+          />
+          <input
+            type="number"
+            min="1"
+            value={cols}
+            onChange={(e) => setCols(Number(e.target.value))}
+            className="w-20 p-2 border rounded text-center"
+            placeholder="Columns"
+          />
+          <button
+            className="p-2 bg-primary text-white rounded hover:bg-primary/90"
+            onClick={resizeMatrices}
+          >
+            Set Size
+          </button>
+        </div>
+      </div>
+
       <div className="grid grid-cols-2 gap-4">
-        {/* Matrix A */}
         <div>
           <h3 className="text-lg font-medium mb-2">Matrix A</h3>
           {matrixA.map((row, i) => (
@@ -108,7 +149,6 @@ const MatrixCalculator = () => {
           ))}
         </div>
 
-        {/* Matrix B */}
         <div>
           <h3 className="text-lg font-medium mb-2">Matrix B</h3>
           {matrixB.map((row, i) => (
@@ -128,10 +168,17 @@ const MatrixCalculator = () => {
       </div>
 
       <button
-        className="w-full mt-4 p-2 bg-blue-500 text-white rounded"
+        className="w-full mt-4 p-2 bg-primary text-white rounded hover:bg-primary/90"
         onClick={calculate}
       >
         Calculate
+      </button>
+
+      <button
+        className="w-full mt-2 p-2 bg-gray-400 text-white rounded hover:bg-gray-500"
+        onClick={clearMatrices}
+      >
+        Clear
       </button>
 
       {result && (

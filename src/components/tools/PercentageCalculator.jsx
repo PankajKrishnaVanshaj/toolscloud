@@ -13,20 +13,46 @@ const PercentageCalculator = () => {
   // Function to calculate percentage
   const calculate = () => {
     let res = 0;
+
     switch (operation) {
       case "percentOf":
+        if (!num || !percentage) return setResult("Please fill in all fields.");
         res = (percentage / 100) * num;
         break;
       case "percentChange":
+        if (!initialValue || !finalValue) return setResult("Please fill in all fields.");
         res = ((finalValue - initialValue) / initialValue) * 100;
         break;
       case "findTotal":
+        if (!num || !percentage) return setResult("Please fill in all fields.");
         res = (num / percentage) * 100;
+        break;
+      case "increaseByPercentage":
+        if (!num || !percentage) return setResult("Please fill in all fields.");
+        res = num * (1 + percentage / 100);
+        break;
+      case "decreaseByPercentage":
+        if (!num || !percentage) return setResult("Please fill in all fields.");
+        res = num * (1 - percentage / 100);
+        break;
+      case "reversePercentage":
+        if (!num || !initialValue) return setResult("Please fill in all fields.");
+        res = (num / initialValue) * 100;
         break;
       default:
         res = "Invalid Operation";
     }
+
     setResult(res.toFixed(2));
+  };
+
+  // Clear all fields
+  const clearFields = () => {
+    setNum("");
+    setPercentage("");
+    setInitialValue("");
+    setFinalValue("");
+    setResult(null);
   };
 
   return (
@@ -43,6 +69,9 @@ const PercentageCalculator = () => {
           <option value="percentOf">Find Percentage of a Number</option>
           <option value="percentChange">Calculate Percentage Change</option>
           <option value="findTotal">Find Total from Percentage</option>
+          <option value="increaseByPercentage">Increase by Percentage</option>
+          <option value="decreaseByPercentage">Decrease by Percentage</option>
+          <option value="reversePercentage">Find What Percentage One Number is of Another</option>
         </select>
       </div>
 
@@ -103,11 +132,56 @@ const PercentageCalculator = () => {
         </div>
       )}
 
+      {["increaseByPercentage", "decreaseByPercentage"].includes(operation) && (
+        <div className="flex flex-col gap-3">
+          <input
+            type="number"
+            placeholder="Enter Number"
+            value={num}
+            onChange={(e) => setNum(e.target.value)}
+            className="w-full p-2 border rounded"
+          />
+          <input
+            type="number"
+            placeholder="Enter Percentage"
+            value={percentage}
+            onChange={(e) => setPercentage(e.target.value)}
+            className="w-full p-2 border rounded"
+          />
+        </div>
+      )}
+
+      {operation === "reversePercentage" && (
+        <div className="flex flex-col gap-3">
+          <input
+            type="number"
+            placeholder="Enter Part Value"
+            value={num}
+            onChange={(e) => setNum(e.target.value)}
+            className="w-full p-2 border rounded"
+          />
+          <input
+            type="number"
+            placeholder="Enter Total Value"
+            value={initialValue}
+            onChange={(e) => setInitialValue(e.target.value)}
+            className="w-full p-2 border rounded"
+          />
+        </div>
+      )}
+
       <button
-        className="w-full mt-4 p-2 bg-blue-500 text-white rounded"
+        className="w-full mt-4 p-2 bg-primary text-white rounded"
         onClick={calculate}
       >
         Calculate
+      </button>
+
+      <button
+        className="w-full mt-2 p-2 bg-gray-300 rounded"
+        onClick={clearFields}
+      >
+        Clear
       </button>
 
       {result !== null && (

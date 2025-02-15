@@ -40,25 +40,85 @@ const JsonToXml = () => {
     }
   };
 
+  // Handle file upload with proper JSON validation
+  const handleFileUpload = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        try {
+          const parsedJson = JSON.parse(event.target.result); // Validate JSON
+          setJsonInput(JSON.stringify(parsedJson, null, 2)); // Pretty-print JSON in the textarea
+        } catch (error) {
+          setJsonInput(""); // Clear input on invalid JSON
+          setXmlOutput("Invalid JSON format. Please upload a valid JSON file.");
+        }
+      };
+      reader.readAsText(file);
+    }
+  };
+
+  // Handle download of XML
+  const handleDownload = () => {
+    const blob = new Blob([xmlOutput], { type: "application/xml" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = "output.xml";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  // Handle copy to clipboard
+  const handleCopy = () => {
+    navigator.clipboard.writeText(xmlOutput).then(() => {
+      alert("Copied to clipboard!");
+    });
+  };
+
+  // Handle clear input and output
+  const handleClear = () => {
+    setJsonInput("");
+    setXmlOutput("");
+  };
+
   return (
-    <div className="max-w-2xl mx-auto p-6 bg-white shadow-lg rounded-lg">
-      <h2 className="text-xl font-semibold mb-4">JSON to XML Converter</h2>
+    <div className="mx-auto p-6 bg-white shadow-lg rounded-lg">
+
+      {/* File Upload */}
+      <input
+        type="file"
+        accept=".json"
+        onChange={handleFileUpload}
+        className="mb-3"
+      />
 
       {/* JSON Input */}
       <textarea
-        className="w-full h-40 p-3 border rounded-lg focus:ring-2 focus:ring-blue-500"
-        placeholder='Enter JSON here...'
+        className="w-full h-40 p-3 border rounded-lg focus:ring-2 focus:ring-primary"
+        placeholder="Enter JSON here..."
         value={jsonInput}
         onChange={(e) => setJsonInput(e.target.value)}
       />
 
       {/* Convert Button */}
-      <button
-        onClick={handleConvert}
-        className="mt-3 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
-      >
-        Convert to XML
-      </button>
+      <div className="flex space-x-2 mt-3">
+        <button
+          onClick={handleConvert}
+          className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90"
+        >
+          Convert to XML
+        </button>
+
+        {/* Clear Button */}
+        <button
+          onClick={handleClear}
+          className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600"
+        >
+          Clear
+        </button>
+      </div>
 
       {/* XML Output */}
       <textarea
@@ -67,6 +127,24 @@ const JsonToXml = () => {
         value={xmlOutput}
         readOnly
       />
+
+      {/* Additional Buttons */}
+      {xmlOutput && (
+        <div className="flex justify-between mt-4">
+          <button
+            onClick={handleDownload}
+            className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90"
+          >
+            Download XML
+          </button>
+          <button
+            onClick={handleCopy}
+            className="px-4 py-2 bg-secondary text-white rounded-lg hover:bg-secondary/90"
+          >
+            Copy to Clipboard
+          </button>
+        </div>
+      )}
     </div>
   );
 };

@@ -21,36 +21,54 @@ const ScientificCalculator = () => {
 
   const handleEvaluate = () => {
     try {
-      setResult(eval(input).toString()); // Using eval (Ensure proper input validation for security)
+      setResult(eval(input).toString());
     } catch {
       setResult("Error");
     }
   };
 
+  // Factorial function
+  const factorial = (num) => {
+    if (num < 0) return "Error";
+    if (num === 0 || num === 1) return 1;
+    return num * factorial(num - 1);
+  };
+
   const handleFunction = (func) => {
     try {
+      let value = eval(input);
       let calculatedValue = "";
+
       switch (func) {
         case "sqrt":
-          calculatedValue = Math.sqrt(eval(input));
+          calculatedValue = Math.sqrt(value);
           break;
         case "log":
-          calculatedValue = Math.log10(eval(input));
+          calculatedValue = Math.log10(value);
           break;
         case "ln":
-          calculatedValue = Math.log(eval(input));
+          calculatedValue = Math.log(value);
           break;
         case "sin":
-          calculatedValue = Math.sin(eval(input));
+          calculatedValue = Math.sin(value);
           break;
         case "cos":
-          calculatedValue = Math.cos(eval(input));
+          calculatedValue = Math.cos(value);
           break;
         case "tan":
-          calculatedValue = Math.tan(eval(input));
+          calculatedValue = Math.tan(value);
           break;
         case "exp":
-          calculatedValue = Math.exp(eval(input));
+          calculatedValue = Math.exp(value);
+          break;
+        case "pow2":
+          calculatedValue = Math.pow(value, 2);
+          break;
+        case "percent":
+          calculatedValue = value / 100;
+          break;
+        case "factorial":
+          calculatedValue = factorial(value);
           break;
         default:
           calculatedValue = "Error";
@@ -62,16 +80,19 @@ const ScientificCalculator = () => {
   };
 
   return (
-    <div className="mx-auto p-6 bg-white shadow-lg rounded-lg">
-      
+    <div className="mx-auto p-6 bg-gray-100 shadow-lg rounded-lg max-w-md">
+      <h1 className="text-2xl font-bold text-center mb-4">Scientific Calculator</h1>
 
-      <div className="mb-3 p-3 bg-gray-100 rounded-lg text-right text-xl">
+      {/* Display Input */}
+      <div className="mb-3 p-3 bg-white rounded-lg text-right text-xl font-mono border border-gray-300">
         {input || "0"}
       </div>
-      <div className="mb-3 p-3 bg-gray-200 rounded-lg text-right text-lg">
+      {/* Display Result */}
+      <div className="mb-3 p-3 bg-gray-200 rounded-lg text-right text-lg font-mono border border-gray-300">
         {result || "Result"}
       </div>
 
+      {/* Buttons Grid */}
       <div className="grid grid-cols-4 gap-2">
         {/* Scientific Functions */}
         <button className="btn" onClick={() => handleFunction("sin")}>sin</button>
@@ -84,7 +105,11 @@ const ScientificCalculator = () => {
         <button className="btn" onClick={() => handleFunction("exp")}>exp</button>
         <button className="btn" onClick={handleDelete}>⌫</button>
 
-        {/* Digits and Basic Operators */}
+        <button className="btn" onClick={() => handleFunction("pow2")}>x²</button>
+        <button className="btn" onClick={() => handleFunction("percent")}>%</button>
+        <button className="btn" onClick={() => handleFunction("factorial")}>n!</button>
+
+        {/* Digits and Operators */}
         {["7", "8", "9", "/"].map((char) => (
           <button key={char} className="btn" onClick={() => handleClick(char)}>
             {char}
@@ -109,26 +134,27 @@ const ScientificCalculator = () => {
             {char}
           </button>
         ))}
-        
+
         {/* Clear Button */}
-        <button className="col-span-4 btn bg-red-500 hover:bg-red-600" onClick={handleClear}>
+        <button className="col-span-4 btn text-primary" onClick={handleClear}>
           Clear
         </button>
       </div>
 
+      {/* Styling */}
       <style jsx>{`
         .btn {
-          background: #f3f4f6;
-          padding: 10px;
+          background-color: #f3f4f6;
+          padding: 12px;
           font-size: 18px;
           font-weight: bold;
-          border-radius: 6px;
+          border-radius: 8px;
           text-align: center;
           cursor: pointer;
-          transition: background 0.2s;
+          transition: background-color 0.2s;
         }
         .btn:hover {
-          background: #e5e7eb;
+          background-color: #e5e7eb;
         }
       `}</style>
     </div>

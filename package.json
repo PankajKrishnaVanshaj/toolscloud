@@ -9,6 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "js-yaml": "^4.1.0",
     "jsbarcode": "^3.11.6",
     "next": "15.1.6",
     "pdf-lib": "^1.17.1",

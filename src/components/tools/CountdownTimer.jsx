@@ -42,7 +42,8 @@ const CountdownTimer = () => {
   // Handle input change
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setInputTime({ ...inputTime, [name]: Math.max(0, parseInt(value, 10) || 0) });
+    const parsedValue = Math.max(0, parseInt(value, 10) || 0);
+    setInputTime((prev) => ({ ...prev, [name]: parsedValue }));
   };
 
   // Set Countdown Time
@@ -78,7 +79,8 @@ const CountdownTimer = () => {
           value={inputTime.hours}
           onChange={handleChange}
           placeholder="HH"
-          className="w-16 p-2 border rounded-lg text-center"
+          className="w-16 p-2 border rounded-lg text-center focus:outline-blue-500"
+          disabled={isRunning}
         />
         <input
           type="number"
@@ -86,7 +88,8 @@ const CountdownTimer = () => {
           value={inputTime.minutes}
           onChange={handleChange}
           placeholder="MM"
-          className="w-16 p-2 border rounded-lg text-center"
+          className="w-16 p-2 border rounded-lg text-center focus:outline-blue-500"
+          disabled={isRunning}
         />
         <input
           type="number"
@@ -94,11 +97,15 @@ const CountdownTimer = () => {
           value={inputTime.seconds}
           onChange={handleChange}
           placeholder="SS"
-          className="w-16 p-2 border rounded-lg text-center"
+          className="w-16 p-2 border rounded-lg text-center focus:outline-blue-500"
+          disabled={isRunning}
         />
         <button
           onClick={setCountdownTime}
-          className="px-3 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
+          className={`px-3 py-2 rounded-lg text-white ${
+            isRunning ? "bg-gray-400" : "bg-blue-500 hover:bg-blue-600"
+          }`}
+          disabled={isRunning}
         >
           Set
         </button>
