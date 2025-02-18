@@ -38,6 +38,7 @@ import {
   MdEditDocument,
   MdWaterDrop,
   MdQrCodeScanner,
+  MdVideoLibrary,
 } from "react-icons/md";
 import { LuScanBarcode } from "react-icons/lu";
 import SeoDataImport from "@/components/SeoDataImport";
@@ -49,6 +50,14 @@ const ToolList = [
     desc: "Text formatting and conversion tools",
     icon: <MdTextFields />,
     tools: [
+      {
+        name: "Text to Image",
+        slug: "text-to-image",
+        icon: <MdOutlineSubtitles />,
+        desc: "Easily overlay custom text on your images with different fonts, colors, and styles.",
+        code: "TextToImage",
+        seo: SeoDataImport.TextToImageGenerator,
+      },
       {
         name: "Word and Character Counter",
         slug: "word-character-counter",
@@ -248,7 +257,7 @@ const ToolList = [
         icon: <MdStraighten />,
         desc: "Resize images to custom dimensions while maintaining quality.",
         code: "ImageResizer",
-        seo: SeoDataImport.ImageResizer
+        seo: SeoDataImport.ImageResizer,
       },
       {
         name: "Image Converter",
@@ -256,7 +265,7 @@ const ToolList = [
         icon: <MdTransform />,
         desc: "Convert images between different formats such as JPG, PNG, and WebP.",
         code: "ImageConverter",
-        seo:SeoDataImport.ImageConverter
+        seo: SeoDataImport.ImageConverter,
       },
       {
         name: "Image Compressor",
@@ -264,7 +273,7 @@ const ToolList = [
         icon: <MdImage />,
         desc: "Compress images to reduce file size without losing quality.",
         code: "ImageCompressor",
-        seo:SeoDataImport.ImageCompressor
+        seo: SeoDataImport.ImageCompressor,
       },
       {
         name: "Image Cropper",
@@ -272,7 +281,7 @@ const ToolList = [
         icon: <MdImage />,
         desc: "Crop images to specific dimensions or aspect ratios.",
         code: "ImageCropper",
-        seo:SeoDataImport.ImageCropper
+        seo: SeoDataImport.ImageCropper,
       },
       {
         name: "Image Enhancer",
@@ -280,7 +289,7 @@ const ToolList = [
         icon: <MdImage />,
         desc: "Enhance image quality with AI-powered adjustments.",
         code: "ImageEnhancer",
-        seo:SeoDataImport.ImageEnhancer
+        seo: SeoDataImport.ImageEnhancer,
       },
       {
         name: "Image Watermarker",
@@ -288,7 +297,7 @@ const ToolList = [
         icon: <MdImage />,
         desc: "Add text or image watermarks to protect your images.",
         code: "ImageWatermarker",
-        seo: SeoDataImport.ImageWatermarker
+        seo: SeoDataImport.ImageWatermarker,
       },
       {
         name: "Image Background Remover",
@@ -296,7 +305,7 @@ const ToolList = [
         icon: <MdImage />,
         desc: "Remove the background of images using AI for a transparent look.",
         code: "ImageBackgroundRemover",
-        seo: SeoDataImport.ImageBackgroundRemover
+        seo: SeoDataImport.ImageBackgroundRemover,
       },
       {
         name: "Image Collage Maker",
@@ -304,7 +313,7 @@ const ToolList = [
         icon: <MdImage />,
         desc: "Combine multiple images into beautiful collages.",
         code: "ImageCollageMaker",
-        seo:SeoDataImport.ImageCollageMaker
+        seo: SeoDataImport.ImageCollageMaker,
       },
       {
         name: "Image Color Adjuster",
@@ -312,7 +321,7 @@ const ToolList = [
         icon: <MdImage />,
         desc: "Fine-tune colors, brightness, and contrast for perfect images.",
         code: "ImageColorAdjuster",
-        seo: SeoDataImport.ImageColorAdjuster
+        seo: SeoDataImport.ImageColorAdjuster,
       },
     ],
   },
@@ -328,7 +337,7 @@ const ToolList = [
         icon: <MdOutlineCreate />,
         desc: "Convert PDF files into editable Word documents.",
         code: "PDFToWord",
-        seo:SeoDataImport.PdfToWord
+        seo: SeoDataImport.PdfToWord,
       },
       {
         name: "PDF to Image",
@@ -336,7 +345,7 @@ const ToolList = [
         icon: <MdPictureAsPdf />,
         desc: "Convert PDF pages into high-quality images.",
         code: "PDFToImage",
-        seo:SeoDataImport.PDFToImage
+        seo: SeoDataImport.PDFToImage,
       },
       {
         name: "Merge PDFs",
@@ -344,7 +353,7 @@ const ToolList = [
         icon: <MdPictureAsPdf />,
         desc: "Combine multiple PDF files into a single document.",
         code: "MergePDFs",
-        seo:SeoDataImport.MergePDFs
+        seo: SeoDataImport.MergePDFs,
       },
       {
         name: "Split PDF",
@@ -352,7 +361,7 @@ const ToolList = [
         icon: <MdPictureAsPdf />,
         desc: "Extract pages or split large PDFs into smaller files.",
         code: "SplitPDF",
-        seo:SeoDataImport.SplitPDF
+        seo: SeoDataImport.SplitPDF,
       },
       {
         name: "Compress PDF",
@@ -360,7 +369,7 @@ const ToolList = [
         icon: <MdPictureAsPdf />,
         desc: "Reduce the file size of PDFs without losing quality.",
         code: "CompressPDF",
-        seo:SeoDataImport.CompressPDF
+        seo: SeoDataImport.CompressPDF,
       },
       {
         name: "PDF Editor",
@@ -368,7 +377,7 @@ const ToolList = [
         icon: <MdEditDocument />,
         desc: "Edit text, images, and annotations within PDFs.",
         code: "PDFEditor",
-        seo:SeoDataImport.PDFEditor
+        seo: SeoDataImport.PDFEditor,
       },
       {
         name: "PDF Watermark",
@@ -376,7 +385,7 @@ const ToolList = [
         icon: <MdWaterDrop />,
         desc: "Add watermarks to PDFs for branding or copyright protection.",
         code: "PDFWatermark",
-        seo:SeoDataImport.PDFWatermark
+        seo: SeoDataImport.PDFWatermark,
       },
       {
         name: "PDF Converter",
@@ -384,9 +393,8 @@ const ToolList = [
         icon: <MdOutlineCreate />,
         desc: "Convert PDF files into various formats like Word, Excel, and images.",
         code: "PDFConverter",
-        seo:SeoDataImport.PDFConverter
-      }
-      
+        seo: SeoDataImport.PDFConverter,
+      },
     ],
   },
   {
@@ -401,7 +409,7 @@ const ToolList = [
         icon: <MdStraighten />,
         desc: "Convert length measurements between different units such as meters, feet, and inches.",
         code: "LengthConverter",
-        seo:SeoDataImport.LengthConverter
+        seo: SeoDataImport.LengthConverter,
       },
       {
         name: "Weight Converter",
@@ -409,7 +417,7 @@ const ToolList = [
         icon: <MdStraighten />,
         desc: "Easily convert weight units like kilograms, pounds, and grams.",
         code: "WeightConverter",
-        seo:SeoDataImport.WeightConverter
+        seo: SeoDataImport.WeightConverter,
       },
       {
         name: "Temperature Converter",
@@ -417,7 +425,7 @@ const ToolList = [
         icon: <MdStraighten />,
         desc: "Convert temperatures between Celsius, Fahrenheit, and Kelvin.",
         code: "TemperatureConverter",
-        seo:SeoDataImport.TemperatureConverter
+        seo: SeoDataImport.TemperatureConverter,
       },
       {
         name: "Volume Converter",
@@ -425,7 +433,7 @@ const ToolList = [
         icon: <MdStraighten />,
         desc: "Convert volume units such as liters, milliliters, and gallons.",
         code: "VolumeConverter",
-        seo:SeoDataImport.VolumeConverter
+        seo: SeoDataImport.VolumeConverter,
       },
       {
         name: "Speed Converter",
@@ -433,7 +441,7 @@ const ToolList = [
         icon: <MdStraighten />,
         desc: "Convert speed units like kilometers per hour, miles per hour, and meters per second.",
         code: "SpeedConverter",
-        seo:SeoDataImport.SpeedConverter
+        seo: SeoDataImport.SpeedConverter,
       },
     ],
   },
@@ -449,7 +457,7 @@ const ToolList = [
         icon: <MdAccessTime />,
         desc: "Convert time between different time zones worldwide.",
         code: "TimeZoneConverter",
-        seo:SeoDataImport.TimeZoneConverter
+        seo: SeoDataImport.TimeZoneConverter,
       },
       {
         name: "Epoch Time Converter",
@@ -457,7 +465,7 @@ const ToolList = [
         icon: <MdAccessTime />,
         desc: "Convert Unix epoch timestamps to human-readable dates and vice versa.",
         code: "EpochTimeConverter",
-        seo:SeoDataImport.EpochTimeConverter
+        seo: SeoDataImport.EpochTimeConverter,
       },
       {
         name: "Date to Timestamp",
@@ -465,7 +473,7 @@ const ToolList = [
         icon: <MdAccessTime />,
         desc: "Generate a timestamp from a given date and time.",
         code: "DateToTimestamp",
-        seo:SeoDataImport.DateToTimestamp
+        seo: SeoDataImport.DateToTimestamp,
       },
       {
         name: "Stopwatch",
@@ -473,7 +481,7 @@ const ToolList = [
         icon: <MdAccessTime />,
         desc: "A simple online stopwatch to track time accurately.",
         code: "Stopwatch",
-        seo:SeoDataImport.Stopwatch
+        seo: SeoDataImport.Stopwatch,
       },
       {
         name: "Countdown Timer",
@@ -481,7 +489,7 @@ const ToolList = [
         icon: <MdAccessTime />,
         desc: "Set a countdown timer for any duration with alerts.",
         code: "CountdownTimer",
-        seo:SeoDataImport.CountdownTimer
+        seo: SeoDataImport.CountdownTimer,
       },
     ],
   },
@@ -497,7 +505,7 @@ const ToolList = [
         icon: <MdTransform />,
         desc: "Convert CSV data to JSON format easily.",
         code: "CsvToJson",
-        seo: SeoDataImport.CsvToJsonConverter
+        seo: SeoDataImport.CsvToJsonConverter,
       },
       {
         name: "JSON to XML",
@@ -505,7 +513,7 @@ const ToolList = [
         icon: <MdTransform />,
         desc: "Convert JSON data to XML format for seamless integration.",
         code: "JsonToXml",
-        seo:SeoDataImport.JsonToXmlConverter
+        seo: SeoDataImport.JsonToXmlConverter,
       },
       {
         name: "YAML to JSON",
@@ -513,7 +521,7 @@ const ToolList = [
         icon: <MdTransform />,
         desc: "Convert YAML data to JSON format effortlessly.",
         code: "YamlToJson",
-        seo:SeoDataImport.YamlToJsonConverter
+        seo: SeoDataImport.YamlToJsonConverter,
       },
       {
         name: "Base64 Encoder",
@@ -521,7 +529,7 @@ const ToolList = [
         icon: <MdSecurity />,
         desc: "Encode text or files to Base64 format.",
         code: "Base64Encoder",
-        seo:SeoDataImport.Base64Encoder
+        seo: SeoDataImport.Base64Encoder,
       },
       {
         name: "Base64 Decoder",
@@ -529,7 +537,7 @@ const ToolList = [
         icon: <MdTransform />,
         desc: "Decode Base64-encoded text or files back to their original form.",
         code: "Base64Decoder",
-        seo:SeoDataImport.Base64Decoder
+        seo: SeoDataImport.Base64Decoder,
       },
       {
         name: "URL Encoder",
@@ -537,7 +545,7 @@ const ToolList = [
         icon: <MdTransform />,
         desc: "Encode special characters in URLs to make them safe for web use.",
         code: "URLEncoder",
-        seo:SeoDataImport.URLEncoder
+        seo: SeoDataImport.URLEncoder,
       },
       {
         name: "URL Decoder",
@@ -545,7 +553,7 @@ const ToolList = [
         icon: <MdTransform />,
         desc: "Decode encoded URLs back to their original readable format.",
         code: "URLDecoder",
-        seo:SeoDataImport.URLDecoder
+        seo: SeoDataImport.URLDecoder,
       },
     ],
   },
@@ -561,7 +569,7 @@ const ToolList = [
         icon: <MdScience />,
         desc: "Calculate the molecular weight of chemical compounds based on their molecular formulas.",
         code: "MolecularWeightCalculator",
-        seo:SeoDataImport.MolecularWeightCalculator
+        seo: SeoDataImport.MolecularWeightCalculator,
       },
       {
         name: "Physics Unit Converter",
@@ -569,7 +577,7 @@ const ToolList = [
         icon: <MdScience />,
         desc: "Convert between different physics units for length, mass, energy, and more.",
         code: "PhysicsUnitConverter",
-        seo:SeoDataImport.PhysicsUnitConverter
+        seo: SeoDataImport.PhysicsUnitConverter,
       },
       {
         name: "Chemical Equation Balancer",
@@ -585,7 +593,7 @@ const ToolList = [
         icon: <MdScience />,
         desc: "Convert astronomical units such as light-years, parsecs, and AU.",
         code: "AstronomicalUnitConverter",
-        seo:SeoDataImport.AstronomicalUnitConverter
+        seo: SeoDataImport.AstronomicalUnitConverter,
       },
       {
         name: "Periodic Table Explorer",
@@ -593,7 +601,7 @@ const ToolList = [
         icon: <MdScience />,
         desc: "Explore detailed information about elements in the periodic table.",
         code: "PeriodicTableExplorer",
-        seo:SeoDataImport.PeriodicTableExplorer
+        seo: SeoDataImport.PeriodicTableExplorer,
       },
     ],
   },
@@ -610,7 +618,7 @@ const ToolList = [
         icon: <MdSecurity />,
         desc: "Evaluate the strength of your password and get security recommendations.",
         code: "PasswordStrengthChecker",
-        seo: SeoDataImport.PasswordStrengthChecker
+        seo: SeoDataImport.PasswordStrengthChecker,
       },
 
       {
@@ -619,7 +627,7 @@ const ToolList = [
         icon: <MdSecurity />,
         desc: "Check if an email address is valid, properly formatted, and exists.",
         code: "EmailValidator",
-        seo:SeoDataImport.EmailValidator
+        seo: SeoDataImport.EmailValidator,
       },
     ],
   },
@@ -636,7 +644,7 @@ const ToolList = [
         icon: <MdCalculate />,
         desc: "Perform advanced mathematical calculations with a scientific calculator.",
         code: "ScientificCalculator",
-        seo:SeoDataImport.ScientificCalculator
+        seo: SeoDataImport.ScientificCalculator,
       },
       {
         name: "Equation Solver",
@@ -644,7 +652,7 @@ const ToolList = [
         icon: <MdCalculate />,
         desc: "Solve linear and quadratic equations instantly.",
         code: "EquationSolver",
-        seo:SeoDataImport.EquationSolver
+        seo: SeoDataImport.EquationSolver,
       },
       {
         name: "Factorial Calculator",
@@ -652,7 +660,7 @@ const ToolList = [
         icon: <MdCalculate />,
         desc: "Calculate the factorial of any number easily.",
         code: "FactorialCalculator",
-        seo:SeoDataImport.FactorialCalculator
+        seo: SeoDataImport.FactorialCalculator,
       },
       {
         name: "Matrix Calculator",
@@ -660,7 +668,7 @@ const ToolList = [
         icon: <MdCalculate />,
         desc: "Perform matrix operations like addition, multiplication, and inverses.",
         code: "MatrixCalculator",
-        seo:SeoDataImport.MatrixCalculator
+        seo: SeoDataImport.MatrixCalculator,
       },
       {
         name: "Percentage Calculator",
@@ -668,7 +676,7 @@ const ToolList = [
         icon: <MdCalculate />,
         desc: "Easily compute percentages for discounts, taxes, and profit margins.",
         code: "PercentageCalculator",
-        seo:SeoDataImport.PercentageCalculator
+        seo: SeoDataImport.PercentageCalculator,
       },
     ],
   },
@@ -684,7 +692,7 @@ const ToolList = [
         icon: <MdPalette />,
         desc: "Pick and preview colors with HEX, RGB, and HSL values.",
         code: "ColorPicker",
-        seo:SeoDataImport.ColorPicker
+        seo: SeoDataImport.ColorPicker,
       },
       {
         name: "Hex to RGB",
@@ -692,7 +700,7 @@ const ToolList = [
         icon: <MdPalette />,
         desc: "Convert HEX color codes to RGB and vice versa.",
         code: "HexToRGB",
-        seo:SeoDataImport.HexToRgbConverter
+        seo: SeoDataImport.HexToRgbConverter,
       },
       {
         name: "Color Gradient Generator",
@@ -700,7 +708,7 @@ const ToolList = [
         icon: <MdPalette />,
         desc: "Create beautiful color gradients with CSS code output.",
         code: "GradientGenerator",
-        seo:SeoDataImport.ColorGradientGenerator
+        seo: SeoDataImport.ColorGradientGenerator,
       },
       {
         name: "Contrast Checker",
@@ -708,7 +716,7 @@ const ToolList = [
         icon: <MdPalette />,
         desc: "Check color contrast for accessibility and readability compliance.",
         code: "ContrastChecker",
-        seo:SeoDataImport.ContrastChecker
+        seo: SeoDataImport.ContrastChecker,
       },
       {
         name: "Palette Generator",
@@ -716,7 +724,7 @@ const ToolList = [
         icon: <MdPalette />,
         desc: "Generate harmonious color palettes for design projects.",
         code: "PaletteGenerator",
-        seo:SeoDataImport.PaletteGenerator
+        seo: SeoDataImport.PaletteGenerator,
       },
     ],
   },
@@ -732,7 +740,7 @@ const ToolList = [
         icon: <MdAttachMoney />,
         desc: "Convert currencies with real-time exchange rates.",
         code: "CurrencyConverter",
-        seo:SeoDataImport.CurrencyConverter
+        seo: SeoDataImport.CurrencyConverter,
       },
       {
         name: "Loan Calculator",
@@ -740,7 +748,7 @@ const ToolList = [
         icon: <MdAttachMoney />,
         desc: "Calculate monthly payments and total interest for loans.",
         code: "LoanCalculator",
-        seo:SeoDataImport.LoanCalculator
+        seo: SeoDataImport.LoanCalculator,
       },
       {
         name: "Tax Calculator",
@@ -748,7 +756,7 @@ const ToolList = [
         icon: <MdAttachMoney />,
         desc: "Compute taxes based on income and deductions.",
         code: "TaxCalculator",
-        seo:SeoDataImport.TaxCalculator
+        seo: SeoDataImport.TaxCalculator,
       },
       {
         name: "Investment Calculator",
@@ -756,7 +764,7 @@ const ToolList = [
         icon: <MdAttachMoney />,
         desc: "Project potential investment growth over time.",
         code: "InvestmentCalculator",
-        seo:SeoDataImport.InvestmentCalculator
+        seo: SeoDataImport.InvestmentCalculator,
       },
       {
         name: "Retirement Savings Calculator",
@@ -764,7 +772,7 @@ const ToolList = [
         icon: <MdAttachMoney />,
         desc: "Plan your retirement savings and estimate future value.",
         code: "RetirementCalculator",
-        seo:SeoDataImport.RetirementSavingsCalculator
+        seo: SeoDataImport.RetirementSavingsCalculator,
       },
     ],
   },
@@ -781,7 +789,7 @@ const ToolList = [
         icon: <MdBuild />,
         desc: "Scan barcodes and retrieve product details instantly.",
         code: "BarcodeScanner",
-        seo:SeoDataImport.BarcodeScanner
+        seo: SeoDataImport.BarcodeScanner,
       },
       {
         name: "QR Code Scanner",
@@ -789,9 +797,16 @@ const ToolList = [
         icon: <MdQrCodeScanner />,
         desc: "Scan QR codes to access links, product info, or promotions.",
         code: "QRCodeScanner",
-        seo: SeoDataImport.QRCodeScanner
+        seo: SeoDataImport.QRCodeScanner,
       },
-     
+      {
+        name: "YouTube to Text",
+        slug: "youtube-to-text",
+        icon: <MdVideoLibrary />,
+        desc: "Retrieve and download transcripts from YouTube videos.",
+        code: "YouTubeToText",
+        seo: SeoDataImport.YouTubeToTextConverter,
+      },
     ],
   },
 ];

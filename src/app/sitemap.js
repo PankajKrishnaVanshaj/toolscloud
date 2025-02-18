@@ -12,6 +12,7 @@ export default function sitemap() {
     "/grammar-checker/tool",
     "/quote-validator/tool",
     "/text-duplicator-checker/tool",
+    "/text-to-image/tool",
 
     "/hash-generator/tool",
     "/uuid-generator/tool",
@@ -94,6 +95,7 @@ export default function sitemap() {
 
     "/barcode-scanner/tool",
     "/qr-code-scanner/tool",
+    "/youtube-to-text/tool",
   ];
 
   return pages.map((page) => ({

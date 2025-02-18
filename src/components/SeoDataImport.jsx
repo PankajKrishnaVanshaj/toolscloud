@@ -67,6 +67,7 @@ import TextBeautifier from "@/staticData/seoData/TextBeautifier";
 import TextCaseConverter from "@/staticData/seoData/TextCaseConverter";
 import TextDuplicatorChecker from "@/staticData/seoData/TextDuplicatorChecker";
 import TextEditor from "@/staticData/seoData/TextEditor";
+import TextToImageGenerator from "@/staticData/seoData/TextToImageGenerator";
 import TextToSpeech from "@/staticData/seoData/TextToSpeech";
 import TimeZoneConverter from "@/staticData/seoData/TimeZoneConverter";
 import URLDecoder from "@/staticData/seoData/URLDecoder";
@@ -76,6 +77,7 @@ import VolumeConverter from "@/staticData/seoData/VolumeConverter";
 import WeightConverter from "@/staticData/seoData/WeightConverter";
 import WordCharacterCounter from "@/staticData/seoData/WordCharacterCounter";
 import YamlToJsonConverter from "@/staticData/seoData/YamlToJsonConverter";
+import YouTubeToTextConverter from "@/staticData/seoData/YouTubeToTextConverter";
 
 const SeoDataImport = {
   WordCharacterCounter,
@@ -155,7 +157,9 @@ const SeoDataImport = {
   InvestmentCalculator,
   RetirementSavingsCalculator,
   BarcodeScanner,
-  QRCodeScanner
+  QRCodeScanner,
+  YouTubeToTextConverter,
+  TextToImageGenerator
 };
 
 export default SeoDataImport;
