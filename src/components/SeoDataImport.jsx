@@ -16,10 +16,12 @@ import EmailValidator from "@/staticData/seoData/EmailValidator";
 import EpochTimeConverter from "@/staticData/seoData/EpochTimeConverter";
 import EquationSolver from "@/staticData/seoData/EquationSolver";
 import FactorialCalculator from "@/staticData/seoData/FactorialCalculator";
+import FakeDataGenerator from "@/staticData/seoData/FakeDataGenerator";
 import FindAndReplace from "@/staticData/seoData/FindAndReplace";
 import GrammarChecker from "@/staticData/seoData/GrammarChecker";
 import HashGenerator from "@/staticData/seoData/HashGenerator";
 import HexToRgbConverter from "@/staticData/seoData/HexToRgbConverter";
+import HTMLValidator from "@/staticData/seoData/HTMLValidator";
 import ImageBackgroundRemover from "@/staticData/seoData/ImageBackgroundRemover";
 import ImageCollageMaker from "@/staticData/seoData/ImageCollageMaker";
 import ImageColorAdjuster from "@/staticData/seoData/ImageColorAdjuster";
@@ -43,6 +45,7 @@ import PaletteGenerator from "@/staticData/seoData/PaletteGenerator";
 import PasswordStrengthChecker from "@/staticData/seoData/PasswordStrengthChecker";
 import PDFConverter from "@/staticData/seoData/PDFConverter";
 import PDFEditor from "@/staticData/seoData/PDFEditor";
+import PDFPasswordProtector from "@/staticData/seoData/PDFPasswordProtector";
 import PDFToImage from "@/staticData/seoData/PDFToImage";
 import PdfToWord from "@/staticData/seoData/PdfToWord";
 import PDFWatermark from "@/staticData/seoData/PDFWatermark";
@@ -159,7 +162,10 @@ const SeoDataImport = {
   BarcodeScanner,
   QRCodeScanner,
   YouTubeToTextConverter,
-  TextToImageGenerator
+  TextToImageGenerator,
+  FakeDataGenerator,
+  PDFPasswordProtector,
+  HTMLValidator,
 };
 
 export default SeoDataImport;

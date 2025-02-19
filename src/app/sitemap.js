@@ -13,6 +13,7 @@ export default function sitemap() {
     "/quote-validator/tool",
     "/text-duplicator-checker/tool",
     "/text-to-image/tool",
+    "/fake-data-generator/tool",
 
     "/hash-generator/tool",
     "/uuid-generator/tool",
@@ -45,6 +46,7 @@ export default function sitemap() {
     "/pdf-editor/tool",
     "/pdf-watermark/tool",
     "/pdf-converter/tool",
+    "/pdf-password-protector/tool",
 
     "/length-converter/tool",
     "/weight-converter/tool",
@@ -65,6 +67,7 @@ export default function sitemap() {
     "/base64-decoder/tool",
     "/url-encoder/tool",
     "/url-decoder/tool",
+    "/html-validator/tool",
 
     "/molecular-weight-calculator/tool",
     "/physics-unit-converter/tool",
