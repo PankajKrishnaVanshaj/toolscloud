@@ -21,6 +21,8 @@ import FindAndReplace from "@/staticData/seoData/FindAndReplace";
 import GrammarChecker from "@/staticData/seoData/GrammarChecker";
 import HashGenerator from "@/staticData/seoData/HashGenerator";
 import HexToRgbConverter from "@/staticData/seoData/HexToRgbConverter";
+import HexToTextConverter from "@/staticData/seoData/HexToTextConverter";
+import HtmlToMarkdownConverter from "@/staticData/seoData/HtmlToMarkdownConverter";
 import HTMLValidator from "@/staticData/seoData/HTMLValidator";
 import ImageBackgroundRemover from "@/staticData/seoData/ImageBackgroundRemover";
 import ImageCollageMaker from "@/staticData/seoData/ImageCollageMaker";
@@ -33,6 +35,7 @@ import ImageResizer from "@/staticData/seoData/ImageResizer";
 import ImageWatermarker from "@/staticData/seoData/ImageWatermarker";
 import InvestmentCalculator from "@/staticData/seoData/InvestmentCalculator";
 import JSONFormatter from "@/staticData/seoData/JSONFormatter";
+import JsonToCsvConverter from "@/staticData/seoData/JsonToCsvConverter";
 import JsonToXmlConverter from "@/staticData/seoData/JsonToXmlConverter";
 import LengthConverter from "@/staticData/seoData/LengthConverter";
 import LoanCalculator from "@/staticData/seoData/LoanCalculator";
@@ -60,9 +63,11 @@ import RandomPasswordGenerator from "@/staticData/seoData/RandomPasswordGenerato
 import RegexTester from "@/staticData/seoData/RegexTester";
 import RetirementSavingsCalculator from "@/staticData/seoData/RetirementSavingsCalculator";
 import ScientificCalculator from "@/staticData/seoData/ScientificCalculator";
+import SlugGenerator from "@/staticData/seoData/SlugGenerator";
 import SpeedConverter from "@/staticData/seoData/SpeedConverter";
 import SpellChecker from "@/staticData/seoData/SpellChecker";
 import SplitPDF from "@/staticData/seoData/SplitPDF";
+import SQLQueryBuilder from "@/staticData/seoData/SQLQueryBuilder";
 import Stopwatch from "@/staticData/seoData/Stopwatch";
 import TaxCalculator from "@/staticData/seoData/TaxCalculator";
 import TemperatureConverter from "@/staticData/seoData/TemperatureConverter";
@@ -70,6 +75,7 @@ import TextBeautifier from "@/staticData/seoData/TextBeautifier";
 import TextCaseConverter from "@/staticData/seoData/TextCaseConverter";
 import TextDuplicatorChecker from "@/staticData/seoData/TextDuplicatorChecker";
 import TextEditor from "@/staticData/seoData/TextEditor";
+import TextToHexConverter from "@/staticData/seoData/TextToHexConverter";
 import TextToImageGenerator from "@/staticData/seoData/TextToImageGenerator";
 import TextToSpeech from "@/staticData/seoData/TextToSpeech";
 import TimeZoneConverter from "@/staticData/seoData/TimeZoneConverter";
@@ -79,6 +85,7 @@ import UUIDGenerator from "@/staticData/seoData/UUIDGenerator";
 import VolumeConverter from "@/staticData/seoData/VolumeConverter";
 import WeightConverter from "@/staticData/seoData/WeightConverter";
 import WordCharacterCounter from "@/staticData/seoData/WordCharacterCounter";
+import XmlToJsonConverter from "@/staticData/seoData/XmlToJsonConverter";
 import YamlToJsonConverter from "@/staticData/seoData/YamlToJsonConverter";
 import YouTubeToTextConverter from "@/staticData/seoData/YouTubeToTextConverter";
 
@@ -166,6 +173,13 @@ const SeoDataImport = {
   FakeDataGenerator,
   PDFPasswordProtector,
   HTMLValidator,
+  SlugGenerator,
+  SQLQueryBuilder,
+  JsonToCsvConverter,
+  XmlToJsonConverter,
+  HexToTextConverter,
+  TextToHexConverter,
+  HtmlToMarkdownConverter
 };
 
 export default SeoDataImport;
