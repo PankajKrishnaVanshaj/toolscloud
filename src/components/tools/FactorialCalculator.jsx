@@ -1,89 +1,148 @@
-"use client";
-
-import { useState } from "react";
-
-// Memoization object to store calculated factorials
-const factorialMemo = {};
+'use client'
+import React, { useState } from 'react';
 
 const FactorialCalculator = () => {
-  const [number, setNumber] = useState("");
-  const [result, setResult] = useState("");
-  const [sequence, setSequence] = useState("");
+  const [number, setNumber] = useState('');
+  const [result, setResult] = useState(null);
+  const [error, setError] = useState('');
+  const [showDetails, setShowDetails] = useState(false);
 
-  // Function to calculate factorial using memoization and generate sequence
-  const calculateFactorial = (num) => {
-    if (num < 0) return "Undefined (Negative number)";
-    if (num === 0 || num === 1) {
-      setSequence("1");
-      return 1;
-    }
-
-    // Check if result is already cached
-    if (factorialMemo[num]) {
-      setSequence(generateSequence(num));
-      return factorialMemo[num];
-    }
-
-    let factorial = 1;
-    for (let i = 2; i <= num; i++) {
-      factorial *= i;
-    }
-
-    // Cache the result
-    factorialMemo[num] = factorial;
-    setSequence(generateSequence(num));
-    return factorial;
-  };
-
-  // Function to generate factorial sequence (e.g., "1 × 2 × 3 × ... × n")
-  const generateSequence = (num) => {
-    let seq = "1";
-    for (let i = 2; i <= num; i++) {
-      seq += ` × ${i}`;
-    }
-    return `${num}! = ${seq}`;
-  };
-
-  const handleCalculate = () => {
-    const num = parseInt(number, 10);
+  // Calculate factorial
+  const calculateFactorial = (n) => {
+    const num = parseInt(n);
     if (isNaN(num) || num < 0) {
-      setResult("Enter a valid non-negative integer");
-      setSequence("");
-    } else {
-      const factorialResult = calculateFactorial(num);
-      setResult(`Factorial of ${num} is ${factorialResult}`);
+      return { error: 'Please enter a non-negative integer' };
     }
+    if (num > 1000) { // Reasonable limit to prevent overflow
+      return { error: 'Number too large (max 1000)' };
+    }
+
+    let factorial = 1n; // Use BigInt for large numbers
+    const steps = [];
+    
+    if (num === 0 || num === 1) {
+      steps.push(`${num}! = 1 (by definition)`);
+    } else {
+      let stepExpr = `${num}! = `;
+      for (let i = num; i >= 1; i--) {
+        factorial *= BigInt(i);
+        stepExpr += `${i}${i > 1 ? ' × ' : ''}`;
+      }
+      steps.push(`${stepExpr} = ${factorial.toString()}`);
+    }
+
+    return {
+      number: num,
+      factorial: factorial.toString(), // Convert BigInt to string for display
+      steps
+    };
+  };
+
+  const calculate = () => {
+    setError('');
+    setResult(null);
+
+    if (!number) {
+      setError('Please enter a number');
+      return;
+    }
+
+    const calcResult = calculateFactorial(number);
+    if (calcResult.error) {
+      setError(calcResult.error);
+      return;
+    }
+
+    setResult(calcResult);
+  };
+
+  const reset = () => {
+    setNumber('');
+    setResult(null);
+    setError('');
+    setShowDetails(false);
   };
 
   return (
-    <div className="mx-auto p-6 bg-white shadow-lg rounded-lg max-w-md">
-      <h1 className="text-2xl font-bold text-center mb-4">Factorial Calculator</h1>
+    <div className="min-h-screen bg-gradient-to-br from-teal-50 to-gray-100 flex items-center justify-center p-4">
+      <div className="bg-white p-6 rounded-xl shadow-2xl w-full max-w-lg">
+        <h1 className="text-3xl font-bold mb-6 text-center text-gray-800">
+          Factorial Calculator
+        </h1>
 
-      <input
-        type="number"
-        className="w-full p-2 border rounded mb-4"
-        placeholder="Enter a number"
-        value={number}
-        onChange={(e) => setNumber(e.target.value)}
-        min="0"
-      />
+        {/* Input Section */}
+        <div className="space-y-6">
+          <div className="flex items-center gap-2">
+            <label className="w-32 text-gray-700">Number:</label>
+            <input
+              type="number"
+              value={number}
+              onChange={(e) => setNumber(e.target.value)}
+              className="flex-1 p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
+              placeholder="e.g., 5"
+              min="0"
+              max="1000"
+            />
+            <span className="text-gray-700">!</span>
+          </div>
 
-      <button
-        className="w-full p-2 bg-primary text-white rounded hover:bg-primary/90 transition"
-        onClick={handleCalculate}
-      >
-        Calculate
-      </button>
-
-      <div className="mt-4 p-3 bg-gray-100 rounded text-lg text-center font-mono border border-gray-300">
-        {result !== "" ? result : "Result will appear here"}
-      </div>
-
-      {sequence && (
-        <div className="mt-4 p-3 bg-gray-100 rounded text-lg text-center h-48 overflow-auto text-secondary">
-          {sequence}
+          {/* Controls */}
+          <div className="flex gap-4">
+            <button
+              onClick={calculate}
+              className="flex-1 bg-teal-600 text-white py-2 rounded-lg hover:bg-teal-700 transition-all font-semibold"
+            >
+              Calculate
+            </button>
+            <button
+              onClick={reset}
+              className="flex-1 bg-gray-600 text-white py-2 rounded-lg hover:bg-gray-700 transition-all font-semibold"
+            >
+              Reset
+            </button>
+          </div>
         </div>
-      )}
+
+        {/* Error Display */}
+        {error && (
+          <div className="mt-4 p-3 bg-red-100 text-red-700 rounded-lg text-center">
+            {error}
+          </div>
+        )}
+
+        {/* Result Display */}
+        {result && (
+          <div className="mt-6 p-4 bg-teal-50 rounded-lg">
+            <h2 className="text-lg font-semibold text-gray-700 text-center">Factorial Result:</h2>
+            <div className="mt-2 space-y-2">
+              <p className="text-center text-xl">
+                {result.number}! = {result.factorial}
+              </p>
+              
+              {/* Details Toggle */}
+              <div className="text-center">
+                <button
+                  onClick={() => setShowDetails(!showDetails)}
+                  className="text-sm text-teal-600 hover:underline"
+                >
+                  {showDetails ? 'Hide Details' : 'Show Details'}
+                </button>
+              </div>
+              
+              {showDetails && (
+                <div className="text-sm space-y-2">
+                  <p>Calculation Steps:</p>
+                  <ul className="list-disc list-inside">
+                    {result.steps.map((step, index) => (
+                      <li key={index}>{step}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 };

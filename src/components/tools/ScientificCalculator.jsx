@@ -1,162 +1,196 @@
-"use client";
-
-import { useState } from "react";
+'use client'
+import React, { useState } from 'react';
 
 const ScientificCalculator = () => {
-  const [input, setInput] = useState("");
-  const [result, setResult] = useState("");
+  const [display, setDisplay] = useState('0');
+  const [expression, setExpression] = useState('');
+  const [memory, setMemory] = useState(0);
+  const [isRad, setIsRad] = useState(true); // Toggle between radians and degrees
 
-  const handleClick = (value) => {
-    setInput((prev) => prev + value);
+  // Handle number and decimal input
+  const handleNumber = (num) => {
+    setDisplay((prev) => (prev === '0' || prev === 'Error') ? num : prev + num);
+    setExpression((prev) => prev + num);
   };
 
-  const handleClear = () => {
-    setInput("");
-    setResult("");
+  // Handle operators
+  const handleOperator = (op) => {
+    if (display === 'Error') return;
+    setDisplay(op);
+    setExpression((prev) => prev + ` ${op} `);
   };
 
-  const handleDelete = () => {
-    setInput(input.slice(0, -1));
-  };
-
-  const handleEvaluate = () => {
-    try {
-      setResult(eval(input).toString());
-    } catch {
-      setResult("Error");
-    }
-  };
-
-  // Factorial function
-  const factorial = (num) => {
-    if (num < 0) return "Error";
-    if (num === 0 || num === 1) return 1;
-    return num * factorial(num - 1);
-  };
-
+  // Handle scientific functions
   const handleFunction = (func) => {
+    if (display === 'Error') return;
     try {
-      let value = eval(input);
-      let calculatedValue = "";
-
+      const num = parseFloat(display);
+      let result;
       switch (func) {
-        case "sqrt":
-          calculatedValue = Math.sqrt(value);
+        case 'sin':
+          result = isRad ? Math.sin(num) : Math.sin(num * Math.PI / 180);
           break;
-        case "log":
-          calculatedValue = Math.log10(value);
+        case 'cos':
+          result = isRad ? Math.cos(num) : Math.cos(num * Math.PI / 180);
           break;
-        case "ln":
-          calculatedValue = Math.log(value);
+        case 'tan':
+          result = isRad ? Math.tan(num) : Math.tan(num * Math.PI / 180);
           break;
-        case "sin":
-          calculatedValue = Math.sin(value);
+        case 'ln':
+          result = Math.log(num);
           break;
-        case "cos":
-          calculatedValue = Math.cos(value);
+        case 'log':
+          result = Math.log10(num);
           break;
-        case "tan":
-          calculatedValue = Math.tan(value);
+        case 'sqrt':
+          result = Math.sqrt(num);
           break;
-        case "exp":
-          calculatedValue = Math.exp(value);
+        case 'square':
+          result = num * num;
           break;
-        case "pow2":
-          calculatedValue = Math.pow(value, 2);
+        case 'cube':
+          result = num * num * num;
           break;
-        case "percent":
-          calculatedValue = value / 100;
-          break;
-        case "factorial":
-          calculatedValue = factorial(value);
+        case 'exp':
+          result = Math.exp(num);
           break;
         default:
-          calculatedValue = "Error";
+          return;
       }
-      setResult(calculatedValue.toString());
+      if (!isFinite(result) || isNaN(result)) throw new Error('Invalid result');
+      setDisplay(result.toFixed(6));
+      setExpression(`${func}(${num}) = ${result.toFixed(6)}`);
     } catch {
-      setResult("Error");
+      setDisplay('Error');
+      setExpression('Error');
     }
   };
 
+  // Handle parentheses
+  const handleParenthesis = (type) => {
+    if (display === 'Error') return;
+    setDisplay(type);
+    setExpression((prev) => prev + type);
+  };
+
+  // Calculate result
+  const calculate = () => {
+    if (display === 'Error') return;
+    try {
+      // Replace scientific notation and evaluate safely
+      const sanitizedExpr = expression
+        .replace(/π/g, Math.PI)
+        .replace(/e/g, Math.E);
+      const result = eval(sanitizedExpr); // Note: eval is used here for simplicity; in production, use a safer parser
+      if (!isFinite(result) || isNaN(result)) throw new Error('Invalid result');
+      setDisplay(result.toFixed(6));
+      setExpression(`${sanitizedExpr} = ${result.toFixed(6)}`);
+    } catch {
+      setDisplay('Error');
+      setExpression('Error');
+    }
+  };
+
+  // Clear display and expression
+  const clear = () => {
+    setDisplay('0');
+    setExpression('');
+  };
+
+  // Memory functions
+  const handleMemory = (action) => {
+    const num = parseFloat(display);
+    if (isNaN(num)) return;
+    switch (action) {
+      case 'M+':
+        setMemory((prev) => prev + num);
+        break;
+      case 'M-':
+        setMemory((prev) => prev - num);
+        break;
+      case 'MR':
+        setDisplay(memory.toFixed(6));
+        setExpression(memory.toString());
+        break;
+      case 'MC':
+        setMemory(0);
+        break;
+      default:
+        break;
+    }
+  };
+
+  // Toggle radians/degrees
+  const toggleAngleUnit = () => {
+    setIsRad((prev) => !prev);
+  };
+
+  const buttons = [
+    ['sin', 'cos', 'tan', 'π', 'e'],
+    ['ln', 'log', 'sqrt', '(', ')'],
+    ['square', 'cube', 'exp', 'M+', 'M-'],
+    ['7', '8', '9', '/', 'MR'],
+    ['4', '5', '6', '*', 'MC'],
+    ['1', '2', '3', '-', 'C'],
+    ['0', '.', '=', '+', 'Rad/Deg']
+  ];
+
   return (
-    <div className="mx-auto p-6 bg-gray-100 shadow-lg rounded-lg max-w-md">
-      <h1 className="text-2xl font-bold text-center mb-4">Scientific Calculator</h1>
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-gray-100 flex items-center justify-center p-4">
+      <div className="bg-white p-6 rounded-xl shadow-2xl w-full max-w-md">
+        <h1 className="text-3xl font-bold mb-4 text-center text-gray-800">
+          Scientific Calculator
+        </h1>
 
-      {/* Display Input */}
-      <div className="mb-3 p-3 bg-white rounded-lg text-right text-xl font-mono border border-gray-300">
-        {input || "0"}
+        {/* Display */}
+        <div className="mb-4">
+          <div className="w-full p-3 bg-gray-100 rounded-lg text-right text-xl font-mono text-gray-800 break-all">
+            {expression || display}
+          </div>
+          <div className="text-sm text-gray-600 text-right mt-1">
+            {isRad ? 'Radians' : 'Degrees'} | Memory: {memory}
+          </div>
+        </div>
+
+        {/* Buttons */}
+        <div className="grid grid-cols-5 gap-2">
+          {buttons.map((row, rowIndex) =>
+            row.map((btn, colIndex) => (
+              <button
+                key={`${rowIndex}-${colIndex}`}
+                onClick={() => {
+                  if (/[0-9]/.test(btn)) handleNumber(btn);
+                  else if (btn === '.') handleNumber(btn);
+                  else if (['+', '-', '*', '/'].includes(btn)) handleOperator(btn);
+                  else if (['sin', 'cos', 'tan', 'ln', 'log', 'sqrt', 'square', 'cube', 'exp'].includes(btn)) handleFunction(btn);
+                  else if (btn === '(' || btn === ')') handleParenthesis(btn);
+                  else if (btn === '=') calculate();
+                  else if (btn === 'C') clear();
+                  else if (btn === 'π') { setDisplay(Math.PI.toFixed(6)); setExpression('π'); }
+                  else if (btn === 'e') { setDisplay(Math.E.toFixed(6)); setExpression('e'); }
+                  else if (['M+', 'M-', 'MR', 'MC'].includes(btn)) handleMemory(btn);
+                  else if (btn === 'Rad/Deg') toggleAngleUnit();
+                }}
+                className={`p-3 rounded-lg text-center font-semibold transition-all ${
+                  ['sin', 'cos', 'tan', 'ln', 'log', 'sqrt', 'square', 'cube', 'exp'].includes(btn)
+                    ? 'bg-purple-200 hover:bg-purple-300'
+                    : ['+', '-', '*', '/', '=', '(', ')'].includes(btn)
+                    ? 'bg-blue-200 hover:bg-blue-300'
+                    : ['M+', 'M-', 'MR', 'MC'].includes(btn)
+                    ? 'bg-green-200 hover:bg-green-300'
+                    : btn === 'C'
+                    ? 'bg-red-200 hover:bg-red-300'
+                    : btn === 'Rad/Deg'
+                    ? 'bg-yellow-200 hover:bg-yellow-300'
+                    : 'bg-gray-200 hover:bg-gray-300'
+                }`}
+              >
+                {btn === 'sqrt' ? '√' : btn === 'square' ? 'x²' : btn === 'cube' ? 'x³' : btn}
+              </button>
+            ))
+          )}
+        </div>
       </div>
-      {/* Display Result */}
-      <div className="mb-3 p-3 bg-gray-200 rounded-lg text-right text-lg font-mono border border-gray-300">
-        {result || "Result"}
-      </div>
-
-      {/* Buttons Grid */}
-      <div className="grid grid-cols-4 gap-2">
-        {/* Scientific Functions */}
-        <button className="btn" onClick={() => handleFunction("sin")}>sin</button>
-        <button className="btn" onClick={() => handleFunction("cos")}>cos</button>
-        <button className="btn" onClick={() => handleFunction("tan")}>tan</button>
-        <button className="btn" onClick={() => handleFunction("sqrt")}>√</button>
-
-        <button className="btn" onClick={() => handleFunction("log")}>log</button>
-        <button className="btn" onClick={() => handleFunction("ln")}>ln</button>
-        <button className="btn" onClick={() => handleFunction("exp")}>exp</button>
-        <button className="btn" onClick={handleDelete}>⌫</button>
-
-        <button className="btn" onClick={() => handleFunction("pow2")}>x²</button>
-        <button className="btn" onClick={() => handleFunction("percent")}>%</button>
-        <button className="btn" onClick={() => handleFunction("factorial")}>n!</button>
-
-        {/* Digits and Operators */}
-        {["7", "8", "9", "/"].map((char) => (
-          <button key={char} className="btn" onClick={() => handleClick(char)}>
-            {char}
-          </button>
-        ))}
-        {["4", "5", "6", "*"].map((char) => (
-          <button key={char} className="btn" onClick={() => handleClick(char)}>
-            {char}
-          </button>
-        ))}
-        {["1", "2", "3", "-"].map((char) => (
-          <button key={char} className="btn" onClick={() => handleClick(char)}>
-            {char}
-          </button>
-        ))}
-        {["0", ".", "+", "="].map((char) => (
-          <button
-            key={char}
-            className="btn"
-            onClick={char === "=" ? handleEvaluate : () => handleClick(char)}
-          >
-            {char}
-          </button>
-        ))}
-
-        {/* Clear Button */}
-        <button className="col-span-4 btn text-primary" onClick={handleClear}>
-          Clear
-        </button>
-      </div>
-
-      {/* Styling */}
-      <style jsx>{`
-        .btn {
-          background-color: #f3f4f6;
-          padding: 12px;
-          font-size: 18px;
-          font-weight: bold;
-          border-radius: 8px;
-          text-align: center;
-          cursor: pointer;
-          transition: background-color 0.2s;
-        }
-        .btn:hover {
-          background-color: #e5e7eb;
-        }
-      `}</style>
     </div>
   );
 };
