@@ -1257,6 +1257,62 @@ const ToolList = [
         code: "MeanMedianModeCalculator",
         seo: SeoDataImport.MeanMedianModeCalculator,
       },
+      {
+        name: "Statistics Calculator",
+        slug: "statistics-calculator",
+        icon: <MdCalculate />,
+        desc: "Compute mean, median, mode, and standard deviation.",
+        code: "StatisticsCalculator",
+        seo: SeoDataImport.StatisticsCalculator,
+      },
+      {
+        name: "Derivative Calculator",
+        slug: "derivative-calculator",
+        icon: <MdCalculate />,
+        desc: "Compute derivatives of functions step-by-step.",
+        code: "DerivativeCalculator",
+        seo: SeoDataImport.DerivativeCalculator,
+      },
+      {
+        name: "Integral Calculator",
+        slug: "integral-calculator",
+        icon: <MdCalculate />,
+        desc: "Calculate definite and indefinite integrals.",
+        code: "IntegralCalculator",
+        seo: SeoDataImport.IntegralCalculator,
+      },
+      {
+        name: "Vector Calculator",
+        slug: "vector-calculator",
+        icon: <MdCalculate />,
+        desc: "Perform operations on vectors like addition and dot product.",
+        code: "VectorCalculator",
+        seo: SeoDataImport.VectorCalculator,
+      },
+      {
+        name: "Complex Number Calculator",
+        slug: "complex-number-calculator",
+        icon: <MdCalculate />,
+        desc: "Perform operations on complex numbers.",
+        code: "ComplexNumberCalculator",
+        seo: SeoDataImport.ComplexNumberCalculator,
+      },
+      {
+        name: "Permutation Calculator",
+        slug: "permutation-calculator",
+        icon: <MdCalculate />,
+        desc: "Calculate permutations of a set of items.",
+        code: "PermutationCalculator",
+        seo: SeoDataImport.PermutationCalculator,
+      },
+      {
+        name: "Combination Calculator",
+        slug: "combination-calculator",
+        icon: <MdCalculate />,
+        desc: "Compute combinations of a set of items.",
+        code: "CombinationCalculator",
+        seo: SeoDataImport.CombinationCalculator,
+      },
     ],
   },
   {
@@ -1289,14 +1345,7 @@ const ToolList = [
         code: "PolynomialFactorizer",
         seo: SeoDataImport.PolynomialFactorizer,
       },
-      {
-        name: "Derivative Calculator",
-        slug: "derivative-calculator",
-        icon: <MdCalculate />,
-        desc: "Compute derivatives of functions step-by-step.",
-        code: "DerivativeCalculator",
-        seo: SeoDataImport.DerivativeCalculator,
-      },
+      
       {
         name: "Quadratic Equation Solver",
         slug: "quadratic-equation-solver",
@@ -1305,14 +1354,7 @@ const ToolList = [
         code: "QuadraticEquationSolver",
         seo: SeoDataImport.QuadraticEquationSolver,
       },
-      {
-        name: "Integral Calculator",
-        slug: "integral-calculator",
-        icon: <MdCalculate />,
-        desc: "Calculate definite and indefinite integrals.",
-        code: "IntegralCalculator",
-        seo: SeoDataImport.IntegralCalculator,
-      },
+      
       {
         name: "Matrix Determinant",
         slug: "matrix-determinant",
@@ -1329,14 +1371,7 @@ const ToolList = [
         code: "MatrixInverse",
         seo: SeoDataImport.MatrixInverse,
       },
-      {
-        name: "Vector Calculator",
-        slug: "vector-calculator",
-        icon: <MdCalculate />,
-        desc: "Perform operations on vectors like addition and dot product.",
-        code: "VectorCalculator",
-        seo: SeoDataImport.VectorCalculator,
-      },
+      
       {
         name: "Trigonometry Solver",
         slug: "trigonometry-solver",
@@ -1377,14 +1412,7 @@ const ToolList = [
         code: "GCDLCMFinder",
         seo: SeoDataImport.GCDLCMFinder,
       },
-      {
-        name: "Complex Number Calculator",
-        slug: "complex-number-calculator",
-        icon: <MdCalculate />,
-        desc: "Perform operations on complex numbers.",
-        code: "ComplexNumberCalculator",
-        seo: SeoDataImport.ComplexNumberCalculator,
-      },
+      
       {
         name: "Sequence Generator",
         slug: "sequence-generator",
@@ -1393,22 +1421,7 @@ const ToolList = [
         code: "SequenceGenerator",
         seo: SeoDataImport.SequenceGenerator,
       },
-      {
-        name: "Permutation Calculator",
-        slug: "permutation-calculator",
-        icon: <MdCalculate />,
-        desc: "Calculate permutations of a set of items.",
-        code: "PermutationCalculator",
-        seo: SeoDataImport.PermutationCalculator,
-      },
-      {
-        name: "Combination Calculator",
-        slug: "combination-calculator",
-        icon: <MdCalculate />,
-        desc: "Compute combinations of a set of items.",
-        code: "CombinationCalculator",
-        seo: SeoDataImport.CombinationCalculator,
-      },
+      
       {
         name: "Binomial Theorem Expander",
         slug: "binomial-theorem-expander",
@@ -1441,14 +1454,7 @@ const ToolList = [
         code: "ProbabilitySolver",
         seo: SeoDataImport.ProbabilitySolver,
       },
-      {
-        name: "Statistics Calculator",
-        slug: "statistics-calculator",
-        icon: <MdCalculate />,
-        desc: "Compute mean, median, mode, and standard deviation.",
-        code: "StatisticsCalculator",
-        seo: SeoDataImport.StatisticsCalculator,
-      },
+      
     ],
   },
   {
