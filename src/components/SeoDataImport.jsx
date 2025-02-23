@@ -30,10 +30,13 @@ import CodeMinifier from "@/staticData/seoData/CodeMinifier";
 import ColorGradientGenerator from "@/staticData/seoData/ColorGradientGenerator";
 import ColorPicker from "@/staticData/seoData/ColorPicker";
 import CombinationCalculator from "@/staticData/seoData/CombinationCalculator";
+import CombinationGenerator from "@/staticData/seoData/CombinationGenerator";
 import ComplexNumberCalculator from "@/staticData/seoData/ComplexNumberCalculator";
+import ComplexNumberSolver from "@/staticData/seoData/ComplexNumberSolver";
 import CompoundInterestCalculator from "@/staticData/seoData/CompoundInterestCalculator";
 import CompressPDF from "@/staticData/seoData/CompressPDF";
 import ConfidenceIntervalCalculator from "@/staticData/seoData/ConfidenceIntervalCalculator";
+import ContinuedFractionExpander from "@/staticData/seoData/ContinuedFractionExpander";
 import ContrastChecker from "@/staticData/seoData/ContrastChecker";
 import CountdownTimer from "@/staticData/seoData/CountdownTimer";
 import CPMCalculator from "@/staticData/seoData/CPMCalculator";
@@ -42,22 +45,31 @@ import CurrencyConverter from "@/staticData/seoData/CurrencyConverter";
 import DateToTimestamp from "@/staticData/seoData/DateToTimestamp";
 import DecimalToBinaryConverter from "@/staticData/seoData/DecimalToBinaryConverter";
 import DerivativeCalculator from "@/staticData/seoData/DerivativeCalculator";
+import DerivativeFinder from "@/staticData/seoData/DerivativeFinder";
 import DiscountCalculator from "@/staticData/seoData/DiscountCalculator";
+import DivisibilityTester from "@/staticData/seoData/DivisibilityTester";
 import EarningsPerShareCalculator from "@/staticData/seoData/EarningsPerShareCalculator";
+import EigenvalueFinder from "@/staticData/seoData/EigenvalueFinder";
 import EmailValidator from "@/staticData/seoData/EmailValidator";
 import EpochTimeConverter from "@/staticData/seoData/EpochTimeConverter";
 import EquationSolver from "@/staticData/seoData/EquationSolver";
 import ExponentCalculator from "@/staticData/seoData/ExponentCalculator";
+import ExponentSimplifier from "@/staticData/seoData/ExponentSimplifier";
 import ExponentSolver from "@/staticData/seoData/ExponentSolver";
 import FactorialCalculator from "@/staticData/seoData/FactorialCalculator";
+import FactorialGenerator from "@/staticData/seoData/FactorialGenerator";
 import FakeDataGenerator from "@/staticData/seoData/FakeDataGenerator";
+import FibonacciSequenceGenerator from "@/staticData/seoData/FibonacciSequenceGenerator";
 import FindAndReplace from "@/staticData/seoData/FindAndReplace";
 import FractionCalculator from "@/staticData/seoData/FractionCalculator";
+import FractionSimplifier from "@/staticData/seoData/FractionSimplifier";
+import GaussianEliminator from "@/staticData/seoData/GaussianEliminator";
 import GCDLCMCalculator from "@/staticData/seoData/GCDLCMCalculator";
 import GCDLCMFinder from "@/staticData/seoData/GCDLCMFinder";
 import GPACalculator from "@/staticData/seoData/GPACalculator";
 import GradeCalculator from "@/staticData/seoData/GradeCalculator";
 import GrammarChecker from "@/staticData/seoData/GrammarChecker";
+import GraphPlotter from "@/staticData/seoData/GraphPlotter";
 import GrayCodeToBinaryConverter from "@/staticData/seoData/GrayCodeToBinaryConverter";
 import GSTCalculator from "@/staticData/seoData/GSTCalculator";
 import HashGenerator from "@/staticData/seoData/HashGenerator";
@@ -76,13 +88,17 @@ import ImageCropper from "@/staticData/seoData/ImageCropper";
 import ImageEnhancer from "@/staticData/seoData/ImageEnhancer";
 import ImageResizer from "@/staticData/seoData/ImageResizer";
 import ImageWatermarker from "@/staticData/seoData/ImageWatermarker";
+import InequalitySolver from "@/staticData/seoData/InequalitySolver";
 import IntegerToBinaryConverter from "@/staticData/seoData/IntegerToBinaryConverter";
 import IntegralCalculator from "@/staticData/seoData/IntegralCalculator";
+import IntegralSolver from "@/staticData/seoData/IntegralSolver";
 import InvestmentCalculator from "@/staticData/seoData/InvestmentCalculator";
 import JSONFormatter from "@/staticData/seoData/JSONFormatter";
 import JsonToCsvConverter from "@/staticData/seoData/JsonToCsvConverter";
 import JsonToXmlConverter from "@/staticData/seoData/JsonToXmlConverter";
 import LengthConverter from "@/staticData/seoData/LengthConverter";
+import LimitEvaluator from "@/staticData/seoData/LimitEvaluator";
+import LinearRegressionAnalyzer from "@/staticData/seoData/LinearRegressionAnalyzer";
 import LoanCalculator from "@/staticData/seoData/LoanCalculator";
 import LoanToValueCalculator from "@/staticData/seoData/LoanToValueCalculator";
 import LogarithmCalculator from "@/staticData/seoData/LogarithmCalculator";
@@ -93,12 +109,16 @@ import MarkdownPreviewer from "@/staticData/seoData/MarkdownPreviewer";
 import MatrixCalculator from "@/staticData/seoData/MatrixCalculator";
 import MatrixDeterminant from "@/staticData/seoData/MatrixDeterminant";
 import MatrixInverse from "@/staticData/seoData/MatrixInverse";
+import MatrixTransposer from "@/staticData/seoData/MatrixTransposer";
 import MeanMedianModeCalculator from "@/staticData/seoData/MeanMedianModeCalculator";
 import MergePDFs from "@/staticData/seoData/MergePDFs";
+import ModularArithmeticSolver from "@/staticData/seoData/ModularArithmeticSolver";
 import MolecularWeightCalculator from "@/staticData/seoData/MolecularWeightCalculator";
 import MortgageCalculator from "@/staticData/seoData/MortgageCalculator";
+import NumberBaseConverter from "@/staticData/seoData/NumberBaseConverter";
 import OctalToBinaryConverter from "@/staticData/seoData/OctalToBinaryConverter";
 import PaletteGenerator from "@/staticData/seoData/PaletteGenerator";
+import PartialFractionDecomposer from "@/staticData/seoData/PartialFractionDecomposer";
 import PasswordStrengthChecker from "@/staticData/seoData/PasswordStrengthChecker";
 import PayPalFeeCalculator from "@/staticData/seoData/PayPalFeeCalculator";
 import PDFConverter from "@/staticData/seoData/PDFConverter";
@@ -114,8 +134,10 @@ import PercentageDifferenceCalculator from "@/staticData/seoData/PercentageDiffe
 import PercentageIncreaseCalculator from "@/staticData/seoData/PercentageIncreaseCalculator";
 import PeriodicTableExplorer from "@/staticData/seoData/PeriodicTableExplorer";
 import PermutationCalculator from "@/staticData/seoData/PermutationCalculator";
+import PermutationGenerator from "@/staticData/seoData/PermutationGenerator";
 import PhysicsUnitConverter from "@/staticData/seoData/PhysicsUnitConverter";
 import PolynomialFactorizer from "@/staticData/seoData/PolynomialFactorizer";
+import PolynomialRootApproximator from "@/staticData/seoData/PolynomialRootApproximator";
 import PrimeFactorization from "@/staticData/seoData/PrimeFactorization";
 import PrimeNumberChecker from "@/staticData/seoData/PrimeNumberChecker";
 import ProbabilityCalculator from "@/staticData/seoData/ProbabilityCalculator";
@@ -126,6 +148,7 @@ import QuadraticEquationSolver from "@/staticData/seoData/QuadraticEquationSolve
 import QuoteValidator from "@/staticData/seoData/QuoteValidator";
 import RandomNumberGenerator from "@/staticData/seoData/RandomNumberGenerator";
 import RandomPasswordGenerator from "@/staticData/seoData/RandomPasswordGenerator";
+import RationalEquationSolver from "@/staticData/seoData/RationalEquationSolver";
 import RegexTester from "@/staticData/seoData/RegexTester";
 import RetirementSavingsCalculator from "@/staticData/seoData/RetirementSavingsCalculator";
 import RootCalculator from "@/staticData/seoData/RootCalculator";
@@ -134,15 +157,19 @@ import SalaryCalculator from "@/staticData/seoData/SalaryCalculator";
 import SalesTaxCalculator from "@/staticData/seoData/SalesTaxCalculator";
 import ScientificCalculator from "@/staticData/seoData/ScientificCalculator";
 import SequenceGenerator from "@/staticData/seoData/SequenceGenerator";
+import SetOperationsTool from "@/staticData/seoData/SetOperationsTool";
+import SigmaNotationExpander from "@/staticData/seoData/SigmaNotationExpander";
 import SlugGenerator from "@/staticData/seoData/SlugGenerator";
 import SpeedConverter from "@/staticData/seoData/SpeedConverter";
 import SpellChecker from "@/staticData/seoData/SpellChecker";
 import SplitPDF from "@/staticData/seoData/SplitPDF";
 import SQLQueryBuilder from "@/staticData/seoData/SQLQueryBuilder";
+import StatisticsAnalyzer from "@/staticData/seoData/StatisticsAnalyzer";
 import StatisticsCalculator from "@/staticData/seoData/StatisticsCalculator";
 import Stopwatch from "@/staticData/seoData/Stopwatch";
 import SystemOfEquationsSolver from "@/staticData/seoData/SystemOfEquationsSolver";
 import TaxCalculator from "@/staticData/seoData/TaxCalculator";
+import TaylorSeriesGenerator from "@/staticData/seoData/TaylorSeriesGenerator";
 import TDEECalculator from "@/staticData/seoData/TDEECalculator";
 import TemperatureConverter from "@/staticData/seoData/TemperatureConverter";
 import TextBeautifier from "@/staticData/seoData/TextBeautifier";
@@ -157,12 +184,15 @@ import TimeCalculator from "@/staticData/seoData/TimeCalculator";
 import TimeDurationCalculator from "@/staticData/seoData/TimeDurationCalculator";
 import TimeZoneConverter from "@/staticData/seoData/TimeZoneConverter";
 import TipCalculator from "@/staticData/seoData/TipCalculator";
+import TrigonometricIdentityProver from "@/staticData/seoData/TrigonometricIdentityProver";
 import TrigonometrySolver from "@/staticData/seoData/TrigonometrySolver";
+import UnitConverter from "@/staticData/seoData/UnitConverter";
 import UnitConverterCalculator from "@/staticData/seoData/UnitConverterCalculator";
 import URLDecoder from "@/staticData/seoData/URLDecoder";
 import URLEncoder from "@/staticData/seoData/URLEncoder";
 import UTF8ToBinaryConverter from "@/staticData/seoData/UTF8ToBinaryConverter";
 import UUIDGenerator from "@/staticData/seoData/UUIDGenerator";
+import VectorAnalyzer from "@/staticData/seoData/VectorAnalyzer";
 import VectorCalculator from "@/staticData/seoData/VectorCalculator";
 import VolumeConverter from "@/staticData/seoData/VolumeConverter";
 import WeightConverter from "@/staticData/seoData/WeightConverter";
@@ -344,6 +374,36 @@ const SeoDataImport = {
   SystemOfEquationsSolver,
   ProbabilitySolver,
   StatisticsCalculator,
+  FractionSimplifier,
+  DerivativeFinder,
+  IntegralSolver,
+  VectorAnalyzer,
+  ComplexNumberSolver,
+  PermutationGenerator,
+  CombinationGenerator,
+  StatisticsAnalyzer,
+  GraphPlotter,
+  UnitConverter,
+  InequalitySolver,
+  FactorialGenerator,
+  MatrixTransposer,
+  EigenvalueFinder,
+  GaussianEliminator,
+  NumberBaseConverter,
+  SigmaNotationExpander,
+  TaylorSeriesGenerator,
+  LimitEvaluator,
+  PartialFractionDecomposer,
+  ModularArithmeticSolver,
+  FibonacciSequenceGenerator,
+  DivisibilityTester,
+  RationalEquationSolver,
+  SetOperationsTool,
+  LinearRegressionAnalyzer,
+  ExponentSimplifier,
+  PolynomialRootApproximator,
+  TrigonometricIdentityProver,
+  ContinuedFractionExpander
 };
 
 export default SeoDataImport;
