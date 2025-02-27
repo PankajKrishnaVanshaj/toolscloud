@@ -173,13 +173,23 @@ import TaylorSeriesGenerator from "@/staticData/seoData/TaylorSeriesGenerator";
 import TDEECalculator from "@/staticData/seoData/TDEECalculator";
 import TemperatureConverter from "@/staticData/seoData/TemperatureConverter";
 import TextBeautifier from "@/staticData/seoData/TextBeautifier";
+import TextCamelCaseConverter from "@/staticData/seoData/TextCamelCaseConverter";
 import TextCaseConverter from "@/staticData/seoData/TextCaseConverter";
 import TextDuplicatorChecker from "@/staticData/seoData/TextDuplicatorChecker";
 import TextEditor from "@/staticData/seoData/TextEditor";
+import TextToHtmlConverter from "@/staticData/seoData/TextHTMLConverter";
+import TextKebabCaseConverter from "@/staticData/seoData/TextKebabCaseConverter";
+import TextLoremIpsumGenerator from "@/staticData/seoData/TextLoremIpsumGenerator";
+import TextParaphrase from "@/staticData/seoData/TextParaphraser";
+import TextReadabilityScorer from "@/staticData/seoData/TextReadabilityScorer";
+import TextSlugifier from "@/staticData/seoData/TextSlugifier";
+import TextSnakeCaseConverter from "@/staticData/seoData/TextSnakeCaseConverter";
+import TextTitleGenerator from "@/staticData/seoData/TextTitleGenerator";
 import TextToBinaryConverter from "@/staticData/seoData/TextToBinaryConverter";
 import TextToHexConverter from "@/staticData/seoData/TextToHexConverter";
 import TextToImageGenerator from "@/staticData/seoData/TextToImageGenerator";
 import TextToSpeech from "@/staticData/seoData/TextToSpeech";
+import TextTypographer from "@/staticData/seoData/TextTypographer";
 import TimeCalculator from "@/staticData/seoData/TimeCalculator";
 import TimeDurationCalculator from "@/staticData/seoData/TimeDurationCalculator";
 import TimeZoneConverter from "@/staticData/seoData/TimeZoneConverter";
@@ -403,7 +413,17 @@ const SeoDataImport = {
   ExponentSimplifier,
   PolynomialRootApproximator,
   TrigonometricIdentityProver,
-  ContinuedFractionExpander
+  ContinuedFractionExpander,
+  TextParaphrase,
+  TextReadabilityScorer,
+  TextTypographer,
+  TextSlugifier,
+  TextTitleGenerator,
+  TextKebabCaseConverter,
+  TextSnakeCaseConverter,
+  TextCamelCaseConverter,
+  TextLoremIpsumGenerator,
+  TextToHtmlConverter 
 };
 
 export default SeoDataImport;

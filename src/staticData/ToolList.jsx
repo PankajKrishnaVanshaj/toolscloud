@@ -623,7 +623,7 @@ const ToolList = [
         icon: <MdOutlineEdit />,
         desc: "Edit and preview text in Markdown format.",
         code: "TextMarkdownEditor",
-        // seo: SeoDataImport.TextMarkdownEditor
+        seo: SeoDataImport.TextMarkdownEditor
       },
       {
         name: "Text HTML Converter",
@@ -631,7 +631,7 @@ const ToolList = [
         icon: <MdOutlineCode />,
         desc: "Convert plain text to HTML tags.",
         code: "TextHTMLConverter",
-        // seo: SeoDataImport.TextHTMLConverter
+        seo: SeoDataImport.TextToHtmlConverter
       },
       {
         name: "Text Lorem Ipsum Generator",
@@ -639,7 +639,7 @@ const ToolList = [
         icon: <MdOutlineCreate />,
         desc: "Generate custom-length Lorem Ipsum text.",
         code: "TextLoremIpsumGenerator",
-        // seo: SeoDataImport.TextLoremIpsumGenerator
+        seo: SeoDataImport.TextLoremIpsumGenerator
       },
       {
         name: "Text Camel Case Converter",
@@ -647,7 +647,7 @@ const ToolList = [
         icon: <MdOutlineTextFormat />,
         desc: "Convert text to camelCase or PascalCase.",
         code: "TextCamelCaseConverter",
-        // seo: SeoDataImport.TextCamelCaseConverter
+        seo: SeoDataImport.TextCamelCaseConverter
       },
       {
         name: "Text Snake Case Converter",
@@ -655,7 +655,7 @@ const ToolList = [
         icon: <MdOutlineTextFormat />,
         desc: "Convert text to snake_case format.",
         code: "TextSnakeCaseConverter",
-        // seo: SeoDataImport.TextSnakeCaseConverter
+        seo: SeoDataImport.TextSnakeCaseConverter
       },
       {
         name: "Text Kebab Case Converter",
@@ -663,7 +663,7 @@ const ToolList = [
         icon: <MdOutlineTextFormat />,
         desc: "Convert text to kebab-case format.",
         code: "TextKebabCaseConverter",
-        // seo: SeoDataImport.TextKebabCaseConverter
+        seo: SeoDataImport.TextKebabCaseConverter
       },
       {
         name: "Text Title Generator",
@@ -671,7 +671,7 @@ const ToolList = [
         icon: <MdOutlineTitle />,
         desc: "Generate catchy titles from keywords.",
         code: "TextTitleGenerator",
-        // seo: SeoDataImport.TextTitleGenerator
+        seo: SeoDataImport.TextTitleGenerator
       },
       {
         name: "Text Slugifier",
@@ -679,7 +679,7 @@ const ToolList = [
         icon: <MdOutlineLink />,
         desc: "Create URL-friendly slugs from text.",
         code: "TextSlugifier",
-        // seo: SeoDataImport.TextSlugifier
+        seo: SeoDataImport.TextSlugifier
       },
       {
         name: "Text Typographer",
@@ -687,7 +687,7 @@ const ToolList = [
         icon: <MdOutlineTextFields />,
         desc: "Enhance text with typographic symbols like smart quotes.",
         code: "TextTypographer",
-        // seo: SeoDataImport.TextTypographer
+        seo: SeoDataImport.TextTypographer
       },
       {
         name: "Text Readability Scorer",
@@ -695,7 +695,7 @@ const ToolList = [
         icon: <MdOutlineAssessment />,
         desc: "Score text readability using Flesch-Kincaid or similar metrics.",
         code: "TextReadabilityScorer",
-        // seo: SeoDataImport.TextReadabilityScorer
+        seo: SeoDataImport.TextReadabilityScorer
       },
       {
         name: "Text Paraphraser",
@@ -703,7 +703,7 @@ const ToolList = [
         icon: <MdOutlineRepeat />,
         desc: "Rephrase text to avoid plagiarism or improve clarity.",
         code: "TextParaphraser",
-        // seo: SeoDataImport.TextParaphraser
+        seo: SeoDataImport.TextParaphrase
       },
     ],
   },
