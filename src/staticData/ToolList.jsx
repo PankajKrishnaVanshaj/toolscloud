@@ -304,14 +304,13 @@ const ToolList = [
         code: "TextDuplicatorChecker",
         seo: SeoDataImport.TextDuplicatorChecker,
       },
-      // New 50 Text Tools
       {
         name: "Text Reverser",
         slug: "text-reverser",
         icon: <MdOutlineSwapHoriz />,
         desc: "Reverse the order of characters or words in your text.",
         code: "TextReverser",
-        // seo: SeoDataImport.TextReverser
+        seo: SeoDataImport.TextReverser
       },
       {
         name: "Text Shuffler",
@@ -319,7 +318,7 @@ const ToolList = [
         icon: <MdOutlineShuffle />,
         desc: "Randomly shuffle words or lines in your text.",
         code: "TextShuffler",
-        // seo: SeoDataImport.TextShuffler
+        seo: SeoDataImport.TextShuffler
       },
       {
         name: "Text Encoder",
@@ -327,7 +326,7 @@ const ToolList = [
         icon: <MdOutlineLock />,
         desc: "Encode text into formats like Base64 or URL encoding.",
         code: "TextEncoder",
-        // seo: SeoDataImport.TextEncoder
+        seo: SeoDataImport.TextEncoder
       },
       {
         name: "Text Decoder",
@@ -335,7 +334,7 @@ const ToolList = [
         icon: <MdOutlineLockOpen />,
         desc: "Decode text from Base64, URL encoding, or other formats.",
         code: "TextDecoder",
-        // seo: SeoDataImport.TextDecoder
+        seo: SeoDataImport.TextDecoder
       },
       {
         name: "Text Trimmer",
@@ -343,7 +342,7 @@ const ToolList = [
         icon: <MdOutlineContentCut />,
         desc: "Remove extra spaces, tabs, or line breaks from text.",
         code: "TextTrimmer",
-        // seo: SeoDataImport.TextTrimmer
+        seo: SeoDataImport.TextTrimmer
       },
       {
         name: "Text Comparator",
@@ -351,7 +350,7 @@ const ToolList = [
         icon: <MdOutlineCompare />,
         desc: "Compare two texts and highlight differences.",
         code: "TextComparator",
-        // seo: SeoDataImport.TextComparator
+        seo: SeoDataImport.TextComparator
       },
       {
         name: "Text Sorter",
@@ -359,7 +358,7 @@ const ToolList = [
         icon: <MdOutlineSort />,
         desc: "Sort lines or words alphabetically or numerically.",
         code: "TextSorter",
-        // seo: SeoDataImport.TextSorter
+        seo: SeoDataImport.TextSorter
       },
       {
         name: "Text Extractor",
@@ -367,7 +366,7 @@ const ToolList = [
         icon: <MdOutlineFilterAlt />,
         desc: "Extract specific patterns like emails or URLs from text.",
         code: "TextExtractor",
-        // seo: SeoDataImport.TextExtractor
+        seo: SeoDataImport.TextExtractor
       },
       {
         name: "Text Randomizer",
@@ -375,7 +374,7 @@ const ToolList = [
         icon: <MdOutlineCasino />,
         desc: "Generate random text or scramble existing text.",
         code: "TextRandomizer",
-        // seo: SeoDataImport.TextRandomizer
+        seo: SeoDataImport.TextRandomizer
       },
       {
         name: "Text Highlighter",
@@ -383,7 +382,7 @@ const ToolList = [
         icon: <MdOutlineHighlight />,
         desc: "Highlight specific words or phrases in your text.",
         code: "TextHighlighter",
-        // seo: SeoDataImport.TextHighlighter
+        seo: SeoDataImport.TextHighlighter
       },
       {
         name: "Text Summarizer",
@@ -391,7 +390,7 @@ const ToolList = [
         icon: <MdOutlineShortText />,
         desc: "Create concise summaries of long text.",
         code: "TextSummarizer",
-        // seo: SeoDataImport.TextSummarizer
+        seo: SeoDataImport.TextSummarizer
       },
       {
         name: "Text Expander",
@@ -399,7 +398,7 @@ const ToolList = [
         icon: <MdOutlineExpand />,
         desc: "Expand abbreviations or shorthand into full text.",
         code: "TextExpander",
-        // seo: SeoDataImport.TextExpander
+        seo: SeoDataImport.TextExpander
       },
       {
         name: "Text Redactor",
@@ -407,7 +406,7 @@ const ToolList = [
         icon: <MdOutlineVisibilityOff />,
         desc: "Redact sensitive information from your text.",
         code: "TextRedactor",
-        // seo: SeoDataImport.TextRedactor
+        seo: SeoDataImport.TextRedactor
       },
       {
         name: "Text Translator",
@@ -415,7 +414,7 @@ const ToolList = [
         icon: <MdOutlineTranslate />,
         desc: "Translate text into multiple languages.",
         code: "TextTranslator",
-        // seo: SeoDataImport.TextTranslator
+        seo: SeoDataImport.TextTranslator
       },
       {
         name: "Text Aligner",
@@ -423,7 +422,7 @@ const ToolList = [
         icon: <MdOutlineFormatAlignLeft />,
         desc: "Align text to left, right, center, or justify.",
         code: "TextAligner",
-        // seo: SeoDataImport.TextAligner
+        seo: SeoDataImport.TextAligner
       },
       {
         name: "Text Formatter",
@@ -431,7 +430,7 @@ const ToolList = [
         icon: <MdOutlineFormatIndentIncrease />,
         desc: "Apply custom formatting like bold, italic, or indentation.",
         code: "TextFormatter",
-        // seo: SeoDataImport.TextFormatter
+        seo: SeoDataImport.TextFormatter
       },
       {
         name: "Text Cleaner",
@@ -439,7 +438,7 @@ const ToolList = [
         icon: <MdOutlineCleaningServices />,
         desc: "Remove unwanted characters or formatting from text.",
         code: "TextCleaner",
-        // seo: SeoDataImport.TextCleaner
+        seo: SeoDataImport.TextCleaner
       },
       {
         name: "Text Generator",
@@ -447,7 +446,7 @@ const ToolList = [
         icon: <MdOutlineCreate />,
         desc: "Generate placeholder text like Lorem Ipsum.",
         code: "TextGenerator",
-        // seo: SeoDataImport.TextGenerator
+        seo: SeoDataImport.TextGenerator
       },
       {
         name: "Text Splitter",
@@ -455,7 +454,7 @@ const ToolList = [
         icon: <MdOutlineCallSplit />,
         desc: "Split text into chunks by words, lines, or characters.",
         code: "TextSplitter",
-        // seo: SeoDataImport.TextSplitter
+        seo: SeoDataImport.TextSplitter
       },
       {
         name: "Text Joiner",
@@ -463,7 +462,7 @@ const ToolList = [
         icon: <MdOutlineMergeType />,
         desc: "Combine multiple text segments with custom separators.",
         code: "TextJoiner",
-        // seo: SeoDataImport.TextJoiner
+        seo: SeoDataImport.TextJoiner
       },
       {
         name: "Text Analyzer",
@@ -471,7 +470,7 @@ const ToolList = [
         icon: <MdOutlineAnalytics />,
         desc: "Analyze text for sentiment, keywords, or readability.",
         code: "TextAnalyzer",
-        // seo: SeoDataImport.TextAnalyzer
+        seo: SeoDataImport.TextAnalyzer
       },
       {
         name: "Text Obfuscator",
@@ -479,7 +478,7 @@ const ToolList = [
         icon: <MdOutlineBlurOn />,
         desc: "Obfuscate text to make it harder to read.",
         code: "TextObfuscator",
-        // seo: SeoDataImport.TextObfuscator
+        seo: SeoDataImport.TextObfuscator
       },
       {
         name: "Text Rotator",
@@ -487,7 +486,7 @@ const ToolList = [
         icon: <MdOutlineRotateRight />,
         desc: "Rotate text using ROT13 or custom ciphers.",
         code: "TextRotator",
-        // seo: SeoDataImport.TextRotator
+        seo: SeoDataImport.TextRotator
       },
       {
         name: "Text Padder",
@@ -495,7 +494,7 @@ const ToolList = [
         icon: <MdOutlineSpaceBar />,
         desc: "Add padding characters to align or format text.",
         code: "TextPadder",
-        // seo: SeoDataImport.TextPadder
+        seo: SeoDataImport.TextPadder
       },
       {
         name: "Text Tokenizer",
@@ -503,7 +502,7 @@ const ToolList = [
         icon: <MdOutlineSegment />,
         desc: "Break text into tokens for processing.",
         code: "TextTokenizer",
-        // seo: SeoDataImport.TextTokenizer
+        seo: SeoDataImport.TextTokenizer
       },
       {
         name: "Text Normalizer",
@@ -511,7 +510,7 @@ const ToolList = [
         icon: <MdOutlineStraighten />,
         desc: "Normalize text by removing accents or special characters.",
         code: "TextNormalizer",
-        // seo: SeoDataImport.TextNormalizer
+        seo: SeoDataImport.TextNormalizer
       },
       {
         name: "Text Hasher",
@@ -519,7 +518,7 @@ const ToolList = [
         icon: <MdOutlineFingerprint />,
         desc: "Generate hash values (e.g., MD5, SHA) from text.",
         code: "TextHasher",
-        // seo: SeoDataImport.TextHasher
+        seo: SeoDataImport.TextHasher
       },
       {
         name: "Text Encryptor",
@@ -527,7 +526,7 @@ const ToolList = [
         icon: <MdOutlineLock />,
         desc: "Encrypt text using simple ciphers or algorithms.",
         code: "TextEncryptor",
-        // seo: SeoDataImport.TextEncryptor
+        seo: SeoDataImport.TextEncryptor
       },
       {
         name: "Text Decryptor",
@@ -535,7 +534,7 @@ const ToolList = [
         icon: <MdOutlineLockOpen />,
         desc: "Decrypt text encrypted with known ciphers.",
         code: "TextDecryptor",
-        // seo: SeoDataImport.TextDecryptor
+        seo: SeoDataImport.TextDecryptor
       },
       {
         name: "Text Profanity Filter",
@@ -543,7 +542,7 @@ const ToolList = [
         icon: <MdOutlineFilterAlt />,
         desc: "Remove or censor profane words from text.",
         code: "TextProfanityFilter",
-        // seo: SeoDataImport.TextProfanityFilter
+        seo: SeoDataImport.TextProfanityFilter
       },
       {
         name: "Text Keyword Extractor",
@@ -551,7 +550,7 @@ const ToolList = [
         icon: <MdOutlineLabel />,
         desc: "Extract key words or phrases from text.",
         code: "TextKeywordExtractor",
-        // seo: SeoDataImport.TextKeywordExtractor
+        seo: SeoDataImport.TextKeywordExtractor
       },
       {
         name: "Text Line Numberer",
@@ -559,7 +558,7 @@ const ToolList = [
         icon: <MdOutlineFormatListNumbered />,
         desc: "Add line numbers to your text.",
         code: "TextLineNumberer",
-        // seo: SeoDataImport.TextLineNumberer
+        seo: SeoDataImport.TextLineNumberer
       },
       {
         name: "Text Word Cloud Generator",
@@ -567,7 +566,7 @@ const ToolList = [
         icon: <MdOutlineCloud />,
         desc: "Create a word cloud from your text.",
         code: "TextWordCloudGenerator",
-        // seo: SeoDataImport.TextWordCloudGenerator
+        seo: SeoDataImport.TextWordCloudGenerator
       },
       {
         name: "Text Unformatter",
@@ -575,7 +574,7 @@ const ToolList = [
         icon: <MdOutlineFormatClear />,
         desc: "Strip all formatting from text.",
         code: "TextUnformatter",
-        // seo: SeoDataImport.TextUnformatter
+        seo: SeoDataImport.TextUnformatter
       },
       {
         name: "Text Length Truncator",
@@ -583,7 +582,7 @@ const ToolList = [
         icon: <MdOutlineContentCut />,
         desc: "Truncate text to a specified length.",
         code: "TextLengthTruncator",
-        // seo: SeoDataImport.TextLengthTruncator
+        seo: SeoDataImport.TextLengthTruncator
       },
       {
         name: "Text Diff Viewer",
@@ -591,7 +590,7 @@ const ToolList = [
         icon: <MdOutlineDifference />,
         desc: "View differences between two text versions side-by-side.",
         code: "TextDiffViewer",
-        // seo: SeoDataImport.TextDiffViewer
+        seo: SeoDataImport.TextDiffViewer
       },
       {
         name: "Text Morse Converter",
@@ -599,7 +598,7 @@ const ToolList = [
         icon: <MdOutlineCode />,
         desc: "Convert text to Morse code and vice versa.",
         code: "TextMorseConverter",
-        // seo: SeoDataImport.TextMorseConverter
+        seo: SeoDataImport.TextMorseConverter
       },
       {
         name: "Text Binary Converter",
@@ -607,7 +606,7 @@ const ToolList = [
         icon: <MdOutlineCode />,
         desc: "Convert text to binary and back.",
         code: "TextBinaryConverter",
-        // seo: SeoDataImport.TextBinaryConverter
+        seo: SeoDataImport.TextBinaryConverter
       },
       {
         name: "Text Hex Converter",
@@ -615,7 +614,7 @@ const ToolList = [
         icon: <MdOutlineCode />,
         desc: "Convert text to hexadecimal and back.",
         code: "TextHexConverter",
-        // seo: SeoDataImport.TextHexConverter
+        seo: SeoDataImport.TextHexConverter
       },
       {
         name: "Text Markdown Editor",
@@ -4230,7 +4229,7 @@ const ToolList = [
         icon: <MdTransform />,
         desc: "Convert JSON data to BSON binary format.",
         code: "JsonToBson",
-        // seo: SeoDataImport.JsonToBsonConverter
+        seo: SeoDataImport.JsonToBsonConverter
       },
       {
         name: "BSON to JSON",
@@ -4238,7 +4237,7 @@ const ToolList = [
         icon: <MdTransform />,
         desc: "Convert BSON binary data to JSON format.",
         code: "BsonToJson",
-        // seo: SeoDataImport.BsonToJsonConverter
+        seo: SeoDataImport.BsonToJsonConverter
       },
       {
         name: "Text to CSV",

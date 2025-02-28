@@ -9,6 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "bson": "^6.10.3",
     "chart.js": "^4.4.8",
     "html-to-md": "^0.8.6",
     "js-yaml": "^4.1.0",

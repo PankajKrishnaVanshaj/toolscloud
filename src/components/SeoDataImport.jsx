@@ -24,6 +24,7 @@ import BinaryToUTF8Converter from "@/staticData/seoData/BinaryToUTF8Converter";
 import BinaryXORCalculator from "@/staticData/seoData/BinaryXORCalculator";
 import BinomialTheoremExpander from "@/staticData/seoData/BinomialTheoremExpander";
 import BMICalculator from "@/staticData/seoData/BMICalculator";
+import BsonToJsonConverter from "@/staticData/seoData/BsonToJsonConverter";
 import CalorieCalculator from "@/staticData/seoData/CalorieCalculator";
 import ChronologicalAgeCalculator from "@/staticData/seoData/ChronologicalAgeCalculator";
 import CodeMinifier from "@/staticData/seoData/CodeMinifier";
@@ -94,6 +95,7 @@ import IntegralCalculator from "@/staticData/seoData/IntegralCalculator";
 import IntegralSolver from "@/staticData/seoData/IntegralSolver";
 import InvestmentCalculator from "@/staticData/seoData/InvestmentCalculator";
 import JSONFormatter from "@/staticData/seoData/JSONFormatter";
+import JsonToBsonConverter from "@/staticData/seoData/JsonToBsonConverter";
 import JsonToCsvConverter from "@/staticData/seoData/JsonToCsvConverter";
 import JsonToXmlConverter from "@/staticData/seoData/JsonToXmlConverter";
 import LengthConverter from "@/staticData/seoData/LengthConverter";
@@ -172,24 +174,63 @@ import TaxCalculator from "@/staticData/seoData/TaxCalculator";
 import TaylorSeriesGenerator from "@/staticData/seoData/TaylorSeriesGenerator";
 import TDEECalculator from "@/staticData/seoData/TDEECalculator";
 import TemperatureConverter from "@/staticData/seoData/TemperatureConverter";
+import TextAligner from "@/staticData/seoData/TextAligner";
+import TextAnalyzer from "@/staticData/seoData/TextAnalyzer";
 import TextBeautifier from "@/staticData/seoData/TextBeautifier";
+import TextBinaryConverter from "@/staticData/seoData/TextBinaryConverter";
 import TextCamelCaseConverter from "@/staticData/seoData/TextCamelCaseConverter";
 import TextCaseConverter from "@/staticData/seoData/TextCaseConverter";
+import TextCleaner from "@/staticData/seoData/TextCleaner";
+import TextComparator from "@/staticData/seoData/TextComparator";
+import TextDecoder from "@/staticData/seoData/TextDecoder";
+import TextDecryptor from "@/staticData/seoData/TextDecryptor";
+import TextDiffViewer from "@/staticData/seoData/TextDiffViewer";
 import TextDuplicatorChecker from "@/staticData/seoData/TextDuplicatorChecker";
 import TextEditor from "@/staticData/seoData/TextEditor";
+import TextEncoder from "@/staticData/seoData/TextEncoder";
+import TextEncryptor from "@/staticData/seoData/TextEncryptor";
+import TextExpander from "@/staticData/seoData/TextExpander";
+import TextExtractor from "@/staticData/seoData/TextExtractor";
+import TextFormatter from "@/staticData/seoData/TextFormatter";
+import TextGenerator from "@/staticData/seoData/TextGenerator";
+import TextHasher from "@/staticData/seoData/TextHasher";
+import TextHexConverter from "@/staticData/seoData/TextHexConverter";
+import TextHighlighter from "@/staticData/seoData/TextHighlighter";
 import TextToHtmlConverter from "@/staticData/seoData/TextHTMLConverter";
+import TextJoiner from "@/staticData/seoData/TextJoiner";
 import TextKebabCaseConverter from "@/staticData/seoData/TextKebabCaseConverter";
+import TextKeywordExtractor from "@/staticData/seoData/TextKeywordExtractor";
+import TextLengthTruncator from "@/staticData/seoData/TextLengthTruncator";
+import TextLineNumberer from "@/staticData/seoData/TextLineNumberer";
 import TextLoremIpsumGenerator from "@/staticData/seoData/TextLoremIpsumGenerator";
+import TextMorseConverter from "@/staticData/seoData/TextMorseConverter";
+import TextNormalizer from "@/staticData/seoData/TextNormalizer";
+import TextObfuscator from "@/staticData/seoData/TextObfuscator";
+import TextPadder from "@/staticData/seoData/TextPadder";
 import TextParaphrase from "@/staticData/seoData/TextParaphraser";
+import TextProfanityFilter from "@/staticData/seoData/TextProfanityFilter";
+import TextRandomizer from "@/staticData/seoData/TextRandomizer";
 import TextReadabilityScorer from "@/staticData/seoData/TextReadabilityScorer";
+import TextRedactor from "@/staticData/seoData/TextRedactor";
+import TextReverser from "@/staticData/seoData/TextReverser";
+import TextRotator from "@/staticData/seoData/TextRotator";
+import TextShuffler from "@/staticData/seoData/TextShuffler";
 import TextSlugifier from "@/staticData/seoData/TextSlugifier";
 import TextSnakeCaseConverter from "@/staticData/seoData/TextSnakeCaseConverter";
+import TextSorter from "@/staticData/seoData/TextSorter";
+import TextSplitter from "@/staticData/seoData/TextSplitter";
+import TextSummarizer from "@/staticData/seoData/TextSummarizer";
 import TextTitleGenerator from "@/staticData/seoData/TextTitleGenerator";
 import TextToBinaryConverter from "@/staticData/seoData/TextToBinaryConverter";
 import TextToHexConverter from "@/staticData/seoData/TextToHexConverter";
 import TextToImageGenerator from "@/staticData/seoData/TextToImageGenerator";
+import TextTokenizer from "@/staticData/seoData/TextTokenizer";
 import TextToSpeech from "@/staticData/seoData/TextToSpeech";
+import TextTranslator from "@/staticData/seoData/TextTranslator";
+import TextTrimmer from "@/staticData/seoData/TextTrimmer";
 import TextTypographer from "@/staticData/seoData/TextTypographer";
+import TextUnformatter from "@/staticData/seoData/TextUnformatter";
+import TextWordCloudGenerator from "@/staticData/seoData/TextWordCloudGenerator";
 import TimeCalculator from "@/staticData/seoData/TimeCalculator";
 import TimeDurationCalculator from "@/staticData/seoData/TimeDurationCalculator";
 import TimeZoneConverter from "@/staticData/seoData/TimeZoneConverter";
@@ -423,7 +464,49 @@ const SeoDataImport = {
   TextSnakeCaseConverter,
   TextCamelCaseConverter,
   TextLoremIpsumGenerator,
-  TextToHtmlConverter 
+  TextToHtmlConverter ,
+  JsonToBsonConverter,
+  BsonToJsonConverter,
+  TextReverser,
+  TextShuffler,
+  TextEncoder,
+  TextDecoder,
+  TextTrimmer,
+  TextComparator,
+  TextSorter,
+  TextExtractor,
+  TextRandomizer,
+  TextHighlighter,
+  TextSummarizer,
+  TextExpander,
+  TextRedactor,
+  TextTranslator,
+  TextAligner,
+  TextFormatter,
+  TextCleaner,
+  TextGenerator,
+  TextSplitter,
+  TextJoiner,
+  TextAnalyzer,
+  TextObfuscator,
+  TextRotator,
+  TextPadder,
+  TextTokenizer,
+  TextNormalizer,
+  TextHasher,
+  TextEncryptor,
+  TextDecryptor,
+  TextProfanityFilter,
+  TextKeywordExtractor,
+  TextLineNumberer,
+  TextWordCloudGenerator,
+  TextUnformatter,
+  TextLengthTruncator,
+  TextDiffViewer,
+  TextHexConverter,
+  TextBinaryConverter,
+  TextMorseConverter,
+  
 };
 
 export default SeoDataImport;
