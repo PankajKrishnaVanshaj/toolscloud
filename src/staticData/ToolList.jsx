@@ -1486,7 +1486,7 @@ const ToolList = [
         slug: "json-to-csv-converter",
         icon: <MdTableChart />,
         desc: "Convert JSON data to CSV format.",
-        code: "JSONToCSVConverter",
+        code: "JsonToCsv",
         // seo: SeoDataImport.JSONToCSVConverter
       },
       {
@@ -1494,7 +1494,7 @@ const ToolList = [
         slug: "csv-to-json-converter",
         icon: <MdTableChart />,
         desc: "Transform CSV data into JSON format.",
-        code: "CSVToJSONConverter",
+        code: "CsvToJson",
         // seo: SeoDataImport.CSVToJSONConverter
       },
       {
