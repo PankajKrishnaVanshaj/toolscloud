@@ -707,7 +707,7 @@ const ToolList = [
     ],
   },
   {
-    category: "Generator Tools",
+    category: "Mix Generator Tools",
     slug: "generator-tools",
     desc: "Tools for generating text, codes, and more",
     icon: <MdAutorenew />,
@@ -784,14 +784,13 @@ const ToolList = [
         code: "SlugGenerator",
         seo: SeoDataImport.SlugGenerator,
       },
-      // New 50 Generator Tools
       {
         name: "API Key Generator",
         slug: "api-key-generator",
         icon: <MdVpnKey />,
         desc: "Create secure API keys for development and authentication.",
         code: "APIKeyGenerator",
-        // seo: SeoDataImport.APIKeyGenerator
+        seo: SeoDataImport.APIKeyGenerator
       },
       {
         name: "Random Word Generator",
@@ -799,7 +798,7 @@ const ToolList = [
         icon: <MdOutlineTextFields />,
         desc: "Produce random words for brainstorming or testing.",
         code: "RandomWordGenerator",
-        // seo: SeoDataImport.RandomWordGenerator
+        seo: SeoDataImport.RandomWordGenerator
       },
       {
         name: "Sentence Generator",
@@ -807,7 +806,7 @@ const ToolList = [
         icon: <MdOutlineShortText />,
         desc: "Generate random sentences for content creation.",
         code: "SentenceGenerator",
-        // seo: SeoDataImport.SentenceGenerator
+        seo: SeoDataImport.SentenceGenerator
       },
       {
         name: "Email Address Generator",
@@ -815,7 +814,7 @@ const ToolList = [
         icon: <MdOutlineEmail />,
         desc: "Create fake email addresses for testing purposes.",
         code: "EmailAddressGenerator",
-        // seo: SeoDataImport.EmailAddressGenerator
+        seo: SeoDataImport.EmailAddressGenerator
       },
       {
         name: "Username Generator",
@@ -823,7 +822,7 @@ const ToolList = [
         icon: <MdPersonOutline />,
         desc: "Generate unique usernames for accounts or profiles.",
         code: "UsernameGenerator",
-        // seo: SeoDataImport.UsernameGenerator
+        seo: SeoDataImport.UsernameGenerator
       },
       {
         name: "Token Generator",
@@ -831,7 +830,7 @@ const ToolList = [
         icon: <MdSecurity />,
         desc: "Generate random tokens for authentication or sessions.",
         code: "TokenGenerator",
-        // seo: SeoDataImport.TokenGenerator
+        seo: SeoDataImport.TokenGenerator
       },
       {
         name: "CSS Gradient Generator",
@@ -839,7 +838,7 @@ const ToolList = [
         icon: <MdGradient />,
         desc: "Create custom CSS gradient codes for web design.",
         code: "CSSGradientGenerator",
-        // seo: SeoDataImport.CSSGradientGenerator
+        seo: SeoDataImport.CSSGradientGenerator
       },
       {
         name: "JSON Data Generator",
@@ -847,7 +846,7 @@ const ToolList = [
         icon: <MdCode />,
         desc: "Generate random JSON data structures for testing.",
         code: "JSONDataGenerator",
-        // seo: SeoDataImport.JSONDataGenerator
+        seo: SeoDataImport.JSONDataGenerator
       },
       {
         name: "XML Data Generator",
@@ -855,7 +854,7 @@ const ToolList = [
         icon: <MdCode />,
         desc: "Produce random XML data for development purposes.",
         code: "XMLDataGenerator",
-        // seo: SeoDataImport.XMLDataGenerator
+        seo: SeoDataImport.XMLDataGenerator
       },
       {
         name: "Credit Card Number Generator",
@@ -863,7 +862,7 @@ const ToolList = [
         icon: <MdCreditCard />,
         desc: "Generate fake credit card numbers for testing.",
         code: "CreditCardNumberGenerator",
-        // seo: SeoDataImport.CreditCardNumberGenerator
+        seo: SeoDataImport.CreditCardNumberGenerator
       },
       {
         name: "Phone Number Generator",
@@ -871,7 +870,7 @@ const ToolList = [
         icon: <MdOutlinePhone />,
         desc: "Create random phone numbers in various formats.",
         code: "PhoneNumberGenerator",
-        // seo: SeoDataImport.PhoneNumberGenerator
+        seo: SeoDataImport.PhoneNumberGenerator
       },
       {
         name: "OTP Generator",
@@ -879,7 +878,7 @@ const ToolList = [
         icon: <MdLockOutline />,
         desc: "Generate one-time passwords for security verification.",
         code: "OTPGenerator",
-        // seo: SeoDataImport.OTPGenerator
+        seo: SeoDataImport.OTPGenerator
       },
       {
         name: "GUID Generator",
@@ -887,7 +886,7 @@ const ToolList = [
         icon: <MdAutorenew />,
         desc: "Generate Globally Unique Identifiers for unique IDs.",
         code: "GUIDGenerator",
-        // seo: SeoDataImport.GUIDGenerator
+        seo: SeoDataImport.GUIDGenerator
       },
       {
         name: "Random Date Generator",
@@ -895,7 +894,7 @@ const ToolList = [
         icon: <MdOutlineCalendarToday />,
         desc: "Generate random dates within a specified range.",
         code: "RandomDateGenerator",
-        // seo: SeoDataImport.RandomDateGenerator
+        seo: SeoDataImport.RandomDateGenerator
       },
       {
         name: "MAC Address Generator",
@@ -903,7 +902,7 @@ const ToolList = [
         icon: <MdOutlineNetworkCheck />,
         desc: "Create random MAC addresses for networking tests.",
         code: "MACAddressGenerator",
-        // seo: SeoDataImport.MACAddressGenerator
+        seo: SeoDataImport.MACAddressGenerator
       },
       {
         name: "IP Address Generator",
@@ -911,7 +910,7 @@ const ToolList = [
         icon: <MdOutlineNetworkWifi />,
         desc: "Generate random IP addresses (IPv4 or IPv6).",
         code: "IPAddressGenerator",
-        // seo: SeoDataImport.IPAddressGenerator
+        seo: SeoDataImport.IPAddressGenerator
       },
       {
         name: "Random String Generator",
@@ -919,7 +918,7 @@ const ToolList = [
         icon: <MdOutlineTextFields />,
         desc: "Produce random strings of specified length and charset.",
         code: "RandomStringGenerator",
-        // seo: SeoDataImport.RandomStringGenerator
+        seo: SeoDataImport.RandomStringGenerator
       },
       {
         name: "Coupon Code Generator",
@@ -927,7 +926,7 @@ const ToolList = [
         icon: <MdOutlineLocalOffer />,
         desc: "Create unique coupon codes for promotions.",
         code: "CouponCodeGenerator",
-        // seo: SeoDataImport.CouponCodeGenerator
+        seo: SeoDataImport.CouponCodeGenerator
       },
       {
         name: "File Name Generator",
@@ -935,7 +934,7 @@ const ToolList = [
         icon: <MdOutlineInsertDriveFile />,
         desc: "Generate unique file names with custom extensions.",
         code: "FileNameGenerator",
-        // seo: SeoDataImport.FileNameGenerator
+        seo: SeoDataImport.FileNameGenerator
       },
       {
         name: "Pattern Generator",
@@ -943,7 +942,7 @@ const ToolList = [
         icon: <MdOutlineDesignServices />,
         desc: "Create repeating patterns for design or testing.",
         code: "PatternGenerator",
-        // seo: SeoDataImport.PatternGenerator
+        seo: SeoDataImport.PatternGenerator
       },
       {
         name: "Random Boolean Generator",
@@ -951,7 +950,7 @@ const ToolList = [
         icon: <MdOutlineToggleOn />,
         desc: "Generate random true/false values.",
         code: "RandomBooleanGenerator",
-        // seo: SeoDataImport.RandomBooleanGenerator
+        seo: SeoDataImport.RandomBooleanGenerator
       },
       {
         name: "Meme Text Generator",
@@ -959,7 +958,7 @@ const ToolList = [
         icon: <MdOutlineImage />,
         desc: "Generate text for meme images with custom styles.",
         code: "MemeTextGenerator",
-        // seo: SeoDataImport.MemeTextGenerator
+        seo: SeoDataImport.MemeTextGenerator
       },
       {
         name: "Random Color Palette Generator",
@@ -967,7 +966,7 @@ const ToolList = [
         icon: <MdPalette />,
         desc: "Create random color palettes for design inspiration.",
         code: "RandomColorPaletteGenerator",
-        // seo: SeoDataImport.RandomColorPaletteGenerator
+        seo: SeoDataImport.RandomColorPaletteGenerator
       },
       {
         name: "SQL Query Generator",
@@ -975,7 +974,7 @@ const ToolList = [
         icon: <MdCode />,
         desc: "Generate basic SQL queries for database testing.",
         code: "SQLQueryGenerator",
-        // seo: SeoDataImport.SQLQueryGenerator
+        seo: SeoDataImport.SQLQueryGenerator
       },
       {
         name: "Regex Generator",
@@ -983,7 +982,7 @@ const ToolList = [
         icon: <MdOutlineCode />,
         desc: "Create regular expressions based on input patterns.",
         code: "RegexGenerator",
-        // seo: SeoDataImport.RegexGenerator
+        seo: SeoDataImport.RegexGenerator
       },
       {
         name: "CSV Data Generator",
@@ -991,7 +990,7 @@ const ToolList = [
         icon: <MdOutlineTableChart />,
         desc: "Generate random CSV data for spreadsheets.",
         code: "CSVDataGenerator",
-        // seo: SeoDataImport.CSVDataGenerator
+        seo: SeoDataImport.CSVDataGenerator
       },
       {
         name: "Random Name Generator",
@@ -999,7 +998,7 @@ const ToolList = [
         icon: <MdOutlinePerson />,
         desc: "Generate random names for characters or users.",
         code: "RandomNameGenerator",
-        // seo: SeoDataImport.RandomNameGenerator
+        seo: SeoDataImport.RandomNameGenerator
       },
       {
         name: "Title Generator",
@@ -1007,7 +1006,7 @@ const ToolList = [
         icon: <MdOutlineTitle />,
         desc: "Create catchy titles for articles or projects.",
         code: "TitleGenerator",
-        // seo: SeoDataImport.TitleGenerator
+        seo: SeoDataImport.TitleGenerator
       },
       {
         name: "Random Address Generator",
@@ -1015,7 +1014,7 @@ const ToolList = [
         icon: <MdOutlineLocationOn />,
         desc: "Generate fake addresses for testing forms.",
         code: "RandomAddressGenerator",
-        // seo: SeoDataImport.RandomAddressGenerator
+        seo: SeoDataImport.RandomAddressGenerator
       },
       {
         name: "Random Time Generator",
@@ -1023,7 +1022,7 @@ const ToolList = [
         icon: <MdOutlineAccessTime />,
         desc: "Generate random times in various formats.",
         code: "RandomTimeGenerator",
-        // seo: SeoDataImport.RandomTimeGenerator
+        seo: SeoDataImport.RandomTimeGenerator
       },
       {
         name: "Captcha Generator",
@@ -1031,7 +1030,7 @@ const ToolList = [
         icon: <MdOutlineVerified />,
         desc: "Create simple image or text captchas.",
         code: "CaptchaGenerator",
-        // seo: SeoDataImport.CaptchaGenerator
+        seo: SeoDataImport.CaptchaGenerator
       },
       {
         name: "Random List Generator",
@@ -1039,7 +1038,7 @@ const ToolList = [
         icon: <MdOutlineList />,
         desc: "Generate random ordered or unordered lists.",
         code: "RandomListGenerator",
-        // seo: SeoDataImport.RandomListGenerator
+        seo: SeoDataImport.RandomListGenerator
       },
       {
         name: "Hex Code Generator",
@@ -1047,7 +1046,7 @@ const ToolList = [
         icon: <MdOutlineCode />,
         desc: "Generate random hexadecimal values.",
         code: "HexCodeGenerator",
-        // seo: SeoDataImport.HexCodeGenerator
+        seo: SeoDataImport.HexCodeGenerator
       },
       {
         name: "Binary Code Generator",
@@ -1055,7 +1054,7 @@ const ToolList = [
         icon: <MdOutlineCode />,
         desc: "Generate binary code from text or numbers.",
         code: "BinaryCodeGenerator",
-        // seo: SeoDataImport.BinaryCodeGenerator
+        seo: SeoDataImport.BinaryCodeGenerator
       },
       {
         name: "ASCII Art Generator",
@@ -1063,7 +1062,7 @@ const ToolList = [
         icon: <MdOutlineImage />,
         desc: "Create ASCII art from text or images.",
         code: "ASCIIArtGenerator",
-        // seo: SeoDataImport.ASCIIArtGenerator
+        seo: SeoDataImport.ASCIIArtGenerator
       },
       {
         name: "Random Quote Generator",
@@ -1071,7 +1070,7 @@ const ToolList = [
         icon: <MdOutlineFormatQuote />,
         desc: "Generate random quotes for inspiration.",
         code: "RandomQuoteGenerator",
-        // seo: SeoDataImport.RandomQuoteGenerator
+        seo: SeoDataImport.RandomQuoteGenerator
       },
       {
         name: "UUID v4 Generator",
@@ -1079,7 +1078,7 @@ const ToolList = [
         icon: <MdAutorenew />,
         desc: "Generate version 4 UUIDs with random components.",
         code: "UUIDv4Generator",
-        // seo: SeoDataImport.UUIDv4Generator
+        seo: SeoDataImport.UUIDv4Generator
       },
       {
         name: "Random PIN Generator",
@@ -1087,7 +1086,7 @@ const ToolList = [
         icon: <MdOutlineLock />,
         desc: "Generate random PIN codes of specified length.",
         code: "RandomPINGenerator",
-        // seo: SeoDataImport.RandomPINGenerator
+        seo: SeoDataImport.RandomPINGenerator
       },
       {
         name: "HTML Tag Generator",
@@ -1095,7 +1094,7 @@ const ToolList = [
         icon: <MdOutlineCode />,
         desc: "Generate HTML tags with custom attributes.",
         code: "HTMLTagGenerator",
-        // seo: SeoDataImport.HTMLTagGenerator
+        seo: SeoDataImport.HTMLTagGenerator
       },
       {
         name: "Random Emoji Generator",
@@ -1103,7 +1102,7 @@ const ToolList = [
         icon: <MdOutlineEmojiEmotions />,
         desc: "Generate random sets of emojis.",
         code: "RandomEmojiGenerator",
-        // seo: SeoDataImport.RandomEmojiGenerator
+        seo: SeoDataImport.RandomEmojiGenerator
       },
       {
         name: "JWT Generator",
@@ -1111,7 +1110,7 @@ const ToolList = [
         icon: <MdSecurity />,
         desc: "Generate JSON Web Tokens for authentication.",
         code: "JWTGenerator",
-        // seo: SeoDataImport.JWTGenerator
+        seo: SeoDataImport.JWTGenerator
       },
       {
         name: "Random UUID Batch Generator",
@@ -1119,7 +1118,7 @@ const ToolList = [
         icon: <MdAutorenew />,
         desc: "Generate multiple UUIDs in a single batch.",
         code: "RandomUUIDBatchGenerator",
-        // seo: SeoDataImport.RandomUUIDBatchGenerator
+        seo: SeoDataImport.RandomUUIDBatchGenerator
       },
       {
         name: "Random File Content Generator",
@@ -1127,7 +1126,7 @@ const ToolList = [
         icon: <MdOutlineInsertDriveFile />,
         desc: "Generate random content for dummy files.",
         code: "RandomFileContentGenerator",
-        // seo: SeoDataImport.RandomFileContentGenerator
+        seo: SeoDataImport.RandomFileContentGenerator
       },
       {
         name: "Random Domain Generator",
@@ -1135,7 +1134,7 @@ const ToolList = [
         icon: <MdOutlineDomain />,
         desc: "Create random domain names with TLDs.",
         code: "RandomDomainGenerator",
-        // seo: SeoDataImport.RandomDomainGenerator
+        seo: SeoDataImport.RandomDomainGenerator
       },
       {
         name: "Random ISBN Generator",
@@ -1143,7 +1142,7 @@ const ToolList = [
         icon: <MdOutlineBook />,
         desc: "Generate random ISBN numbers for books.",
         code: "RandomISBNGenerator",
-        // seo: SeoDataImport.RandomISBNGenerator
+        seo: SeoDataImport.RandomISBNGenerator
       },
       {
         name: "Random Sequence Generator",
@@ -1151,7 +1150,7 @@ const ToolList = [
         icon: <MdOutlineRepeat />,
         desc: "Generate random sequences of numbers or letters.",
         code: "RandomSequenceGenerator",
-        // seo: SeoDataImport.RandomSequenceGenerator
+        seo: SeoDataImport.RandomSequenceGenerator
       },
       {
         name: "Random Barcode Batch Generator",
@@ -1159,7 +1158,7 @@ const ToolList = [
         icon: <LuScanBarcode />,
         desc: "Generate multiple barcodes in one go.",
         code: "RandomBarcodeBatchGenerator",
-        // seo: SeoDataImport.RandomBarcodeBatchGenerator
+        seo: SeoDataImport.RandomBarcodeBatchGenerator
       },
       {
         name: "Random Signature Generator",
@@ -1167,7 +1166,7 @@ const ToolList = [
         icon: <MdOutlineDraw />,
         desc: "Create random stylized signatures.",
         code: "RandomSignatureGenerator",
-        // seo: SeoDataImport.RandomSignatureGenerator
+        seo: SeoDataImport.RandomSignatureGenerator
       },
     ],
   },
