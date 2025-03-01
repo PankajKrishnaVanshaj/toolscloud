@@ -1,82 +1,170 @@
 'use client';
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { faker } from '@faker-js/faker';
-import { FaCopy, FaDownload, FaTimes, FaCheckCircle } from 'react-icons/fa'; // React Icons
+import { FaCopy, FaDownload, FaTimes, FaCheckCircle } from 'react-icons/fa';
 
 const RandomISBNGenerator = () => {
   const [isbnType, setIsbnType] = useState('isbn13');
-  const [batchSize, setBatchSize] = useState(5);
+  const [batchSize, setBatchSize] = useState(1);
   const [isbns, setIsbns] = useState([]);
   const [error, setError] = useState('');
   const [history, setHistory] = useState([]);
   const [isGenerating, setIsGenerating] = useState(false);
-  const [uniqueOnly, setUniqueOnly] = useState(true); // New feature: ensure unique ISBNs
+  const [uniqueOnly, setUniqueOnly] = useState(true);
+  const [prefix, setPrefix] = useState('random');
+  const [separator, setSeparator] = useState('-');
+  const [includeTimestamp, setIncludeTimestamp] = useState(false);
+  const [languageGroup, setLanguageGroup] = useState('random');
+  const [isCustom, setIsCustom] = useState(false);
+  const [customPrefix, setCustomPrefix] = useState('978');
+  const [customRegistration, setCustomRegistration] = useState('');
+  const [customRegistrant, setCustomRegistrant] = useState('');
+
+  // Store raw ISBN parts separately to allow reformatting
+  const [isbnPartsList, setIsbnPartsList] = useState([]);
 
   const generateISBN = useCallback(() => {
+    const prefixes = prefix === 'random' ? ['978', '979'] : [prefix];
+    const langGroups = {
+      'random': ['0', '1', '2', '3', '4', '5', '6', '7', '80', '81', '82', '83', '84', '85', '86', '87', '88', '89', '90', '91', '92', '93', '94', '95', '96', '97', '98', '99'],
+      'english': ['0', '1'],
+      'french': ['2'],
+      'german': ['3'],
+      'japan': ['4'],
+      'russia': ['5'],
+    };
+    const selectedLangGroup = languageGroup === 'random' ? langGroups.random : langGroups[languageGroup];
+
+    const isbnParts = {};
     if (isbnType === 'isbn13') {
-      const prefix = faker.helpers.arrayElement(['978', '979']);
-      const registration = faker.string.numeric({ length: 2 }); // Registration group
-      const registrant = faker.string.numeric({ length: 5 }); // Registrant
-      const publication = faker.string.numeric({ length: 2 }); // Publication
-      const base = prefix + registration + registrant + publication;
-      const checksum = calculateISBN13Checksum(base);
-      return formatISBN(`${base}${checksum}`, isbnType);
+      isbnParts.prefix = isCustom ? (customPrefix || faker.helpers.arrayElement(prefixes)) : faker.helpers.arrayElement(prefixes);
+      isbnParts.prefix = isbnParts.prefix.padEnd(3, '0').slice(0, 3);
+      const is979 = isbnParts.prefix === '979';
+      isbnParts.registration = isCustom && customRegistration 
+        ? customRegistration.padEnd(is979 ? 2 : 1, '0').slice(0, is979 ? 2 : 1)
+        : faker.helpers.arrayElement(selectedLangGroup);
+      isbnParts.registrant = isCustom && customRegistrant 
+        ? customRegistrant.padEnd(is979 ? 4 : 5, '0').slice(0, is979 ? 4 : 5)
+        : faker.string.numeric({ length: is979 ? 4 : 5 });
+      isbnParts.publication = faker.string.numeric({ length: is979 ? 3 : 2 });
+      const base = isbnParts.prefix + isbnParts.registration + isbnParts.registrant + isbnParts.publication;
+      if (base.length !== 12) throw new Error(`ISBN-13 base length invalid: ${base.length}`);
+      isbnParts.checksum = calculateISBN13Checksum(base);
+      const fullIsbn = base + isbnParts.checksum;
+      if (fullIsbn.length !== 13) throw new Error(`ISBN-13 full length invalid: ${fullIsbn.length}`);
+      return isbnParts;
     } else {
-      const registration = faker.string.numeric({ length: 2 });
-      const registrant = faker.string.numeric({ length: 4 });
-      const publication = faker.string.numeric({ length: 2 });
-      const base = registration + registrant + publication;
-      const checksum = calculateISBN10Checksum(base);
-      return formatISBN(`${base}${checksum}`, isbnType);
+      isbnParts.registration = isCustom && customRegistration 
+        ? customRegistration.padEnd(1, '0').slice(0, 1)
+        : faker.helpers.arrayElement(selectedLangGroup);
+      isbnParts.registrant = isCustom && customRegistrant 
+        ? customRegistrant.padEnd(4, '0').slice(0, 4)
+        : faker.string.numeric({ length: 4 });
+      isbnParts.publication = faker.string.numeric({ length: 3 });
+      const base = isbnParts.registration + isbnParts.registrant + isbnParts.publication;
+      if (base.length !== 9) throw new Error(`ISBN-10 base length invalid: ${base.length}`);
+      isbnParts.checksum = calculateISBN10Checksum(base);
+      const fullIsbn = base + isbnParts.checksum;
+      if (fullIsbn.length !== 10) throw new Error(`ISBN-10 full length invalid: ${fullIsbn.length}`);
+      return isbnParts;
     }
-  }, [isbnType]);
+  }, [isbnType, prefix, languageGroup, isCustom, customPrefix, customRegistration, customRegistrant]);
 
   const calculateISBN13Checksum = (base) => {
     const digits = base.split('').map(Number);
     const sum = digits.reduce((acc, digit, i) => acc + (i % 2 === 0 ? digit : digit * 3), 0);
-    return (10 - (sum % 10)) % 10;
+    return ((10 - (sum % 10)) % 10).toString();
   };
 
   const calculateISBN10Checksum = (base) => {
     const digits = base.split('').map(Number);
     const sum = digits.reduce((acc, digit, i) => acc + digit * (10 - i), 0);
     const checksum = (11 - (sum % 11)) % 11;
-    return checksum === 10 ? 'X' : checksum;
+    return checksum === 10 ? 'X' : checksum.toString();
   };
 
-  const formatISBN = (isbn, type) => {
+  const formatISBN = (parts, type) => {
+    const sep = separator === 'none' ? '' : separator;
     if (type === 'isbn13') {
-      return `${isbn.slice(0, 3)}-${isbn.slice(3, 5)}-${isbn.slice(5, 10)}-${isbn.slice(10, 12)}-${isbn[12]}`;
+      return [
+        parts.prefix,
+        parts.registration,
+        parts.registrant,
+        parts.publication,
+        parts.checksum
+      ].join(sep);
+    } else {
+      return [
+        parts.registration,
+        parts.registrant,
+        parts.publication,
+        parts.checksum
+      ].join(sep);
     }
-    return `${isbn.slice(0, 2)}-${isbn.slice(2, 6)}-${isbn.slice(6, 8)}-${isbn[8]}`;
   };
+
+  // Effect to update ISBNs when separator changes
+  useEffect(() => {
+    if (isbnPartsList.length > 0) {
+      const updatedIsbns = isbnPartsList.map(parts => {
+        const isbn = formatISBN(parts, isbnType);
+        return includeTimestamp ? `${isbn} [${parts.timestamp}]` : isbn;
+      });
+      setIsbns(updatedIsbns);
+    }
+  }, [separator, isbnPartsList, isbnType, includeTimestamp]);
 
   const generateBatch = async () => {
     setIsGenerating(true);
     try {
       const newIsbnsSet = new Set();
-      const maxAttempts = batchSize * 2; // Prevent infinite loops
+      const newPartsSet = new Set();
+      const maxAttempts = batchSize * 10;
       let attempts = 0;
 
       while (newIsbnsSet.size < batchSize && attempts < maxAttempts) {
-        const isbn = generateISBN();
-        if (!uniqueOnly || !newIsbnsSet.has(isbn)) {
-          newIsbnsSet.add(isbn);
+        const parts = generateISBN();
+        const isbn = formatISBN(parts, isbnType);
+        const uniqueKey = isbn; // Use formatted ISBN for uniqueness check
+        if (!uniqueOnly || !newIsbnsSet.has(uniqueKey)) {
+          newIsbnsSet.add(uniqueKey);
+          parts.timestamp = new Date().toISOString(); // Store timestamp with parts
+          newPartsSet.add(parts);
         }
         attempts++;
       }
 
-      const newIsbns = Array.from(newIsbnsSet);
+      const newIsbnParts = Array.from(newPartsSet);
+      const newIsbns = newIsbnParts.map(parts => {
+        const isbn = formatISBN(parts, isbnType);
+        return includeTimestamp ? `${isbn} [${parts.timestamp}]` : isbn;
+      });
+
       if (newIsbns.length < batchSize) {
-        setError(`Could only generate ${newIsbns.length} unique ISBNs`);
+        setError(`Could only generate ${newIsbns.length} unique ISBNs after ${attempts} attempts`);
+      } else {
+        setError('');
       }
 
+      setIsbnPartsList(newIsbnParts);
       setIsbns(newIsbns);
       setHistory((prev) => [
-        { isbns: newIsbns, type: isbnType, timestamp: new Date(), unique: uniqueOnly },
+        { 
+          isbns: newIsbns, 
+          type: isbnType, 
+          timestamp: new Date(), 
+          unique: uniqueOnly,
+          prefix,
+          separator,
+          includeTimestamp,
+          languageGroup,
+          isCustom,
+          customPrefix,
+          customRegistration,
+          customRegistrant
+        },
         ...prev.slice(0, 9),
       ]);
-      if (!error) setError('');
     } catch (err) {
       setError(`Generation failed: ${err.message}`);
     } finally {
@@ -105,13 +193,46 @@ const RandomISBNGenerator = () => {
 
   const handleReset = () => {
     setIsbns([]);
+    setIsbnPartsList([]);
     setError('');
+    setCustomPrefix('978');
+    setCustomRegistration('');
+    setCustomRegistrant('');
   };
 
   const loadFromHistory = (entry) => {
     setIsbns(entry.isbns);
+    // Reconstruct parts from history ISBNs (simplified approach)
+    const reconstructedParts = entry.isbns.map(isbn => {
+      const parts = {};
+      const digitsOnly = isbn.split(' ')[0].replace(new RegExp(`[${separator === 'none' ? '' : separator}]`, 'g'), '');
+      if (entry.type === 'isbn13') {
+        const is979 = digitsOnly.startsWith('979');
+        parts.prefix = digitsOnly.slice(0, 3);
+        parts.registration = digitsOnly.slice(3, is979 ? 5 : 4);
+        parts.registrant = digitsOnly.slice(is979 ? 5 : 4, is979 ? 9 : 9);
+        parts.publication = digitsOnly.slice(is979 ? 9 : 9, 12);
+        parts.checksum = digitsOnly.slice(12);
+      } else {
+        parts.registration = digitsOnly.slice(0, 1);
+        parts.registrant = digitsOnly.slice(1, 5);
+        parts.publication = digitsOnly.slice(5, 9);
+        parts.checksum = digitsOnly.slice(9);
+      }
+      parts.timestamp = isbn.includes('[') ? isbn.split(' [')[1].slice(0, -1) : new Date().toISOString();
+      return parts;
+    });
+    setIsbnPartsList(reconstructedParts);
     setIsbnType(entry.type);
     setUniqueOnly(entry.unique);
+    setPrefix(entry.prefix);
+    setSeparator(entry.separator);
+    setIncludeTimestamp(entry.includeTimestamp);
+    setLanguageGroup(entry.languageGroup);
+    setIsCustom(entry.isCustom);
+    setCustomPrefix(entry.customPrefix);
+    setCustomRegistration(entry.customRegistration);
+    setCustomRegistrant(entry.customRegistrant);
   };
 
   return (
@@ -122,7 +243,7 @@ const RandomISBNGenerator = () => {
         </h2>
 
         {/* Controls */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8 bg-white p-6 rounded-xl shadow-md">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8 bg-white p-6 rounded-xl shadow-md">
           <div className="space-y-2">
             <label className="text-sm font-medium text-gray-700">ISBN Type</label>
             <select
@@ -143,17 +264,115 @@ const RandomISBNGenerator = () => {
               className="w-full p-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             />
           </div>
-          <div className="space-y-2 flex items-end">
-            <label className="flex items-center gap-2 text-sm font-medium text-gray-700">
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-gray-700">Prefix</label>
+            {isCustom ? (
               <input
-                type="checkbox"
-                checked={uniqueOnly}
-                onChange={(e) => setUniqueOnly(e.target.checked)}
-                className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                type="text"
+                value={customPrefix}
+                onChange={(e) => setCustomPrefix(e.target.value.slice(0, 3))}
+                placeholder="e.g., 978"
+                maxLength={3}
+                className="w-full p-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
-              Unique ISBNs Only
-            </label>
+            ) : (
+              <select
+                value={prefix}
+                onChange={(e) => setPrefix(e.target.value)}
+                disabled={isbnType === 'isbn10'}
+                className="w-full p-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed"
+              >
+                <option value="random">Random (978/979)</option>
+                <option value="978">978</option>
+                <option value="979">979</option>
+              </select>
+            )}
           </div>
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-gray-700">Separator</label>
+            <select
+              value={separator}
+              onChange={(e) => setSeparator(e.target.value)}
+              className="w-full p-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            >
+              <option value="-">Hyphen (-)</option>
+              <option value=" ">Space</option>
+              <option value="none">None</option>
+            </select>
+          </div>
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-gray-700">Language/Region Group</label>
+            <select
+              value={languageGroup}
+              onChange={(e) => setLanguageGroup(e.target.value)}
+              disabled={isCustom && customRegistration}
+              className="w-full p-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed"
+            >
+              <option value="random">Random</option>
+              <option value="english">English (0-1)</option>
+              <option value="french">French (2)</option>
+              <option value="german">German (3)</option>
+              <option value="japan">Japan (4)</option>
+              <option value="russia">Russia (5)</option>
+            </select>
+          </div>
+          <div className="space-y-2 flex items-end">
+            <div className="flex flex-col gap-2">
+              <label className="flex items-center gap-2 text-sm font-medium text-gray-700">
+                <input
+                  type="checkbox"
+                  checked={uniqueOnly}
+                  onChange={(e) => setUniqueOnly(e.target.checked)}
+                  className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                />
+                Unique ISBNs
+              </label>
+              <label className="flex items-center gap-2 text-sm font-medium text-gray-700">
+                <input
+                  type="checkbox"
+                  checked={includeTimestamp}
+                  onChange={(e) => setIncludeTimestamp(e.target.checked)}
+                  className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                />
+                Include Timestamp
+              </label>
+              <label className="flex items-center gap-2 text-sm font-medium text-gray-700">
+                <input
+                  type="checkbox"
+                  checked={isCustom}
+                  onChange={(e) => setIsCustom(e.target.checked)}
+                  className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                />
+                Custom Mode
+              </label>
+            </div>
+          </div>
+          {isCustom && (
+            <>
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-gray-700">Custom Registration</label>
+                <input
+                  type="text"
+                  value={customRegistration}
+                  onChange={(e) => setCustomRegistration(e.target.value.slice(0, isbnType === 'isbn13' && customPrefix === '979' ? 2 : 1))}
+                  placeholder={isbnType === 'isbn13' && customPrefix === '979' ? 'e.g., 12' : 'e.g., 1'}
+                  maxLength={isbnType === 'isbn13' && customPrefix === '979' ? 2 : 1}
+                  className="w-full p-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-gray-700">Custom Registrant</label>
+                <input
+                  type="text"
+                  value={customRegistrant}
+                  onChange={(e) => setCustomRegistrant(e.target.value.slice(0, isbnType === 'isbn13' && customPrefix === '979' ? 4 : 5))}
+                  placeholder={isbnType === 'isbn13' && customPrefix === '979' ? 'e.g., 1234' : 'e.g., 12345'}
+                  maxLength={isbnType === 'isbn13' && customPrefix === '979' ? 4 : 5}
+                  className="w-full p-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+              </div>
+            </>
+          )}
         </div>
 
         <div className="flex flex-wrap gap-4 mb-8">
@@ -232,12 +451,17 @@ const RandomISBNGenerator = () => {
                       <p className="font-medium text-gray-800">
                         {entry.type.toUpperCase()} Batch ({entry.isbns.length})
                         {entry.unique && ' - Unique'}
+                        {entry.includeTimestamp && ' - Timestamp'}
+                        {entry.isCustom && ' - Custom'}
                       </p>
                       <p className="text-xs text-gray-600">
-                        {entry.timestamp.toLocaleString()}
+                        {entry.timestamp.toLocaleString()} | Prefix: {entry.isCustom ? entry.customPrefix : entry.prefix} 
+                        {entry.isCustom && ` | Reg: ${entry.customRegistration || 'Random'}`} 
+                        {entry.isCustom && ` | Regt: ${entry.customRegistrant || 'Random'}`} 
+                        {!entry.isCustom && ` | Lang: ${entry.languageGroup}`}
                       </p>
                     </div>
-                    <p className="text-sm font-mono text-gray-700">{entry.isbns[0]}</p>
+                    <p className="text-sm font-mono text-gray-700">{entry.isbns[0].split(' ')[0]}</p>
                   </div>
                 </div>
               ))}
