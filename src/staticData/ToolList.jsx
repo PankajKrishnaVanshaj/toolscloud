@@ -205,6 +205,8 @@ import {
   MdDomain,
   MdLocationOn,
   MdShoppingCart,
+  MdDataObject,
+  MdSchema,
 } from "react-icons/md";
 import { LuScanBarcode } from "react-icons/lu";
 import SeoDataImport from "@/components/SeoDataImport";
@@ -310,7 +312,7 @@ const ToolList = [
         icon: <MdOutlineSwapHoriz />,
         desc: "Reverse the order of characters or words in your text.",
         code: "TextReverser",
-        seo: SeoDataImport.TextReverser
+        seo: SeoDataImport.TextReverser,
       },
       {
         name: "Text Shuffler",
@@ -318,7 +320,7 @@ const ToolList = [
         icon: <MdOutlineShuffle />,
         desc: "Randomly shuffle words or lines in your text.",
         code: "TextShuffler",
-        seo: SeoDataImport.TextShuffler
+        seo: SeoDataImport.TextShuffler,
       },
       {
         name: "Text Encoder",
@@ -326,7 +328,7 @@ const ToolList = [
         icon: <MdOutlineLock />,
         desc: "Encode text into formats like Base64 or URL encoding.",
         code: "TextEncoder",
-        seo: SeoDataImport.TextEncoder
+        seo: SeoDataImport.TextEncoder,
       },
       {
         name: "Text Decoder",
@@ -334,7 +336,7 @@ const ToolList = [
         icon: <MdOutlineLockOpen />,
         desc: "Decode text from Base64, URL encoding, or other formats.",
         code: "TextDecoder",
-        seo: SeoDataImport.TextDecoder
+        seo: SeoDataImport.TextDecoder,
       },
       {
         name: "Text Trimmer",
@@ -342,7 +344,7 @@ const ToolList = [
         icon: <MdOutlineContentCut />,
         desc: "Remove extra spaces, tabs, or line breaks from text.",
         code: "TextTrimmer",
-        seo: SeoDataImport.TextTrimmer
+        seo: SeoDataImport.TextTrimmer,
       },
       {
         name: "Text Comparator",
@@ -350,7 +352,7 @@ const ToolList = [
         icon: <MdOutlineCompare />,
         desc: "Compare two texts and highlight differences.",
         code: "TextComparator",
-        seo: SeoDataImport.TextComparator
+        seo: SeoDataImport.TextComparator,
       },
       {
         name: "Text Sorter",
@@ -358,7 +360,7 @@ const ToolList = [
         icon: <MdOutlineSort />,
         desc: "Sort lines or words alphabetically or numerically.",
         code: "TextSorter",
-        seo: SeoDataImport.TextSorter
+        seo: SeoDataImport.TextSorter,
       },
       {
         name: "Text Extractor",
@@ -366,7 +368,7 @@ const ToolList = [
         icon: <MdOutlineFilterAlt />,
         desc: "Extract specific patterns like emails or URLs from text.",
         code: "TextExtractor",
-        seo: SeoDataImport.TextExtractor
+        seo: SeoDataImport.TextExtractor,
       },
       {
         name: "Text Randomizer",
@@ -374,7 +376,7 @@ const ToolList = [
         icon: <MdOutlineCasino />,
         desc: "Generate random text or scramble existing text.",
         code: "TextRandomizer",
-        seo: SeoDataImport.TextRandomizer
+        seo: SeoDataImport.TextRandomizer,
       },
       {
         name: "Text Highlighter",
@@ -382,7 +384,7 @@ const ToolList = [
         icon: <MdOutlineHighlight />,
         desc: "Highlight specific words or phrases in your text.",
         code: "TextHighlighter",
-        seo: SeoDataImport.TextHighlighter
+        seo: SeoDataImport.TextHighlighter,
       },
       {
         name: "Text Summarizer",
@@ -390,7 +392,7 @@ const ToolList = [
         icon: <MdOutlineShortText />,
         desc: "Create concise summaries of long text.",
         code: "TextSummarizer",
-        seo: SeoDataImport.TextSummarizer
+        seo: SeoDataImport.TextSummarizer,
       },
       {
         name: "Text Expander",
@@ -398,7 +400,7 @@ const ToolList = [
         icon: <MdOutlineExpand />,
         desc: "Expand abbreviations or shorthand into full text.",
         code: "TextExpander",
-        seo: SeoDataImport.TextExpander
+        seo: SeoDataImport.TextExpander,
       },
       {
         name: "Text Redactor",
@@ -406,7 +408,7 @@ const ToolList = [
         icon: <MdOutlineVisibilityOff />,
         desc: "Redact sensitive information from your text.",
         code: "TextRedactor",
-        seo: SeoDataImport.TextRedactor
+        seo: SeoDataImport.TextRedactor,
       },
       {
         name: "Text Translator",
@@ -414,7 +416,7 @@ const ToolList = [
         icon: <MdOutlineTranslate />,
         desc: "Translate text into multiple languages.",
         code: "TextTranslator",
-        seo: SeoDataImport.TextTranslator
+        seo: SeoDataImport.TextTranslator,
       },
       {
         name: "Text Aligner",
@@ -422,7 +424,7 @@ const ToolList = [
         icon: <MdOutlineFormatAlignLeft />,
         desc: "Align text to left, right, center, or justify.",
         code: "TextAligner",
-        seo: SeoDataImport.TextAligner
+        seo: SeoDataImport.TextAligner,
       },
       {
         name: "Text Formatter",
@@ -430,7 +432,7 @@ const ToolList = [
         icon: <MdOutlineFormatIndentIncrease />,
         desc: "Apply custom formatting like bold, italic, or indentation.",
         code: "TextFormatter",
-        seo: SeoDataImport.TextFormatter
+        seo: SeoDataImport.TextFormatter,
       },
       {
         name: "Text Cleaner",
@@ -438,7 +440,7 @@ const ToolList = [
         icon: <MdOutlineCleaningServices />,
         desc: "Remove unwanted characters or formatting from text.",
         code: "TextCleaner",
-        seo: SeoDataImport.TextCleaner
+        seo: SeoDataImport.TextCleaner,
       },
       {
         name: "Text Generator",
@@ -446,7 +448,7 @@ const ToolList = [
         icon: <MdOutlineCreate />,
         desc: "Generate placeholder text like Lorem Ipsum.",
         code: "TextGenerator",
-        seo: SeoDataImport.TextGenerator
+        seo: SeoDataImport.TextGenerator,
       },
       {
         name: "Text Splitter",
@@ -454,7 +456,7 @@ const ToolList = [
         icon: <MdOutlineCallSplit />,
         desc: "Split text into chunks by words, lines, or characters.",
         code: "TextSplitter",
-        seo: SeoDataImport.TextSplitter
+        seo: SeoDataImport.TextSplitter,
       },
       {
         name: "Text Joiner",
@@ -462,7 +464,7 @@ const ToolList = [
         icon: <MdOutlineMergeType />,
         desc: "Combine multiple text segments with custom separators.",
         code: "TextJoiner",
-        seo: SeoDataImport.TextJoiner
+        seo: SeoDataImport.TextJoiner,
       },
       {
         name: "Text Analyzer",
@@ -470,7 +472,7 @@ const ToolList = [
         icon: <MdOutlineAnalytics />,
         desc: "Analyze text for sentiment, keywords, or readability.",
         code: "TextAnalyzer",
-        seo: SeoDataImport.TextAnalyzer
+        seo: SeoDataImport.TextAnalyzer,
       },
       {
         name: "Text Obfuscator",
@@ -478,7 +480,7 @@ const ToolList = [
         icon: <MdOutlineBlurOn />,
         desc: "Obfuscate text to make it harder to read.",
         code: "TextObfuscator",
-        seo: SeoDataImport.TextObfuscator
+        seo: SeoDataImport.TextObfuscator,
       },
       {
         name: "Text Rotator",
@@ -486,7 +488,7 @@ const ToolList = [
         icon: <MdOutlineRotateRight />,
         desc: "Rotate text using ROT13 or custom ciphers.",
         code: "TextRotator",
-        seo: SeoDataImport.TextRotator
+        seo: SeoDataImport.TextRotator,
       },
       {
         name: "Text Padder",
@@ -494,7 +496,7 @@ const ToolList = [
         icon: <MdOutlineSpaceBar />,
         desc: "Add padding characters to align or format text.",
         code: "TextPadder",
-        seo: SeoDataImport.TextPadder
+        seo: SeoDataImport.TextPadder,
       },
       {
         name: "Text Tokenizer",
@@ -502,7 +504,7 @@ const ToolList = [
         icon: <MdOutlineSegment />,
         desc: "Break text into tokens for processing.",
         code: "TextTokenizer",
-        seo: SeoDataImport.TextTokenizer
+        seo: SeoDataImport.TextTokenizer,
       },
       {
         name: "Text Normalizer",
@@ -510,7 +512,7 @@ const ToolList = [
         icon: <MdOutlineStraighten />,
         desc: "Normalize text by removing accents or special characters.",
         code: "TextNormalizer",
-        seo: SeoDataImport.TextNormalizer
+        seo: SeoDataImport.TextNormalizer,
       },
       {
         name: "Text Hasher",
@@ -518,7 +520,7 @@ const ToolList = [
         icon: <MdOutlineFingerprint />,
         desc: "Generate hash values (e.g., MD5, SHA) from text.",
         code: "TextHasher",
-        seo: SeoDataImport.TextHasher
+        seo: SeoDataImport.TextHasher,
       },
       {
         name: "Text Encryptor",
@@ -526,7 +528,7 @@ const ToolList = [
         icon: <MdOutlineLock />,
         desc: "Encrypt text using simple ciphers or algorithms.",
         code: "TextEncryptor",
-        seo: SeoDataImport.TextEncryptor
+        seo: SeoDataImport.TextEncryptor,
       },
       {
         name: "Text Decryptor",
@@ -534,7 +536,7 @@ const ToolList = [
         icon: <MdOutlineLockOpen />,
         desc: "Decrypt text encrypted with known ciphers.",
         code: "TextDecryptor",
-        seo: SeoDataImport.TextDecryptor
+        seo: SeoDataImport.TextDecryptor,
       },
       {
         name: "Text Profanity Filter",
@@ -542,7 +544,7 @@ const ToolList = [
         icon: <MdOutlineFilterAlt />,
         desc: "Remove or censor profane words from text.",
         code: "TextProfanityFilter",
-        seo: SeoDataImport.TextProfanityFilter
+        seo: SeoDataImport.TextProfanityFilter,
       },
       {
         name: "Text Keyword Extractor",
@@ -550,7 +552,7 @@ const ToolList = [
         icon: <MdOutlineLabel />,
         desc: "Extract key words or phrases from text.",
         code: "TextKeywordExtractor",
-        seo: SeoDataImport.TextKeywordExtractor
+        seo: SeoDataImport.TextKeywordExtractor,
       },
       {
         name: "Text Line Numberer",
@@ -558,7 +560,7 @@ const ToolList = [
         icon: <MdOutlineFormatListNumbered />,
         desc: "Add line numbers to your text.",
         code: "TextLineNumberer",
-        seo: SeoDataImport.TextLineNumberer
+        seo: SeoDataImport.TextLineNumberer,
       },
       {
         name: "Text Word Cloud Generator",
@@ -566,7 +568,7 @@ const ToolList = [
         icon: <MdOutlineCloud />,
         desc: "Create a word cloud from your text.",
         code: "TextWordCloudGenerator",
-        seo: SeoDataImport.TextWordCloudGenerator
+        seo: SeoDataImport.TextWordCloudGenerator,
       },
       {
         name: "Text Unformatter",
@@ -574,7 +576,7 @@ const ToolList = [
         icon: <MdOutlineFormatClear />,
         desc: "Strip all formatting from text.",
         code: "TextUnformatter",
-        seo: SeoDataImport.TextUnformatter
+        seo: SeoDataImport.TextUnformatter,
       },
       {
         name: "Text Length Truncator",
@@ -582,7 +584,7 @@ const ToolList = [
         icon: <MdOutlineContentCut />,
         desc: "Truncate text to a specified length.",
         code: "TextLengthTruncator",
-        seo: SeoDataImport.TextLengthTruncator
+        seo: SeoDataImport.TextLengthTruncator,
       },
       {
         name: "Text Diff Viewer",
@@ -590,7 +592,7 @@ const ToolList = [
         icon: <MdOutlineDifference />,
         desc: "View differences between two text versions side-by-side.",
         code: "TextDiffViewer",
-        seo: SeoDataImport.TextDiffViewer
+        seo: SeoDataImport.TextDiffViewer,
       },
       {
         name: "Text Morse Converter",
@@ -598,7 +600,7 @@ const ToolList = [
         icon: <MdOutlineCode />,
         desc: "Convert text to Morse code and vice versa.",
         code: "TextMorseConverter",
-        seo: SeoDataImport.TextMorseConverter
+        seo: SeoDataImport.TextMorseConverter,
       },
       {
         name: "Text Binary Converter",
@@ -606,7 +608,7 @@ const ToolList = [
         icon: <MdOutlineCode />,
         desc: "Convert text to binary and back.",
         code: "TextBinaryConverter",
-        seo: SeoDataImport.TextBinaryConverter
+        seo: SeoDataImport.TextBinaryConverter,
       },
       {
         name: "Text Hex Converter",
@@ -614,7 +616,7 @@ const ToolList = [
         icon: <MdOutlineCode />,
         desc: "Convert text to hexadecimal and back.",
         code: "TextHexConverter",
-        seo: SeoDataImport.TextHexConverter
+        seo: SeoDataImport.TextHexConverter,
       },
       {
         name: "Text Markdown Editor",
@@ -622,7 +624,7 @@ const ToolList = [
         icon: <MdOutlineEdit />,
         desc: "Edit and preview text in Markdown format.",
         code: "TextMarkdownEditor",
-        seo: SeoDataImport.TextMarkdownEditor
+        seo: SeoDataImport.TextMarkdownEditor,
       },
       {
         name: "Text HTML Converter",
@@ -630,7 +632,7 @@ const ToolList = [
         icon: <MdOutlineCode />,
         desc: "Convert plain text to HTML tags.",
         code: "TextHTMLConverter",
-        seo: SeoDataImport.TextToHtmlConverter
+        seo: SeoDataImport.TextToHtmlConverter,
       },
       {
         name: "Text Lorem Ipsum Generator",
@@ -638,7 +640,7 @@ const ToolList = [
         icon: <MdOutlineCreate />,
         desc: "Generate custom-length Lorem Ipsum text.",
         code: "TextLoremIpsumGenerator",
-        seo: SeoDataImport.TextLoremIpsumGenerator
+        seo: SeoDataImport.TextLoremIpsumGenerator,
       },
       {
         name: "Text Camel Case Converter",
@@ -646,7 +648,7 @@ const ToolList = [
         icon: <MdOutlineTextFormat />,
         desc: "Convert text to camelCase or PascalCase.",
         code: "TextCamelCaseConverter",
-        seo: SeoDataImport.TextCamelCaseConverter
+        seo: SeoDataImport.TextCamelCaseConverter,
       },
       {
         name: "Text Snake Case Converter",
@@ -654,7 +656,7 @@ const ToolList = [
         icon: <MdOutlineTextFormat />,
         desc: "Convert text to snake_case format.",
         code: "TextSnakeCaseConverter",
-        seo: SeoDataImport.TextSnakeCaseConverter
+        seo: SeoDataImport.TextSnakeCaseConverter,
       },
       {
         name: "Text Kebab Case Converter",
@@ -662,7 +664,7 @@ const ToolList = [
         icon: <MdOutlineTextFormat />,
         desc: "Convert text to kebab-case format.",
         code: "TextKebabCaseConverter",
-        seo: SeoDataImport.TextKebabCaseConverter
+        seo: SeoDataImport.TextKebabCaseConverter,
       },
       {
         name: "Text Title Generator",
@@ -670,7 +672,7 @@ const ToolList = [
         icon: <MdOutlineTitle />,
         desc: "Generate catchy titles from keywords.",
         code: "TextTitleGenerator",
-        seo: SeoDataImport.TextTitleGenerator
+        seo: SeoDataImport.TextTitleGenerator,
       },
       {
         name: "Text Slugifier",
@@ -678,7 +680,7 @@ const ToolList = [
         icon: <MdOutlineLink />,
         desc: "Create URL-friendly slugs from text.",
         code: "TextSlugifier",
-        seo: SeoDataImport.TextSlugifier
+        seo: SeoDataImport.TextSlugifier,
       },
       {
         name: "Text Typographer",
@@ -686,7 +688,7 @@ const ToolList = [
         icon: <MdOutlineTextFields />,
         desc: "Enhance text with typographic symbols like smart quotes.",
         code: "TextTypographer",
-        seo: SeoDataImport.TextTypographer
+        seo: SeoDataImport.TextTypographer,
       },
       {
         name: "Text Readability Scorer",
@@ -694,7 +696,7 @@ const ToolList = [
         icon: <MdOutlineAssessment />,
         desc: "Score text readability using Flesch-Kincaid or similar metrics.",
         code: "TextReadabilityScorer",
-        seo: SeoDataImport.TextReadabilityScorer
+        seo: SeoDataImport.TextReadabilityScorer,
       },
       {
         name: "Text Paraphraser",
@@ -702,7 +704,7 @@ const ToolList = [
         icon: <MdOutlineRepeat />,
         desc: "Rephrase text to avoid plagiarism or improve clarity.",
         code: "TextParaphraser",
-        seo: SeoDataImport.TextParaphrase
+        seo: SeoDataImport.TextParaphrase,
       },
     ],
   },
@@ -790,7 +792,7 @@ const ToolList = [
         icon: <MdVpnKey />,
         desc: "Create secure API keys for development and authentication.",
         code: "APIKeyGenerator",
-        seo: SeoDataImport.APIKeyGenerator
+        seo: SeoDataImport.APIKeyGenerator,
       },
       {
         name: "Random Word Generator",
@@ -798,7 +800,7 @@ const ToolList = [
         icon: <MdOutlineTextFields />,
         desc: "Produce random words for brainstorming or testing.",
         code: "RandomWordGenerator",
-        seo: SeoDataImport.RandomWordGenerator
+        seo: SeoDataImport.RandomWordGenerator,
       },
       {
         name: "Sentence Generator",
@@ -806,7 +808,7 @@ const ToolList = [
         icon: <MdOutlineShortText />,
         desc: "Generate random sentences for content creation.",
         code: "SentenceGenerator",
-        seo: SeoDataImport.SentenceGenerator
+        seo: SeoDataImport.SentenceGenerator,
       },
       {
         name: "Email Address Generator",
@@ -814,7 +816,7 @@ const ToolList = [
         icon: <MdOutlineEmail />,
         desc: "Create fake email addresses for testing purposes.",
         code: "EmailAddressGenerator",
-        seo: SeoDataImport.EmailAddressGenerator
+        seo: SeoDataImport.EmailAddressGenerator,
       },
       {
         name: "Username Generator",
@@ -822,7 +824,7 @@ const ToolList = [
         icon: <MdPersonOutline />,
         desc: "Generate unique usernames for accounts or profiles.",
         code: "UsernameGenerator",
-        seo: SeoDataImport.UsernameGenerator
+        seo: SeoDataImport.UsernameGenerator,
       },
       {
         name: "Token Generator",
@@ -830,7 +832,7 @@ const ToolList = [
         icon: <MdSecurity />,
         desc: "Generate random tokens for authentication or sessions.",
         code: "TokenGenerator",
-        seo: SeoDataImport.TokenGenerator
+        seo: SeoDataImport.TokenGenerator,
       },
       {
         name: "CSS Gradient Generator",
@@ -838,7 +840,7 @@ const ToolList = [
         icon: <MdGradient />,
         desc: "Create custom CSS gradient codes for web design.",
         code: "CSSGradientGenerator",
-        seo: SeoDataImport.CSSGradientGenerator
+        seo: SeoDataImport.CSSGradientGenerator,
       },
       {
         name: "JSON Data Generator",
@@ -846,7 +848,7 @@ const ToolList = [
         icon: <MdCode />,
         desc: "Generate random JSON data structures for testing.",
         code: "JSONDataGenerator",
-        seo: SeoDataImport.JSONDataGenerator
+        seo: SeoDataImport.JSONDataGenerator,
       },
       {
         name: "XML Data Generator",
@@ -854,7 +856,7 @@ const ToolList = [
         icon: <MdCode />,
         desc: "Produce random XML data for development purposes.",
         code: "XMLDataGenerator",
-        seo: SeoDataImport.XMLDataGenerator
+        seo: SeoDataImport.XMLDataGenerator,
       },
       {
         name: "Credit Card Number Generator",
@@ -862,7 +864,7 @@ const ToolList = [
         icon: <MdCreditCard />,
         desc: "Generate fake credit card numbers for testing.",
         code: "CreditCardNumberGenerator",
-        seo: SeoDataImport.CreditCardNumberGenerator
+        seo: SeoDataImport.CreditCardNumberGenerator,
       },
       {
         name: "Phone Number Generator",
@@ -870,7 +872,7 @@ const ToolList = [
         icon: <MdOutlinePhone />,
         desc: "Create random phone numbers in various formats.",
         code: "PhoneNumberGenerator",
-        seo: SeoDataImport.PhoneNumberGenerator
+        seo: SeoDataImport.PhoneNumberGenerator,
       },
       {
         name: "OTP Generator",
@@ -878,7 +880,7 @@ const ToolList = [
         icon: <MdLockOutline />,
         desc: "Generate one-time passwords for security verification.",
         code: "OTPGenerator",
-        seo: SeoDataImport.OTPGenerator
+        seo: SeoDataImport.OTPGenerator,
       },
       {
         name: "GUID Generator",
@@ -886,7 +888,7 @@ const ToolList = [
         icon: <MdAutorenew />,
         desc: "Generate Globally Unique Identifiers for unique IDs.",
         code: "GUIDGenerator",
-        seo: SeoDataImport.GUIDGenerator
+        seo: SeoDataImport.GUIDGenerator,
       },
       {
         name: "Random Date Generator",
@@ -894,7 +896,7 @@ const ToolList = [
         icon: <MdOutlineCalendarToday />,
         desc: "Generate random dates within a specified range.",
         code: "RandomDateGenerator",
-        seo: SeoDataImport.RandomDateGenerator
+        seo: SeoDataImport.RandomDateGenerator,
       },
       {
         name: "MAC Address Generator",
@@ -902,7 +904,7 @@ const ToolList = [
         icon: <MdOutlineNetworkCheck />,
         desc: "Create random MAC addresses for networking tests.",
         code: "MACAddressGenerator",
-        seo: SeoDataImport.MACAddressGenerator
+        seo: SeoDataImport.MACAddressGenerator,
       },
       {
         name: "IP Address Generator",
@@ -910,7 +912,7 @@ const ToolList = [
         icon: <MdOutlineNetworkWifi />,
         desc: "Generate random IP addresses (IPv4 or IPv6).",
         code: "IPAddressGenerator",
-        seo: SeoDataImport.IPAddressGenerator
+        seo: SeoDataImport.IPAddressGenerator,
       },
       {
         name: "Random String Generator",
@@ -918,7 +920,7 @@ const ToolList = [
         icon: <MdOutlineTextFields />,
         desc: "Produce random strings of specified length and charset.",
         code: "RandomStringGenerator",
-        seo: SeoDataImport.RandomStringGenerator
+        seo: SeoDataImport.RandomStringGenerator,
       },
       {
         name: "Coupon Code Generator",
@@ -926,7 +928,7 @@ const ToolList = [
         icon: <MdOutlineLocalOffer />,
         desc: "Create unique coupon codes for promotions.",
         code: "CouponCodeGenerator",
-        seo: SeoDataImport.CouponCodeGenerator
+        seo: SeoDataImport.CouponCodeGenerator,
       },
       {
         name: "File Name Generator",
@@ -934,7 +936,7 @@ const ToolList = [
         icon: <MdOutlineInsertDriveFile />,
         desc: "Generate unique file names with custom extensions.",
         code: "FileNameGenerator",
-        seo: SeoDataImport.FileNameGenerator
+        seo: SeoDataImport.FileNameGenerator,
       },
       {
         name: "Pattern Generator",
@@ -942,7 +944,7 @@ const ToolList = [
         icon: <MdOutlineDesignServices />,
         desc: "Create repeating patterns for design or testing.",
         code: "PatternGenerator",
-        seo: SeoDataImport.PatternGenerator
+        seo: SeoDataImport.PatternGenerator,
       },
       {
         name: "Random Boolean Generator",
@@ -950,7 +952,7 @@ const ToolList = [
         icon: <MdOutlineToggleOn />,
         desc: "Generate random true/false values.",
         code: "RandomBooleanGenerator",
-        seo: SeoDataImport.RandomBooleanGenerator
+        seo: SeoDataImport.RandomBooleanGenerator,
       },
       {
         name: "Meme Text Generator",
@@ -958,7 +960,7 @@ const ToolList = [
         icon: <MdOutlineImage />,
         desc: "Generate text for meme images with custom styles.",
         code: "MemeTextGenerator",
-        seo: SeoDataImport.MemeTextGenerator
+        seo: SeoDataImport.MemeTextGenerator,
       },
       {
         name: "Random Color Palette Generator",
@@ -966,7 +968,7 @@ const ToolList = [
         icon: <MdPalette />,
         desc: "Create random color palettes for design inspiration.",
         code: "RandomColorPaletteGenerator",
-        seo: SeoDataImport.RandomColorPaletteGenerator
+        seo: SeoDataImport.RandomColorPaletteGenerator,
       },
       {
         name: "SQL Query Generator",
@@ -974,7 +976,7 @@ const ToolList = [
         icon: <MdCode />,
         desc: "Generate basic SQL queries for database testing.",
         code: "SQLQueryGenerator",
-        seo: SeoDataImport.SQLQueryGenerator
+        seo: SeoDataImport.SQLQueryGenerator,
       },
       {
         name: "Regex Generator",
@@ -982,7 +984,7 @@ const ToolList = [
         icon: <MdOutlineCode />,
         desc: "Create regular expressions based on input patterns.",
         code: "RegexGenerator",
-        seo: SeoDataImport.RegexGenerator
+        seo: SeoDataImport.RegexGenerator,
       },
       {
         name: "CSV Data Generator",
@@ -990,7 +992,7 @@ const ToolList = [
         icon: <MdOutlineTableChart />,
         desc: "Generate random CSV data for spreadsheets.",
         code: "CSVDataGenerator",
-        seo: SeoDataImport.CSVDataGenerator
+        seo: SeoDataImport.CSVDataGenerator,
       },
       {
         name: "Random Name Generator",
@@ -998,7 +1000,7 @@ const ToolList = [
         icon: <MdOutlinePerson />,
         desc: "Generate random names for characters or users.",
         code: "RandomNameGenerator",
-        seo: SeoDataImport.RandomNameGenerator
+        seo: SeoDataImport.RandomNameGenerator,
       },
       {
         name: "Title Generator",
@@ -1006,7 +1008,7 @@ const ToolList = [
         icon: <MdOutlineTitle />,
         desc: "Create catchy titles for articles or projects.",
         code: "TitleGenerator",
-        seo: SeoDataImport.TitleGenerator
+        seo: SeoDataImport.TitleGenerator,
       },
       {
         name: "Random Address Generator",
@@ -1014,7 +1016,7 @@ const ToolList = [
         icon: <MdOutlineLocationOn />,
         desc: "Generate fake addresses for testing forms.",
         code: "RandomAddressGenerator",
-        seo: SeoDataImport.RandomAddressGenerator
+        seo: SeoDataImport.RandomAddressGenerator,
       },
       {
         name: "Random Time Generator",
@@ -1022,7 +1024,7 @@ const ToolList = [
         icon: <MdOutlineAccessTime />,
         desc: "Generate random times in various formats.",
         code: "RandomTimeGenerator",
-        seo: SeoDataImport.RandomTimeGenerator
+        seo: SeoDataImport.RandomTimeGenerator,
       },
       {
         name: "Captcha Generator",
@@ -1030,7 +1032,7 @@ const ToolList = [
         icon: <MdOutlineVerified />,
         desc: "Create simple image or text captchas.",
         code: "CaptchaGenerator",
-        seo: SeoDataImport.CaptchaGenerator
+        seo: SeoDataImport.CaptchaGenerator,
       },
       {
         name: "Random List Generator",
@@ -1038,7 +1040,7 @@ const ToolList = [
         icon: <MdOutlineList />,
         desc: "Generate random ordered or unordered lists.",
         code: "RandomListGenerator",
-        seo: SeoDataImport.RandomListGenerator
+        seo: SeoDataImport.RandomListGenerator,
       },
       {
         name: "Hex Code Generator",
@@ -1046,7 +1048,7 @@ const ToolList = [
         icon: <MdOutlineCode />,
         desc: "Generate random hexadecimal values.",
         code: "HexCodeGenerator",
-        seo: SeoDataImport.HexCodeGenerator
+        seo: SeoDataImport.HexCodeGenerator,
       },
       {
         name: "Binary Code Generator",
@@ -1054,7 +1056,7 @@ const ToolList = [
         icon: <MdOutlineCode />,
         desc: "Generate binary code from text or numbers.",
         code: "BinaryCodeGenerator",
-        seo: SeoDataImport.BinaryCodeGenerator
+        seo: SeoDataImport.BinaryCodeGenerator,
       },
       {
         name: "ASCII Art Generator",
@@ -1062,7 +1064,7 @@ const ToolList = [
         icon: <MdOutlineImage />,
         desc: "Create ASCII art from text or images.",
         code: "ASCIIArtGenerator",
-        seo: SeoDataImport.ASCIIArtGenerator
+        seo: SeoDataImport.ASCIIArtGenerator,
       },
       {
         name: "Random Quote Generator",
@@ -1070,7 +1072,7 @@ const ToolList = [
         icon: <MdOutlineFormatQuote />,
         desc: "Generate random quotes for inspiration.",
         code: "RandomQuoteGenerator",
-        seo: SeoDataImport.RandomQuoteGenerator
+        seo: SeoDataImport.RandomQuoteGenerator,
       },
       {
         name: "UUID v4 Generator",
@@ -1078,7 +1080,7 @@ const ToolList = [
         icon: <MdAutorenew />,
         desc: "Generate version 4 UUIDs with random components.",
         code: "UUIDv4Generator",
-        seo: SeoDataImport.UUIDv4Generator
+        seo: SeoDataImport.UUIDv4Generator,
       },
       {
         name: "Random PIN Generator",
@@ -1086,7 +1088,7 @@ const ToolList = [
         icon: <MdOutlineLock />,
         desc: "Generate random PIN codes of specified length.",
         code: "RandomPINGenerator",
-        seo: SeoDataImport.RandomPINGenerator
+        seo: SeoDataImport.RandomPINGenerator,
       },
       {
         name: "HTML Tag Generator",
@@ -1094,7 +1096,7 @@ const ToolList = [
         icon: <MdOutlineCode />,
         desc: "Generate HTML tags with custom attributes.",
         code: "HTMLTagGenerator",
-        seo: SeoDataImport.HTMLTagGenerator
+        seo: SeoDataImport.HTMLTagGenerator,
       },
       {
         name: "Random Emoji Generator",
@@ -1102,7 +1104,7 @@ const ToolList = [
         icon: <MdOutlineEmojiEmotions />,
         desc: "Generate random sets of emojis.",
         code: "RandomEmojiGenerator",
-        seo: SeoDataImport.RandomEmojiGenerator
+        seo: SeoDataImport.RandomEmojiGenerator,
       },
       {
         name: "JWT Generator",
@@ -1110,7 +1112,7 @@ const ToolList = [
         icon: <MdSecurity />,
         desc: "Generate JSON Web Tokens for authentication.",
         code: "JWTGenerator",
-        seo: SeoDataImport.JWTGenerator
+        seo: SeoDataImport.JWTGenerator,
       },
       {
         name: "Random UUID Batch Generator",
@@ -1118,7 +1120,7 @@ const ToolList = [
         icon: <MdAutorenew />,
         desc: "Generate multiple UUIDs in a single batch.",
         code: "RandomUUIDBatchGenerator",
-        seo: SeoDataImport.RandomUUIDBatchGenerator
+        seo: SeoDataImport.RandomUUIDBatchGenerator,
       },
       {
         name: "Random File Content Generator",
@@ -1126,7 +1128,7 @@ const ToolList = [
         icon: <MdOutlineInsertDriveFile />,
         desc: "Generate random content for dummy files.",
         code: "RandomFileContentGenerator",
-        seo: SeoDataImport.RandomFileContentGenerator
+        seo: SeoDataImport.RandomFileContentGenerator,
       },
       {
         name: "Random Domain Generator",
@@ -1134,7 +1136,7 @@ const ToolList = [
         icon: <MdOutlineDomain />,
         desc: "Create random domain names with TLDs.",
         code: "RandomDomainGenerator",
-        seo: SeoDataImport.RandomDomainGenerator
+        seo: SeoDataImport.RandomDomainGenerator,
       },
       {
         name: "Random ISBN Generator",
@@ -1142,7 +1144,7 @@ const ToolList = [
         icon: <MdOutlineBook />,
         desc: "Generate random ISBN numbers for books.",
         code: "RandomISBNGenerator",
-        seo: SeoDataImport.RandomISBNGenerator
+        seo: SeoDataImport.RandomISBNGenerator,
       },
       {
         name: "Random Sequence Generator",
@@ -1150,7 +1152,7 @@ const ToolList = [
         icon: <MdOutlineRepeat />,
         desc: "Generate random sequences of numbers or letters.",
         code: "RandomSequenceGenerator",
-        seo: SeoDataImport.RandomSequenceGenerator
+        seo: SeoDataImport.RandomSequenceGenerator,
       },
       {
         name: "Random Barcode Batch Generator",
@@ -1158,7 +1160,7 @@ const ToolList = [
         icon: <LuScanBarcode />,
         desc: "Generate multiple barcodes in one go.",
         code: "RandomBarcodeBatchGenerator",
-        seo: SeoDataImport.RandomBarcodeBatchGenerator
+        seo: SeoDataImport.RandomBarcodeBatchGenerator,
       },
       {
         name: "Random Signature Generator",
@@ -1166,7 +1168,7 @@ const ToolList = [
         icon: <MdOutlineDraw />,
         desc: "Create random stylized signatures.",
         code: "RandomSignatureGenerator",
-        seo: SeoDataImport.RandomSignatureGenerator
+        seo: SeoDataImport.RandomSignatureGenerator,
       },
     ],
   },
@@ -1182,7 +1184,7 @@ const ToolList = [
         icon: <MdCode />,
         desc: "Format and beautify JSON data for better readability.",
         code: "JSONFormatter",
-        seo: SeoDataImport.JSONFormatter
+        seo: SeoDataImport.JSONFormatter,
       },
       {
         name: "Regex Tester",
@@ -1190,7 +1192,7 @@ const ToolList = [
         icon: <MdCode />,
         desc: "Test and debug regular expressions interactively.",
         code: "RegexTester",
-        seo: SeoDataImport.RegexTester
+        seo: SeoDataImport.RegexTester,
       },
       {
         name: "Code Minifier",
@@ -1198,7 +1200,7 @@ const ToolList = [
         icon: <MdBuild />,
         desc: "Minify JavaScript, CSS, and HTML code for better performance.",
         code: "CodeMinifier",
-        seo: SeoDataImport.CodeMinifier
+        seo: SeoDataImport.CodeMinifier,
       },
       {
         name: "Markdown Previewer",
@@ -1206,7 +1208,7 @@ const ToolList = [
         icon: <MdCode />,
         desc: "Preview and render Markdown files in real time.",
         code: "MarkdownPreviewer",
-        seo: SeoDataImport.MarkdownPreviewer
+        seo: SeoDataImport.MarkdownPreviewer,
       },
       {
         name: "HTML Validator",
@@ -1214,7 +1216,7 @@ const ToolList = [
         icon: <MdCode />,
         desc: "Validate HTML code for syntax and semantic errors.",
         code: "HTMLValidator",
-        seo: SeoDataImport.HTMLValidator
+        seo: SeoDataImport.HTMLValidator,
       },
       {
         name: "SQL Query Builder",
@@ -1222,7 +1224,7 @@ const ToolList = [
         icon: <MdStorage />,
         desc: "Generate and test SQL queries visually.",
         code: "SQLQueryBuilder",
-        seo: SeoDataImport.SQLQueryBuilder
+        seo: SeoDataImport.SQLQueryBuilder,
       },
       // New 100 Developer Tools
       {
@@ -1618,6 +1620,14 @@ const ToolList = [
         // seo: SeoDataImport.SitemapGenerator
       },
       {
+        name: "RSS Feed Generator",
+        slug: "rss-feed-generator",
+        icon: <MdDataObject />,
+        desc: "Generate RSS feed XML data for content syndication.",
+        code: "RSSFeedGenerator",
+        seo: SeoDataImport.RSSFeedGenerator,
+      },
+      {
         name: "REST Client",
         slug: "rest-client",
         icon: <MdHttp />,
@@ -1928,8 +1938,8 @@ const ToolList = [
         desc: "Highlight syntax for multiple programming languages.",
         code: "CodeSyntaxHighlighter",
         // seo: SeoDataImport.CodeSyntaxHighlighter
-      }
-    ]
+      },
+    ],
   },
   {
     category: "Image Tools",
@@ -1943,7 +1953,7 @@ const ToolList = [
         icon: <MdStraighten />,
         desc: "Resize images to custom dimensions while maintaining quality.",
         code: "ImageResizer",
-        seo: SeoDataImport.ImageResizer
+        seo: SeoDataImport.ImageResizer,
       },
       {
         name: "Image Converter",
@@ -1951,7 +1961,7 @@ const ToolList = [
         icon: <MdTransform />,
         desc: "Convert images between different formats such as JPG, PNG, and WebP.",
         code: "ImageConverter",
-        seo: SeoDataImport.ImageConverter
+        seo: SeoDataImport.ImageConverter,
       },
       {
         name: "Image Compressor",
@@ -1959,7 +1969,7 @@ const ToolList = [
         icon: <MdImage />,
         desc: "Compress images to reduce file size without losing quality.",
         code: "ImageCompressor",
-        seo: SeoDataImport.ImageCompressor
+        seo: SeoDataImport.ImageCompressor,
       },
       {
         name: "Image Cropper",
@@ -1967,7 +1977,7 @@ const ToolList = [
         icon: <MdImage />,
         desc: "Crop images to specific dimensions or aspect ratios.",
         code: "ImageCropper",
-        seo: SeoDataImport.ImageCropper
+        seo: SeoDataImport.ImageCropper,
       },
       {
         name: "Image Enhancer",
@@ -1975,7 +1985,7 @@ const ToolList = [
         icon: <MdImage />,
         desc: "Enhance image quality with AI-powered adjustments.",
         code: "ImageEnhancer",
-        seo: SeoDataImport.ImageEnhancer
+        seo: SeoDataImport.ImageEnhancer,
       },
       {
         name: "Image Watermarker",
@@ -1983,7 +1993,7 @@ const ToolList = [
         icon: <MdImage />,
         desc: "Add text or image watermarks to protect your images.",
         code: "ImageWatermarker",
-        seo: SeoDataImport.ImageWatermarker
+        seo: SeoDataImport.ImageWatermarker,
       },
       {
         name: "Image Background Remover",
@@ -1991,7 +2001,7 @@ const ToolList = [
         icon: <MdImage />,
         desc: "Remove the background of images using AI for a transparent look.",
         code: "ImageBackgroundRemover",
-        seo: SeoDataImport.ImageBackgroundRemover
+        seo: SeoDataImport.ImageBackgroundRemover,
       },
       {
         name: "Image Collage Maker",
@@ -1999,7 +2009,7 @@ const ToolList = [
         icon: <MdImage />,
         desc: "Combine multiple images into beautiful collages.",
         code: "ImageCollageMaker",
-        seo: SeoDataImport.ImageCollageMaker
+        seo: SeoDataImport.ImageCollageMaker,
       },
       {
         name: "Image Color Adjuster",
@@ -2007,7 +2017,7 @@ const ToolList = [
         icon: <MdImage />,
         desc: "Fine-tune colors, brightness, and contrast for perfect images.",
         code: "ImageColorAdjuster",
-        seo: SeoDataImport.ImageColorAdjuster
+        seo: SeoDataImport.ImageColorAdjuster,
       },
       // New 50 Image Tools
       {
@@ -2409,8 +2419,8 @@ const ToolList = [
         desc: "Generate repeating patterns from images.",
         code: "ImagePatternGenerator",
         // seo: SeoDataImport.ImagePatternGenerator
-      }
-    ]
+      },
+    ],
   },
   {
     category: "PDF Tools",
@@ -2424,7 +2434,7 @@ const ToolList = [
         icon: <MdOutlineCreate />,
         desc: "Convert PDF files into editable Word documents.",
         code: "PDFToWord",
-        seo: SeoDataImport.PdfToWord
+        seo: SeoDataImport.PdfToWord,
       },
       {
         name: "PDF to Image",
@@ -2432,7 +2442,7 @@ const ToolList = [
         icon: <MdPictureAsPdf />,
         desc: "Convert PDF pages into high-quality images.",
         code: "PDFToImage",
-        seo: SeoDataImport.PDFToImage
+        seo: SeoDataImport.PDFToImage,
       },
       {
         name: "Merge PDFs",
@@ -2440,7 +2450,7 @@ const ToolList = [
         icon: <MdPictureAsPdf />,
         desc: "Combine multiple PDF files into a single document.",
         code: "MergePDFs",
-        seo: SeoDataImport.MergePDFs
+        seo: SeoDataImport.MergePDFs,
       },
       {
         name: "Split PDF",
@@ -2448,7 +2458,7 @@ const ToolList = [
         icon: <MdPictureAsPdf />,
         desc: "Extract pages or split large PDFs into smaller files.",
         code: "SplitPDF",
-        seo: SeoDataImport.SplitPDF
+        seo: SeoDataImport.SplitPDF,
       },
       {
         name: "Compress PDF",
@@ -2456,7 +2466,7 @@ const ToolList = [
         icon: <MdPictureAsPdf />,
         desc: "Reduce the file size of PDFs without losing quality.",
         code: "CompressPDF",
-        seo: SeoDataImport.CompressPDF
+        seo: SeoDataImport.CompressPDF,
       },
       {
         name: "PDF Editor",
@@ -2464,7 +2474,7 @@ const ToolList = [
         icon: <MdEditDocument />,
         desc: "Edit text, images, and annotations within PDFs.",
         code: "PDFEditor",
-        seo: SeoDataImport.PDFEditor
+        seo: SeoDataImport.PDFEditor,
       },
       {
         name: "PDF Watermark",
@@ -2472,7 +2482,7 @@ const ToolList = [
         icon: <MdWaterDrop />,
         desc: "Add watermarks to PDFs for branding or copyright protection.",
         code: "PDFWatermark",
-        seo: SeoDataImport.PDFWatermark
+        seo: SeoDataImport.PDFWatermark,
       },
       {
         name: "PDF Converter",
@@ -2480,7 +2490,7 @@ const ToolList = [
         icon: <MdOutlineCreate />,
         desc: "Convert PDF files into various formats like Word, Excel, and images.",
         code: "PDFConverter",
-        seo: SeoDataImport.PDFConverter
+        seo: SeoDataImport.PDFConverter,
       },
       {
         name: "PDF Password Protector",
@@ -2488,7 +2498,7 @@ const ToolList = [
         icon: <MdSecurity />,
         desc: "Secure your PDF documents with passwords.",
         code: "PDFPasswordProtector",
-        seo: SeoDataImport.PDFPasswordProtector
+        seo: SeoDataImport.PDFPasswordProtector,
       },
       // New 50 PDF Tools
       {
@@ -2890,8 +2900,8 @@ const ToolList = [
         desc: "Optimize PDFs for high-quality printing.",
         code: "PDFPrintOptimizer",
         // seo: SeoDataImport.PDFPrintOptimizer
-      }
-    ]
+      },
+    ],
   },
   {
     category: "Unit Converter",
@@ -2905,7 +2915,7 @@ const ToolList = [
         icon: <MdStraighten />,
         desc: "Convert length measurements between different units such as meters, feet, and inches.",
         code: "LengthConverter",
-        seo: SeoDataImport.LengthConverter
+        seo: SeoDataImport.LengthConverter,
       },
       {
         name: "Weight Converter",
@@ -2913,7 +2923,7 @@ const ToolList = [
         icon: <MdStraighten />,
         desc: "Easily convert weight units like kilograms, pounds, and grams.",
         code: "WeightConverter",
-        seo: SeoDataImport.WeightConverter
+        seo: SeoDataImport.WeightConverter,
       },
       {
         name: "Temperature Converter",
@@ -2921,7 +2931,7 @@ const ToolList = [
         icon: <MdStraighten />,
         desc: "Convert temperatures between Celsius, Fahrenheit, and Kelvin.",
         code: "TemperatureConverter",
-        seo: SeoDataImport.TemperatureConverter
+        seo: SeoDataImport.TemperatureConverter,
       },
       {
         name: "Volume Converter",
@@ -2929,7 +2939,7 @@ const ToolList = [
         icon: <MdStraighten />,
         desc: "Convert volume units such as liters, milliliters, and gallons.",
         code: "VolumeConverter",
-        seo: SeoDataImport.VolumeConverter
+        seo: SeoDataImport.VolumeConverter,
       },
       {
         name: "Speed Converter",
@@ -2937,7 +2947,7 @@ const ToolList = [
         icon: <MdStraighten />,
         desc: "Convert speed units like kilometers per hour, miles per hour, and meters per second.",
         code: "SpeedConverter",
-        seo: SeoDataImport.SpeedConverter
+        seo: SeoDataImport.SpeedConverter,
       },
       // New 50 Unit Converter Tools
       {
@@ -3331,8 +3341,8 @@ const ToolList = [
         desc: "Convert radioactivity units like becquerels and curies.",
         code: "RadioactivityConverter",
         // seo: SeoDataImport.RadioactivityConverter
-      }
-    ]
+      },
+    ],
   },
   {
     category: "Time Converter",
@@ -3346,7 +3356,7 @@ const ToolList = [
         icon: <MdAccessTime />,
         desc: "Convert time between different time zones worldwide.",
         code: "TimeZoneConverter",
-        seo: SeoDataImport.TimeZoneConverter
+        seo: SeoDataImport.TimeZoneConverter,
       },
       {
         name: "Epoch Time Converter",
@@ -3354,7 +3364,7 @@ const ToolList = [
         icon: <MdAccessTime />,
         desc: "Convert Unix epoch timestamps to human-readable dates and vice versa.",
         code: "EpochTimeConverter",
-        seo: SeoDataImport.EpochTimeConverter
+        seo: SeoDataImport.EpochTimeConverter,
       },
       {
         name: "Date to Timestamp",
@@ -3362,7 +3372,7 @@ const ToolList = [
         icon: <MdAccessTime />,
         desc: "Generate a timestamp from a given date and time.",
         code: "DateToTimestamp",
-        seo: SeoDataImport.DateToTimestamp
+        seo: SeoDataImport.DateToTimestamp,
       },
       {
         name: "Stopwatch",
@@ -3370,7 +3380,7 @@ const ToolList = [
         icon: <MdAccessTime />,
         desc: "A simple online stopwatch to track time accurately.",
         code: "Stopwatch",
-        seo: SeoDataImport.Stopwatch
+        seo: SeoDataImport.Stopwatch,
       },
       {
         name: "Countdown Timer",
@@ -3378,7 +3388,7 @@ const ToolList = [
         icon: <MdAccessTime />,
         desc: "Set a countdown timer for any duration with alerts.",
         code: "CountdownTimer",
-        seo: SeoDataImport.CountdownTimer
+        seo: SeoDataImport.CountdownTimer,
       },
       // New 50 Time Converter Tools
       {
@@ -3772,8 +3782,8 @@ const ToolList = [
         desc: "Convert times to relative formats (e.g., '2 hours ago').",
         code: "RelativeTimeFormatter",
         // seo: SeoDataImport.RelativeTimeFormatter
-      }
-    ]
+      },
+    ],
   },
   {
     category: "Data Converter",
@@ -3787,7 +3797,7 @@ const ToolList = [
         icon: <MdTransform />,
         desc: "Convert CSV data to JSON format easily.",
         code: "CsvToJson",
-        seo: SeoDataImport.CsvToJsonConverter
+        seo: SeoDataImport.CsvToJsonConverter,
       },
       {
         name: "JSON to XML",
@@ -3795,7 +3805,7 @@ const ToolList = [
         icon: <MdTransform />,
         desc: "Convert JSON data to XML format for seamless integration.",
         code: "JsonToXml",
-        seo: SeoDataImport.JsonToXmlConverter
+        seo: SeoDataImport.JsonToXmlConverter,
       },
       {
         name: "YAML to JSON",
@@ -3803,7 +3813,7 @@ const ToolList = [
         icon: <MdTransform />,
         desc: "Convert YAML data to JSON format effortlessly.",
         code: "YamlToJson",
-        seo: SeoDataImport.YamlToJsonConverter
+        seo: SeoDataImport.YamlToJsonConverter,
       },
       {
         name: "Base64 Encoder",
@@ -3811,7 +3821,7 @@ const ToolList = [
         icon: <MdSecurity />,
         desc: "Encode text or files to Base64 format.",
         code: "Base64Encoder",
-        seo: SeoDataImport.Base64Encoder
+        seo: SeoDataImport.Base64Encoder,
       },
       {
         name: "Base64 Decoder",
@@ -3819,7 +3829,7 @@ const ToolList = [
         icon: <MdTransform />,
         desc: "Decode Base64-encoded text or files back to their original form.",
         code: "Base64Decoder",
-        seo: SeoDataImport.Base64Decoder
+        seo: SeoDataImport.Base64Decoder,
       },
       {
         name: "URL Encoder",
@@ -3827,7 +3837,7 @@ const ToolList = [
         icon: <MdTransform />,
         desc: "Encode special characters in URLs to make them safe for web use.",
         code: "URLEncoder",
-        seo: SeoDataImport.URLEncoder
+        seo: SeoDataImport.URLEncoder,
       },
       {
         name: "URL Decoder",
@@ -3835,7 +3845,7 @@ const ToolList = [
         icon: <MdTransform />,
         desc: "Decode encoded URLs back to their original readable format.",
         code: "URLDecoder",
-        seo: SeoDataImport.URLDecoder
+        seo: SeoDataImport.URLDecoder,
       },
       {
         name: "JSON to CSV",
@@ -3843,7 +3853,7 @@ const ToolList = [
         icon: <MdTransform />,
         desc: "Convert JSON data to CSV format for spreadsheet use.",
         code: "JsonToCsv",
-        seo: SeoDataImport.JsonToCsvConverter
+        seo: SeoDataImport.JsonToCsvConverter,
       },
       {
         name: "XML to JSON",
@@ -3851,7 +3861,7 @@ const ToolList = [
         icon: <MdTransform />,
         desc: "Transform XML data into JSON format easily.",
         code: "XmlToJson",
-        seo: SeoDataImport.XmlToJsonConverter
+        seo: SeoDataImport.XmlToJsonConverter,
       },
       {
         name: "Hex to Text",
@@ -3859,7 +3869,7 @@ const ToolList = [
         icon: <MdTransform />,
         desc: "Convert hexadecimal values to readable text.",
         code: "HexToText",
-        seo: SeoDataImport.HexToTextConverter
+        seo: SeoDataImport.HexToTextConverter,
       },
       {
         name: "Text to Hex",
@@ -3867,7 +3877,7 @@ const ToolList = [
         icon: <MdTransform />,
         desc: "Encode text into hexadecimal format.",
         code: "TextToHex",
-        seo: SeoDataImport.TextToHexConverter
+        seo: SeoDataImport.TextToHexConverter,
       },
       {
         name: "HTML to Markdown",
@@ -3875,7 +3885,7 @@ const ToolList = [
         icon: <MdTransform />,
         desc: "Convert HTML content to Markdown format.",
         code: "HtmlToMarkdown",
-        seo: SeoDataImport.HtmlToMarkdownConverter
+        seo: SeoDataImport.HtmlToMarkdownConverter,
       },
       // New 50 Data Converter Tools
       {
@@ -4228,7 +4238,7 @@ const ToolList = [
         icon: <MdTransform />,
         desc: "Convert JSON data to BSON binary format.",
         code: "JsonToBson",
-        seo: SeoDataImport.JsonToBsonConverter
+        seo: SeoDataImport.JsonToBsonConverter,
       },
       {
         name: "BSON to JSON",
@@ -4236,7 +4246,7 @@ const ToolList = [
         icon: <MdTransform />,
         desc: "Convert BSON binary data to JSON format.",
         code: "BsonToJson",
-        seo: SeoDataImport.BsonToJsonConverter
+        seo: SeoDataImport.BsonToJsonConverter,
       },
       {
         name: "Text to CSV",
@@ -4253,8 +4263,8 @@ const ToolList = [
         desc: "Convert XML data into styled HTML content.",
         code: "XmlToHtml",
         // seo: SeoDataImport.XmlToHtmlConverter
-      }
-    ]
+      },
+    ],
   },
   {
     category: "Binary Converter",
@@ -4268,7 +4278,7 @@ const ToolList = [
         icon: <MdTransform />,
         desc: "Convert Text to Binary easily.",
         code: "TextToBinary",
-        seo: SeoDataImport.TextToBinaryConverter
+        seo: SeoDataImport.TextToBinaryConverter,
       },
       {
         name: "Binary To Text",
@@ -4276,7 +4286,7 @@ const ToolList = [
         icon: <MdTransform />,
         desc: "Convert Binary code back to readable Text.",
         code: "BinaryToText",
-        seo: SeoDataImport.BinaryToTextConverter
+        seo: SeoDataImport.BinaryToTextConverter,
       },
       {
         name: "Binary To Hex",
@@ -4284,7 +4294,7 @@ const ToolList = [
         icon: <MdTransform />,
         desc: "Transform Binary data into Hexadecimal format.",
         code: "BinaryToHex",
-        seo: SeoDataImport.BinaryToHexConverter
+        seo: SeoDataImport.BinaryToHexConverter,
       },
       {
         name: "Hex To Binary",
@@ -4292,7 +4302,7 @@ const ToolList = [
         icon: <MdTransform />,
         desc: "Convert Hexadecimal values to Binary format.",
         code: "HexToBinary",
-        seo: SeoDataImport.HexToBinaryConverter
+        seo: SeoDataImport.HexToBinaryConverter,
       },
       {
         name: "Binary To Decimal",
@@ -4300,7 +4310,7 @@ const ToolList = [
         icon: <MdTransform />,
         desc: "Convert Binary numbers to Decimal values.",
         code: "BinaryToDecimal",
-        seo: SeoDataImport.BinaryToDecimalConverter
+        seo: SeoDataImport.BinaryToDecimalConverter,
       },
       {
         name: "Decimal To Binary",
@@ -4308,7 +4318,7 @@ const ToolList = [
         icon: <MdTransform />,
         desc: "Transform Decimal numbers into Binary format.",
         code: "DecimalToBinary",
-        seo: SeoDataImport.DecimalToBinaryConverter
+        seo: SeoDataImport.DecimalToBinaryConverter,
       },
       {
         name: "Binary To Octal",
@@ -4316,7 +4326,7 @@ const ToolList = [
         icon: <MdTransform />,
         desc: "Convert Binary data to Octal representation.",
         code: "BinaryToOctal",
-        seo: SeoDataImport.BinaryToOctalConverter
+        seo: SeoDataImport.BinaryToOctalConverter,
       },
       {
         name: "Octal To Binary",
@@ -4324,7 +4334,7 @@ const ToolList = [
         icon: <MdTransform />,
         desc: "Convert Octal values to Binary format.",
         code: "OctalToBinary",
-        seo: SeoDataImport.OctalToBinaryConverter
+        seo: SeoDataImport.OctalToBinaryConverter,
       },
       {
         name: "Binary To ASCII",
@@ -4332,7 +4342,7 @@ const ToolList = [
         icon: <MdTransform />,
         desc: "Decode Binary data into ASCII characters.",
         code: "BinaryToASCII",
-        seo: SeoDataImport.BinaryToASCIIConverter
+        seo: SeoDataImport.BinaryToASCIIConverter,
       },
       {
         name: "ASCII To Binary",
@@ -4340,7 +4350,7 @@ const ToolList = [
         icon: <MdTransform />,
         desc: "Encode ASCII text into Binary format.",
         code: "ASCIIToBinary",
-        seo: SeoDataImport.ASCIIToBinaryConverter
+        seo: SeoDataImport.ASCIIToBinaryConverter,
       },
       {
         name: "Binary To Base64",
@@ -4348,7 +4358,7 @@ const ToolList = [
         icon: <MdTransform />,
         desc: "Convert Binary data to Base64 encoding.",
         code: "BinaryToBase64",
-        seo: SeoDataImport.BinaryToBase64Converter
+        seo: SeoDataImport.BinaryToBase64Converter,
       },
       {
         name: "Base64 To Binary",
@@ -4356,7 +4366,7 @@ const ToolList = [
         icon: <MdTransform />,
         desc: "Decode Base64 data back to Binary format.",
         code: "Base64ToBinary",
-        seo: SeoDataImport.Base64ToBinaryConverter
+        seo: SeoDataImport.Base64ToBinaryConverter,
       },
       {
         name: "Binary To Gray Code",
@@ -4364,7 +4374,7 @@ const ToolList = [
         icon: <MdTransform />,
         desc: "Convert Binary numbers to Gray Code.",
         code: "BinaryToGrayCode",
-        seo: SeoDataImport.BinaryToGrayCodeConverter
+        seo: SeoDataImport.BinaryToGrayCodeConverter,
       },
       {
         name: "Gray Code To Binary",
@@ -4372,7 +4382,7 @@ const ToolList = [
         icon: <MdTransform />,
         desc: "Convert Gray Code back to Binary format.",
         code: "GrayCodeToBinary",
-        seo: SeoDataImport.GrayCodeToBinaryConverter
+        seo: SeoDataImport.GrayCodeToBinaryConverter,
       },
       {
         name: "Binary To BCD",
@@ -4380,7 +4390,7 @@ const ToolList = [
         icon: <MdTransform />,
         desc: "Convert Binary to Binary-Coded Decimal (BCD).",
         code: "BinaryToBCD",
-        seo: SeoDataImport.BinaryToBCDConverter
+        seo: SeoDataImport.BinaryToBCDConverter,
       },
       {
         name: "BCD To Binary",
@@ -4388,7 +4398,7 @@ const ToolList = [
         icon: <MdTransform />,
         desc: "Convert Binary-Coded Decimal (BCD) to Binary.",
         code: "BCDToBinary",
-        seo: SeoDataImport.BCDToBinaryConverter
+        seo: SeoDataImport.BCDToBinaryConverter,
       },
       {
         name: "Binary To Integer",
@@ -4396,7 +4406,7 @@ const ToolList = [
         icon: <MdTransform />,
         desc: "Convert Binary data to Integer values.",
         code: "BinaryToInteger",
-        seo: SeoDataImport.BinaryToIntegerConverter
+        seo: SeoDataImport.BinaryToIntegerConverter,
       },
       {
         name: "Integer To Binary",
@@ -4404,7 +4414,7 @@ const ToolList = [
         icon: <MdTransform />,
         desc: "Transform Integer values into Binary format.",
         code: "IntegerToBinary",
-        seo: SeoDataImport.IntegerToBinaryConverter
+        seo: SeoDataImport.IntegerToBinaryConverter,
       },
       {
         name: "Binary To UTF-8",
@@ -4412,7 +4422,7 @@ const ToolList = [
         icon: <MdTransform />,
         desc: "Decode Binary data into UTF-8 characters.",
         code: "BinaryToUTF8",
-        seo: SeoDataImport.BinaryToUTF8Converter
+        seo: SeoDataImport.BinaryToUTF8Converter,
       },
       {
         name: "UTF-8 To Binary",
@@ -4420,7 +4430,7 @@ const ToolList = [
         icon: <MdTransform />,
         desc: "Encode UTF-8 text into Binary format.",
         code: "UTF8ToBinary",
-        seo: SeoDataImport.UTF8ToBinaryConverter
+        seo: SeoDataImport.UTF8ToBinaryConverter,
       },
       {
         name: "Binary Encoder",
@@ -4428,7 +4438,7 @@ const ToolList = [
         icon: <MdTransform />,
         desc: "Encode data into Binary format.",
         code: "BinaryEncoder",
-        seo: SeoDataImport.BinaryEncoder
+        seo: SeoDataImport.BinaryEncoder,
       },
       {
         name: "Binary Decoder",
@@ -4436,7 +4446,7 @@ const ToolList = [
         icon: <MdTransform />,
         desc: "Decode Binary data into readable format.",
         code: "BinaryDecoder",
-        seo: SeoDataImport.BinaryDecoder
+        seo: SeoDataImport.BinaryDecoder,
       },
       {
         name: "Binary XOR Calculator",
@@ -4444,7 +4454,7 @@ const ToolList = [
         icon: <MdTransform />,
         desc: "Perform XOR operation on Binary values.",
         code: "BinaryXORCalculator",
-        seo: SeoDataImport.BinaryXORCalculator
+        seo: SeoDataImport.BinaryXORCalculator,
       },
       {
         name: "Binary Complement",
@@ -4452,7 +4462,7 @@ const ToolList = [
         icon: <MdTransform />,
         desc: "Calculate the one's complement of a Binary number.",
         code: "BinaryComplement",
-        seo: SeoDataImport.BinaryComplementConverter
+        seo: SeoDataImport.BinaryComplementConverter,
       },
       // New 50 Binary Converter Tools
       {
@@ -4854,8 +4864,8 @@ const ToolList = [
         desc: "Rotate bits in a Binary number left or right.",
         code: "BinaryBitRotator",
         // seo: SeoDataImport.BinaryBitRotator
-      }
-    ]
+      },
+    ],
   },
   {
     category: "Science Tools",
@@ -4869,7 +4879,7 @@ const ToolList = [
         icon: <MdScience />,
         desc: "Calculate the molecular weight of chemical compounds based on their molecular formulas.",
         code: "MolecularWeightCalculator",
-        seo: SeoDataImport.MolecularWeightCalculator
+        seo: SeoDataImport.MolecularWeightCalculator,
       },
       {
         name: "Physics Unit Converter",
@@ -4877,7 +4887,7 @@ const ToolList = [
         icon: <MdScience />,
         desc: "Convert between different physics units for length, mass, energy, and more.",
         code: "PhysicsUnitConverter",
-        seo: SeoDataImport.PhysicsUnitConverter
+        seo: SeoDataImport.PhysicsUnitConverter,
       },
       {
         name: "Chemical Equation Balancer",
@@ -4885,7 +4895,7 @@ const ToolList = [
         icon: <MdScience />,
         desc: "Balance chemical equations automatically for accurate reactions.",
         code: "ChemicalEquationBalancer",
-        seo: SeoDataImport.ChemicalEquationBalancer // Corrected missing SEO field
+        seo: SeoDataImport.ChemicalEquationBalancer, // Corrected missing SEO field
       },
       {
         name: "Astronomical Unit Converter",
@@ -4893,7 +4903,7 @@ const ToolList = [
         icon: <MdScience />,
         desc: "Convert astronomical units such as light-years, parsecs, and AU.",
         code: "AstronomicalUnitConverter",
-        seo: SeoDataImport.AstronomicalUnitConverter
+        seo: SeoDataImport.AstronomicalUnitConverter,
       },
       {
         name: "Periodic Table Explorer",
@@ -4901,7 +4911,7 @@ const ToolList = [
         icon: <MdScience />,
         desc: "Explore detailed information about elements in the periodic table.",
         code: "PeriodicTableExplorer",
-        seo: SeoDataImport.PeriodicTableExplorer
+        seo: SeoDataImport.PeriodicTableExplorer,
       },
       // New 50 Science Tools
       {
@@ -5303,8 +5313,8 @@ const ToolList = [
         desc: "Calculate the event horizon radius of a black hole.",
         code: "BlackHoleEventHorizonCalculator",
         // seo: SeoDataImport.BlackHoleEventHorizonCalculator
-      }
-    ]
+      },
+    ],
   },
   {
     category: "Security Tools",
@@ -5318,7 +5328,7 @@ const ToolList = [
         icon: <MdSecurity />,
         desc: "Evaluate the strength of your password and get security recommendations.",
         code: "PasswordStrengthChecker",
-        seo: SeoDataImport.PasswordStrengthChecker
+        seo: SeoDataImport.PasswordStrengthChecker,
       },
       {
         name: "Email Validator",
@@ -5326,7 +5336,7 @@ const ToolList = [
         icon: <MdSecurity />,
         desc: "Check if an email address is valid, properly formatted, and exists.",
         code: "EmailValidator",
-        seo: SeoDataImport.EmailValidator
+        seo: SeoDataImport.EmailValidator,
       },
       // New 50 Security Tools
       {
@@ -5728,8 +5738,8 @@ const ToolList = [
         desc: "Analyze HTTP security headers for websites.",
         code: "SecurityHeadersAnalyzer",
         // seo: SeoDataImport.SecurityHeadersAnalyzer
-      }
-    ]
+      },
+    ],
   },
   {
     category: "Calculators",
@@ -6521,7 +6531,7 @@ const ToolList = [
         icon: <MdPalette />,
         desc: "Pick and preview colors with HEX, RGB, and HSL values.",
         code: "ColorPicker",
-        seo: SeoDataImport.ColorPicker
+        seo: SeoDataImport.ColorPicker,
       },
       {
         name: "Hex to RGB",
@@ -6529,7 +6539,7 @@ const ToolList = [
         icon: <MdPalette />,
         desc: "Convert HEX color codes to RGB and vice versa.",
         code: "HexToRGB",
-        seo: SeoDataImport.HexToRgbConverter
+        seo: SeoDataImport.HexToRgbConverter,
       },
       {
         name: "Color Gradient Generator",
@@ -6537,7 +6547,7 @@ const ToolList = [
         icon: <MdPalette />,
         desc: "Create beautiful color gradients with CSS code output.",
         code: "GradientGenerator",
-        seo: SeoDataImport.ColorGradientGenerator
+        seo: SeoDataImport.ColorGradientGenerator,
       },
       {
         name: "Contrast Checker",
@@ -6545,7 +6555,7 @@ const ToolList = [
         icon: <MdPalette />,
         desc: "Check color contrast for accessibility and readability compliance.",
         code: "ContrastChecker",
-        seo: SeoDataImport.ContrastChecker
+        seo: SeoDataImport.ContrastChecker,
       },
       {
         name: "Palette Generator",
@@ -6553,7 +6563,7 @@ const ToolList = [
         icon: <MdPalette />,
         desc: "Generate harmonious color palettes for design projects.",
         code: "PaletteGenerator",
-        seo: SeoDataImport.PaletteGenerator
+        seo: SeoDataImport.PaletteGenerator,
       },
       // New 50 Color Tools
       {
@@ -6855,7 +6865,7 @@ const ToolList = [
       {
         name: "Color Vision Test Simulator",
         slug: "color-vision-test-simulator",
-        icon: <MdColorLens  />,
+        icon: <MdColorLens />,
         desc: "Simulate color vision tests like Ishihara plates.",
         code: "ColorVisionTestSimulator",
         // seo: SeoDataImport.ColorVisionTestSimulator
@@ -6939,8 +6949,8 @@ const ToolList = [
         desc: "Test contrast across an entire color palette.",
         code: "ColorPaletteContrastTester",
         // seo: SeoDataImport.ColorPaletteContrastTester
-      }
-    ]
+      },
+    ],
   },
   {
     category: "Finance Tools",
@@ -6954,7 +6964,7 @@ const ToolList = [
         icon: <MdAttachMoney />,
         desc: "Convert currencies with real-time exchange rates.",
         code: "CurrencyConverter",
-        seo: SeoDataImport.CurrencyConverter
+        seo: SeoDataImport.CurrencyConverter,
       },
       {
         name: "Loan Calculator",
@@ -6962,7 +6972,7 @@ const ToolList = [
         icon: <MdAttachMoney />,
         desc: "Calculate monthly payments and total interest for loans.",
         code: "LoanCalculator",
-        seo: SeoDataImport.LoanCalculator
+        seo: SeoDataImport.LoanCalculator,
       },
       {
         name: "Tax Calculator",
@@ -6970,7 +6980,7 @@ const ToolList = [
         icon: <MdAttachMoney />,
         desc: "Compute taxes based on income and deductions.",
         code: "TaxCalculator",
-        seo: SeoDataImport.TaxCalculator
+        seo: SeoDataImport.TaxCalculator,
       },
       {
         name: "Investment Calculator",
@@ -6978,7 +6988,7 @@ const ToolList = [
         icon: <MdAttachMoney />,
         desc: "Project potential investment growth over time.",
         code: "InvestmentCalculator",
-        seo: SeoDataImport.InvestmentCalculator
+        seo: SeoDataImport.InvestmentCalculator,
       },
       {
         name: "Retirement Savings Calculator",
@@ -6986,7 +6996,7 @@ const ToolList = [
         icon: <MdAttachMoney />,
         desc: "Plan your retirement savings and estimate future value.",
         code: "RetirementCalculator",
-        seo: SeoDataImport.RetirementSavingsCalculator
+        seo: SeoDataImport.RetirementSavingsCalculator,
       },
       // New 50 Finance Tools
       {
@@ -7380,8 +7390,657 @@ const ToolList = [
         desc: "Estimate how much house you can afford based on income.",
         code: "HomeAffordabilityCalculator",
         // seo: SeoDataImport.HomeAffordabilityCalculator
-      }
-    ]
+      },
+    ],
+  },
+  {
+    category: "Data Generator Tools",
+    slug: "data-generator-tools",
+    desc: "Tools for generating structured data in various formats",
+    icon: <MdDataObject />,
+    tools: [
+      {
+        name: "JSON Data Generator",
+        slug: "json-data-generator",
+        icon: <MdDataObject />,
+        desc: "Generate sample JSON data for testing and development.",
+        code: "JSONDataGenerator",
+        seo: SeoDataImport.JSONDataGenerator,
+      },
+      {
+        name: "YAML Data Generator",
+        slug: "yaml-data-generator",
+        icon: <MdDataObject />,
+        desc: "Create YAML formatted data for configuration or testing.",
+        code: "YAMLDataGenerator",
+        seo: SeoDataImport.YAMLDataGenerator,
+      },
+      {
+        name: "XML Data Generator",
+        slug: "xml-data-generator",
+        icon: <MdDataObject />,
+        desc: "Generate XML data for use in development or simulations.",
+        code: "XMLDataGenerator",
+        seo: SeoDataImport.XMLDataGenerator,
+      },
+      {
+        name: "CSV Data Generator",
+        slug: "csv-data-generator",
+        icon: <MdDataObject />,
+        desc: "Produce CSV data for spreadsheets or database testing.",
+        code: "CSVDataGenerator",
+        seo: SeoDataImport.CSVDataGenerator,
+      },
+      {
+        name: "SQL Data Generator",
+        slug: "sql-data-generator",
+        icon: <MdDataObject />,
+        desc: "Generate SQL insert statements for database population.",
+        code: "SQLDataGenerator",
+        seo: SeoDataImport.SQLDataGenerator,
+      },
+      {
+        name: "TOML Data Generator",
+        slug: "toml-data-generator",
+        icon: <MdDataObject />,
+        desc: "Create TOML formatted data for lightweight configuration.",
+        code: "TOMLDataGenerator",
+        seo: SeoDataImport.TOMLDataGenerator,
+      },
+      {
+        name: "Protobuf Data Generator",
+        slug: "protobuf-data-generator",
+        icon: <MdDataObject />,
+        desc: "Produce Protocol Buffers data for efficient serialization.",
+        code: "ProtobufDataGenerator",
+        seo: SeoDataImport.ProtobufDataGenerator,
+      },
+      {
+        name: "Avro Data Generator",
+        slug: "avro-data-generator",
+        icon: <MdDataObject />,
+        desc: "Generate Avro formatted data for big data processing.",
+        code: "AvroDataGenerator",
+        seo: SeoDataImport.AvroDataGenerator,
+      },
+      {
+        name: "Parquet Data Generator",
+        slug: "parquet-data-generator",
+        icon: <MdDataObject />,
+        desc: "Create Parquet files for columnar data storage.",
+        code: "ParquetDataGenerator",
+        seo: SeoDataImport.ParquetDataGenerator,
+      },
+      {
+        name: "INI Data Generator",
+        slug: "ini-data-generator",
+        icon: <MdDataObject />,
+        desc: "Generate INI formatted data for simple configuration files.",
+        code: "INIDataGenerator",
+        seo: SeoDataImport.INIDataGenerator,
+      },
+      {
+        name: "TSV Data Generator",
+        slug: "tsv-data-generator",
+        icon: <MdDataObject />,
+        desc: "Produce tab-separated values (TSV) data for tabular datasets.",
+        code: "TSVDataGenerator",
+        seo: SeoDataImport.TSVDataGenerator,
+      },
+      {
+        name: "RDF Data Generator",
+        slug: "rdf-data-generator",
+        icon: <MdDataObject />,
+        desc: "Generate Resource Description Framework data for semantic web.",
+        code: "RDFDataGenerator",
+        seo: SeoDataImport.RDFDataGenerator,
+      },
+      {
+        name: "JSONL Data Generator",
+        slug: "jsonl-data-generator",
+        icon: <MdDataObject />,
+        desc: "Create JSON Lines data for streaming or logging purposes.",
+        code: "JSONLDataGenerator",
+        seo: SeoDataImport.JSONLDataGenerator,
+      },
+      {
+        name: "BSON Data Generator",
+        slug: "bson-data-generator",
+        icon: <MdDataObject />,
+        desc: "Generate BSON data for MongoDB-compatible binary storage.",
+        code: "BSONDataGenerator",
+        seo: SeoDataImport.BSONDataGenerator,
+      },
+      {
+        name: "Markdown Table Generator",
+        slug: "markdown-table-generator",
+        icon: <MdDataObject />,
+        desc: "Produce Markdown tables for documentation or display.",
+        code: "MarkdownTableGenerator",
+        seo: SeoDataImport.MarkdownTableGenerator,
+      },
+      {
+        name: "Apache Arrow Data Generator",
+        slug: "apache-arrow-data-generator",
+        icon: <MdDataObject />,
+        desc: "Generate Apache Arrow data for in-memory analytics.",
+        code: "ApacheArrowDataGenerator",
+        seo: SeoDataImport.ApacheArrowDataGenerator,
+      },
+      {
+        name: "HDF5 Data Generator",
+        slug: "hdf5-data-generator",
+        icon: <MdDataObject />,
+        desc: "Create HDF5 datasets for scientific data storage.",
+        code: "HDF5DataGenerator",
+        seo: SeoDataImport.HDF5DataGenerator,
+      },
+      {
+        name: "EDN Data Generator",
+        slug: "edn-data-generator",
+        icon: <MdDataObject />,
+        desc: "Generate Extensible Data Notation data for Clojure projects.",
+        code: "EDNDataGenerator",
+        seo: SeoDataImport.EDNDataGenerator,
+      },
+      {
+        name: "ORC Data Generator",
+        slug: "orc-data-generator",
+        icon: <MdDataObject />,
+        desc: "Produce Optimized Row Columnar (ORC) data for big data.",
+        code: "ORCDataGenerator",
+        seo: SeoDataImport.ORCDataGenerator,
+      },
+      {
+        name: "MessagePack Data Generator",
+        slug: "messagepack-data-generator",
+        icon: <MdDataObject />,
+        desc: "Generate MessagePack data for compact binary serialization.",
+        code: "MessagePackDataGenerator",
+        seo: SeoDataImport.MessagePackDataGenerator,
+      },
+      {
+        name: "LDIF Data Generator",
+        slug: "ldif-data-generator",
+        icon: <MdDataObject />,
+        desc: "Create LDAP Data Interchange Format data for directory services.",
+        code: "LDIFDataGenerator",
+        seo: SeoDataImport.LDIFDataGenerator,
+      },
+      {
+        name: "GeoJSON Data Generator",
+        slug: "geojson-data-generator",
+        icon: <MdDataObject />,
+        desc: "Generate GeoJSON data for geospatial applications.",
+        code: "GeoJSONDataGenerator",
+        seo: SeoDataImport.GeoJSONDataGenerator,
+      },
+      {
+        name: "KML Data Generator",
+        slug: "kml-data-generator",
+        icon: <MdDataObject />,
+        desc: "Create Keyhole Markup Language data for geographic visualization.",
+        code: "KMLDataGenerator",
+        seo: SeoDataImport.KMLDataGenerator,
+      },
+      {
+        name: "Thrift Data Generator",
+        slug: "thrift-data-generator",
+        icon: <MdDataObject />,
+        desc: "Generate Apache Thrift data for cross-language RPC.",
+        code: "ThriftDataGenerator",
+        seo: SeoDataImport.ThriftDataGenerator,
+      },
+      {
+        name: "CBOR Data Generator",
+        slug: "cbor-data-generator",
+        icon: <MdDataObject />,
+        desc: "Produce Concise Binary Object Representation data for IoT.",
+        code: "CBORDataGenerator",
+        seo: SeoDataImport.CBORDataGenerator,
+      },
+      {
+        name: "DSON Data Generator",
+        slug: "dson-data-generator",
+        icon: <MdDataObject />,
+        desc: "Generate Doge Serialized Object Notation data for playful testing.",
+        code: "DSONDataGenerator",
+        seo: SeoDataImport.DSONDataGenerator,
+      },
+
+      {
+        name: "FlatBuffers Data Generator",
+        slug: "flatbuffers-data-generator",
+        icon: <MdDataObject />,
+        desc: "Produce FlatBuffers data for high-performance serialization.",
+        code: "FlatBuffersDataGenerator",
+        seo: SeoDataImport.FlatBuffersDataGenerator,
+      },
+      {
+        name: "HOCON Data Generator",
+        slug: "hocon-data-generator",
+        icon: <MdDataObject />,
+        desc: "Generate Human-Optimized Config Object Notation data.",
+        code: "HOCONDataGenerator",
+        seo: SeoDataImport.HOCONDataGenerator,
+      },
+    ],
+  },
+  {
+    category: "Schema or Model Generator Tools",
+    slug: "schema-model-generator-tools",
+    desc: "Tools for generating schemas, models, or database structures",
+    icon: <MdSchema />,
+    tools: [
+      {
+        name: "GraphQL Schema Generator",
+        slug: "graphql-schema-generator",
+        icon: <MdDataObject />,
+        desc: "Generate sample GraphQL schemas and mock data.",
+        code: "GraphQLSchemaGenerator",
+        seo: SeoDataImport.GraphQLSchemaGenerator,
+      },
+      {
+        name: "MongoDB Schema Generator",
+        slug: "mongodb-schema-generator",
+        icon: <MdSchema />,
+        desc: "Generate MongoDB schemas for NoSQL document collections.",
+        code: "MongoDBSchemaGenerator",
+        seo: SeoDataImport.MongoDBSchemaGenerator,
+      },
+      {
+        name: "MySQL Schema Generator",
+        slug: "mysql-schema-generator",
+        icon: <MdSchema />,
+        desc: "Create MySQL database schemas with tables and relationships.",
+        code: "MySQLSchemaGenerator",
+        seo: SeoDataImport.MySQLSchemaGenerator,
+      },
+      {
+        name: "Prisma Schema Generator",
+        slug: "prisma-schema-generator",
+        icon: <MdSchema />,
+        desc: "Generate Prisma schemas for type-safe database access.",
+        code: "PrismaSchemaGenerator",
+        seo: SeoDataImport.PrismaSchemaGenerator,
+      },
+      {
+        name: "PostgreSQL Schema Generator",
+        slug: "postgresql-schema-generator",
+        icon: <MdSchema />,
+        desc: "Produce PostgreSQL schemas with advanced constraints.",
+        code: "PostgreSQLSchemaGenerator",
+        seo: SeoDataImport.PostgreSQLSchemaGenerator,
+      },
+      {
+        name: "SQLite Schema Generator",
+        slug: "sqlite-schema-generator",
+        icon: <MdSchema />,
+        desc: "Generate SQLite database schemas for lightweight applications.",
+        code: "SQLiteSchemaGenerator",
+        seo: SeoDataImport.SQLiteSchemaGenerator,
+      },
+      {
+        name: "DynamoDB Schema Generator",
+        slug: "dynamodb-schema-generator",
+        icon: <MdSchema />,
+        desc: "Create DynamoDB table schemas for AWS NoSQL databases.",
+        code: "DynamoDBSchemaGenerator",
+        seo: SeoDataImport.DynamoDBSchemaGenerator,
+      },
+      {
+        name: "Cassandra Schema Generator",
+        slug: "cassandra-schema-generator",
+        icon: <MdSchema />,
+        desc: "Generate Cassandra keyspace and table schemas.",
+        code: "CassandraSchemaGenerator",
+        seo: SeoDataImport.CassandraSchemaGenerator,
+      },
+      {
+        name: "GraphQL Model Generator",
+        slug: "graphql-model-generator",
+        icon: <MdSchema />,
+        desc: "Generate GraphQL type definitions and resolvers.",
+        code: "GraphQLModelGenerator",
+        seo: SeoDataImport.GraphQLModelGenerator,
+      },
+      {
+        name: "JSON Schema Generator",
+        slug: "json-schema-generator",
+        icon: <MdSchema />,
+        desc: "Create JSON Schema definitions for data validation.",
+        code: "JSONSchemaGenerator",
+        seo: SeoDataImport.JSONSchemaGenerator,
+      },
+      {
+        name: "OpenAPI Schema Generator",
+        slug: "openapi-schema-generator",
+        icon: <MdSchema />,
+        desc: "Generate OpenAPI schemas for API specifications.",
+        code: "OpenAPISchemaGenerator",
+        seo: SeoDataImport.OpenAPISchemaGenerator,
+      },
+      {
+        name: "Mongoose Model Generator",
+        slug: "mongoose-model-generator",
+        icon: <MdSchema />,
+        desc: "Generate Mongoose models for MongoDB with Node.js.",
+        code: "MongooseModelGenerator",
+        seo: SeoDataImport.MongooseModelGenerator,
+      },
+      {
+        name: "Sequelize Model Generator",
+        slug: "sequelize-model-generator",
+        icon: <MdSchema />,
+        desc: "Create Sequelize models for SQL databases in Node.js.",
+        code: "SequelizeModelGenerator",
+        seo: SeoDataImport.SequelizeModelGenerator,
+      },
+      {
+        name: "TypeORM Model Generator",
+        slug: "typeorm-model-generator",
+        icon: <MdSchema />,
+        desc: "Generate TypeORM entities for TypeScript database access.",
+        code: "TypeORMModelGenerator",
+        seo: SeoDataImport.TypeORMModelGenerator,
+      },
+      {
+        name: "Hibernate Schema Generator",
+        slug: "hibernate-schema-generator",
+        icon: <MdSchema />,
+        desc: "Create Hibernate ORM schemas for Java applications.",
+        code: "HibernateSchemaGenerator",
+        seo: SeoDataImport.HibernateSchemaGenerator,
+      },
+      {
+        name: "Django Model Generator",
+        slug: "django-model-generator",
+        icon: <MdSchema />,
+        desc: "Generate Django models for Python web applications.",
+        code: "DjangoModelGenerator",
+        seo: SeoDataImport.DjangoModelGenerator,
+      },
+      {
+        name: "Rails Model Generator",
+        slug: "rails-model-generator",
+        icon: <MdSchema />,
+        desc: "Create Ruby on Rails models with migrations.",
+        code: "RailsModelGenerator",
+        seo: SeoDataImport.RailsModelGenerator,
+      },
+      {
+        name: "Entity Framework Model Generator",
+        slug: "entity-framework-model-generator",
+        icon: <MdSchema />,
+        desc: "Generate Entity Framework models for .NET databases.",
+        code: "EntityFrameworkModelGenerator",
+        seo: SeoDataImport.EntityFrameworkModelGenerator,
+      },
+      {
+        name: "Firestore Schema Generator",
+        slug: "firestore-schema-generator",
+        icon: <MdSchema />,
+        desc: "Generate schemas for Google Firestore collections.",
+        code: "FirestoreSchemaGenerator",
+        seo: SeoDataImport.FirestoreSchemaGenerator,
+      },
+      {
+        name: "Redis Schema Generator",
+        slug: "redis-schema-generator",
+        icon: <MdSchema />,
+        desc: "Create Redis data structure schemas for key-value stores.",
+        code: "RedisSchemaGenerator",
+        seo: SeoDataImport.RedisSchemaGenerator,
+      },
+      {
+        name: "Elasticsearch Mapping Generator",
+        slug: "elasticsearch-mapping-generator",
+        icon: <MdSchema />,
+        desc: "Generate Elasticsearch mappings for search indexing.",
+        code: "ElasticsearchMappingGenerator",
+        seo: SeoDataImport.ElasticsearchMappingGenerator,
+      },
+      {
+        name: "Avro Schema Generator",
+        slug: "avro-schema-generator",
+        icon: <MdSchema />,
+        desc: "Create Avro schemas for big data serialization.",
+        code: "AvroSchemaGenerator",
+        seo: SeoDataImport.AvroSchemaGenerator,
+      },
+      {
+        name: "Protobuf Schema Generator",
+        slug: "protobuf-schema-generator",
+        icon: <MdSchema />,
+        desc: "Generate Protocol Buffers schemas for efficient data exchange.",
+        code: "ProtobufSchemaGenerator",
+        seo: SeoDataImport.ProtobufSchemaGenerator,
+      },
+      {
+        name: "Thrift Schema Generator",
+        slug: "thrift-schema-generator",
+        icon: <MdSchema />,
+        desc: "Create Apache Thrift schemas for cross-language services.",
+        code: "ThriftSchemaGenerator",
+        seo: SeoDataImport.ThriftSchemaGenerator,
+      },
+      {
+        name: "Parquet Schema Generator",
+        slug: "parquet-schema-generator",
+        icon: <MdSchema />,
+        desc: "Generate Parquet schemas for columnar data storage.",
+        code: "ParquetSchemaGenerator",
+        seo: SeoDataImport.ParquetSchemaGenerator,
+      },
+      {
+        name: "Kafka Schema Generator",
+        slug: "kafka-schema-generator",
+        icon: <MdSchema />,
+        desc: "Create schemas for Apache Kafka topics with Schema Registry.",
+        code: "KafkaSchemaGenerator",
+        seo: SeoDataImport.KafkaSchemaGenerator,
+      },
+      {
+        name: "SQLAlchemy Model Generator",
+        slug: "sqlalchemy-model-generator",
+        icon: <MdSchema />,
+        desc: "Generate SQLAlchemy models for Python ORM.",
+        code: "SQLAlchemyModelGenerator",
+        seo: SeoDataImport.SQLAlchemyModelGenerator,
+      },
+      {
+        name: "Knex Schema Generator",
+        slug: "knex-schema-generator",
+        icon: <MdSchema />,
+        desc: "Create Knex.js schemas for Node.js SQL databases.",
+        code: "KnexSchemaGenerator",
+        seo: SeoDataImport.KnexSchemaGenerator,
+      },
+      {
+        name: "GORM Model Generator",
+        slug: "gorm-model-generator",
+        icon: <MdSchema />,
+        desc: "Generate GORM models for Go database interactions.",
+        code: "GORMModelGenerator",
+        seo: SeoDataImport.GORMModelGenerator,
+      },
+      {
+        name: "Room Schema Generator",
+        slug: "room-schema-generator",
+        icon: <MdSchema />,
+        desc: "Create Room database schemas for Android apps.",
+        code: "RoomSchemaGenerator",
+        seo: SeoDataImport.RoomSchemaGenerator,
+      },
+      {
+        name: "Core Data Model Generator",
+        slug: "core-data-model-generator",
+        icon: <MdSchema />,
+        desc: "Generate Core Data models for iOS/macOS apps.",
+        code: "CoreDataModelGenerator",
+        seo: SeoDataImport.CoreDataModelGenerator,
+      },
+      {
+        name: "Realm Schema Generator",
+        slug: "realm-schema-generator",
+        icon: <MdSchema />,
+        desc: "Create Realm schemas for mobile database persistence.",
+        code: "RealmSchemaGenerator",
+        seo: SeoDataImport.RealmSchemaGenerator,
+      },
+      {
+        name: "MikroORM Model Generator",
+        slug: "mikroorm-model-generator",
+        icon: <MdSchema />,
+        desc: "Generate MikroORM entities for TypeScript ORM.",
+        code: "MikroORMModelGenerator",
+        seo: SeoDataImport.MikroORMModelGenerator,
+      },
+      {
+        name: "Objection.js Model Generator",
+        slug: "objectionjs-model-generator",
+        icon: <MdSchema />,
+        desc: "Create Objection.js models for Node.js SQL ORM.",
+        code: "ObjectionJSModelGenerator",
+        seo: SeoDataImport.ObjectionJSModelGenerator,
+      },
+      {
+        name: "Waterline Model Generator",
+        slug: "waterline-model-generator",
+        icon: <MdSchema />,
+        desc: "Generate Waterline models for Sails.js ORM.",
+        code: "WaterlineModelGenerator",
+        seo: SeoDataImport.WaterlineModelGenerator,
+      },
+      {
+        name: "Eloquent Model Generator",
+        slug: "eloquent-model-generator",
+        icon: <MdSchema />,
+        desc: "Create Eloquent ORM models for Laravel PHP.",
+        code: "EloquentModelGenerator",
+        seo: SeoDataImport.EloquentModelGenerator,
+      },
+      {
+        name: "CakePHP Model Generator",
+        slug: "cakephp-model-generator",
+        icon: <MdSchema />,
+        desc: "Generate CakePHP models for PHP applications.",
+        code: "CakePHPModelGenerator",
+        seo: SeoDataImport.CakePHPModelGenerator,
+      },
+      {
+        name: "Propel Model Generator",
+        slug: "propel-model-generator",
+        icon: <MdSchema />,
+        desc: "Create Propel ORM models for PHP databases.",
+        code: "PropelModelGenerator",
+        seo: SeoDataImport.PropelModelGenerator,
+      },
+      {
+        name: "Doctrine Model Generator",
+        slug: "doctrine-model-generator",
+        icon: <MdSchema />,
+        desc: "Generate Doctrine ORM entities for PHP.",
+        code: "DoctrineModelGenerator",
+        seo: SeoDataImport.DoctrineModelGenerator,
+      },
+      {
+        name: "JPA Schema Generator",
+        slug: "jpa-schema-generator",
+        icon: <MdSchema />,
+        desc: "Create JPA entities for Java Persistence API.",
+        code: "JPASchemaGenerator",
+        seo: SeoDataImport.JPASchemaGenerator,
+      },
+      {
+        name: "NESTJS TypeORM Model Generator",
+        slug: "nestjs-typeorm-model-generator",
+        icon: <MdSchema />,
+        desc: "Generate TypeORM models for NestJS applications.",
+        code: "NestJSTypeORMModelGenerator",
+        seo: SeoDataImport.NestJSTypeORMModelGenerator,
+      },
+      {
+        name: "Hasura Schema Generator",
+        slug: "hasura-schema-generator",
+        icon: <MdSchema />,
+        desc: "Create Hasura GraphQL schemas for instant APIs.",
+        code: "HasuraSchemaGenerator",
+        seo: SeoDataImport.HasuraSchemaGenerator,
+      },
+      {
+        name: "CouchDB Schema Generator",
+        slug: "couchdb-schema-generator",
+        icon: <MdSchema />,
+        desc: "Generate CouchDB document schemas for NoSQL.",
+        code: "CouchDBSchemaGenerator",
+        seo: SeoDataImport.CouchDBSchemaGenerator,
+      },
+      {
+        name: "Neo4j Schema Generator",
+        slug: "neo4j-schema-generator",
+        icon: <MdSchema />,
+        desc: "Create Neo4j graph database schemas for relationships.",
+        code: "Neo4jSchemaGenerator",
+        seo: SeoDataImport.Neo4jSchemaGenerator,
+      },
+      {
+        name: "ArangoDB Schema Generator",
+        slug: "arangodb-schema-generator",
+        icon: <MdSchema />,
+        desc: "Generate ArangoDB schemas for multi-model databases.",
+        code: "ArangoDBSchemaGenerator",
+        seo: SeoDataImport.ArangoDBSchemaGenerator,
+      },
+      {
+        name: "InfluxDB Schema Generator",
+        slug: "influxdb-schema-generator",
+        icon: <MdSchema />,
+        desc: "Create InfluxDB schemas for time-series data.",
+        code: "InfluxDBSchemaGenerator",
+        seo: SeoDataImport.InfluxDBSchemaGenerator,
+      },
+      {
+        name: "TimescaleDB Schema Generator",
+        slug: "timescaledb-schema-generator",
+        icon: <MdSchema />,
+        desc: "Generate TimescaleDB schemas for time-series PostgreSQL.",
+        code: "TimescaleDBSchemaGenerator",
+        seo: SeoDataImport.TimescaleDBSchemaGenerator,
+      },
+      {
+        name: "ClickHouse Schema Generator",
+        slug: "clickhouse-schema-generator",
+        icon: <MdSchema />,
+        desc: "Create ClickHouse schemas for analytical databases.",
+        code: "ClickHouseSchemaGenerator",
+        seo: SeoDataImport.ClickHouseSchemaGenerator,
+      },
+      {
+        name: "MariaDB Schema Generator",
+        slug: "mariadb-schema-generator",
+        icon: <MdSchema />,
+        desc: "Generate MariaDB schemas for relational databases.",
+        code: "MariaDBSchemaGenerator",
+        seo: SeoDataImport.MariaDBSchemaGenerator,
+      },
+      {
+        name: "SurrealDB Schema Generator",
+        slug: "surrealdb-schema-generator",
+        icon: <MdSchema />,
+        desc: "Create SurrealDB schemas for multi-model NoSQL.",
+        code: "SurrealDBSchemaGenerator",
+        seo: SeoDataImport.SurrealDBSchemaGenerator,
+      },
+      {
+        name: "Supabase Schema Generator",
+        slug: "supabase-schema-generator",
+        icon: <MdSchema />,
+        desc: "Generate Supabase schemas for PostgreSQL-based APIs.",
+        code: "SupabaseSchemaGenerator",
+        seo: SeoDataImport.SupabaseSchemaGenerator,
+      },
+    ],
   },
   {
     category: "Misc Tools",
@@ -7395,7 +8054,7 @@ const ToolList = [
         icon: <MdBuild />,
         desc: "Scan barcodes and retrieve product details instantly.",
         code: "BarcodeScanner",
-        seo: SeoDataImport.BarcodeScanner
+        seo: SeoDataImport.BarcodeScanner,
       },
       {
         name: "QR Code Scanner",
@@ -7403,7 +8062,7 @@ const ToolList = [
         icon: <MdQrCodeScanner />,
         desc: "Scan QR codes to access links, product info, or promotions.",
         code: "QRCodeScanner",
-        seo: SeoDataImport.QRCodeScanner
+        seo: SeoDataImport.QRCodeScanner,
       },
       {
         name: "YouTube to Text",
@@ -7411,7 +8070,7 @@ const ToolList = [
         icon: <MdVideoLibrary />,
         desc: "Retrieve and download transcripts from YouTube videos.",
         code: "YouTubeToText",
-        seo: SeoDataImport.YouTubeToTextConverter
+        seo: SeoDataImport.YouTubeToTextConverter,
       },
       // New 100 Unique Misc Tools
       {
@@ -8085,8 +8744,8 @@ const ToolList = [
         desc: "Magnify parts of your screen for detailed viewing.",
         code: "VirtualMagnifierTool",
         // seo: SeoDataImport.VirtualMagnifierTool
-      }
-    ]
+      },
+    ],
   },
 ];
 

@@ -1,117 +1,132 @@
 'use client'
 import React, { useState, useCallback } from 'react'
 
-const XMLDataGenerator = () => {
-  const [xmlData, setXmlData] = useState('')
+const AvroDataGenerator = () => {
+  const [avroData, setAvroData] = useState('')
   const [count, setCount] = useState(5)
-  const [rootElement, setRootElement] = useState('items')
-  const [itemElement, setItemElement] = useState('item')
+  const [namespace, setNamespace] = useState('example.avro')
+  const [recordName, setRecordName] = useState('Record')
   const [fields, setFields] = useState([
-    { name: 'id', type: 'number', asAttribute: false },
-    { name: 'name', type: 'text', asAttribute: false },
-    { name: 'email', type: 'email', asAttribute: false }
+    { name: 'id', type: 'int', logicalType: '', defaultValue: null },
+    { name: 'name', type: 'string', logicalType: '', defaultValue: null },
+    { name: 'email', type: 'string', logicalType: 'email', defaultValue: null }
   ])
   const [isCopied, setIsCopied] = useState(false)
   const [error, setError] = useState('')
-  const [useCDATA, setUseCDATA] = useState(false)
+  const [includeSchema, setIncludeSchema] = useState(true)
 
   const MAX_ITEMS = 100
-  const FIELD_TYPES = ['number', 'text', 'email', 'date', 'boolean']
+  const FIELD_TYPES = [
+    'int', 'long', 'float', 'double', 'boolean', 
+    'string', 'bytes', 'null', 'array', 'map'
+  ]
+  const LOGICAL_TYPES = {
+    'int': ['date', 'time-millis'],
+    'long': ['timestamp-millis', 'timestamp-micros'],
+    'float': ['decimal'],
+    'double': ['decimal'],
+    'string': ['email', 'uuid'],
+    'bytes': ['decimal']
+  }
 
-  const generateRandomData = useCallback((type) => {
+  const generateRandomData = useCallback((field) => {
+    const { type, logicalType } = field
     const timestamp = Date.now()
+    
     switch (type) {
-      case 'number':
+      case 'int':
+        if (logicalType === 'date') {
+          return Math.floor((timestamp - Math.random() * 31536000000) / 86400000)
+        }
         return Math.floor(Math.random() * 10000) + 1
-      case 'text':
-        const firstNames = ['John', 'Emma', 'Michael', 'Sophie', 'Alex']
-        const lastNames = ['Smith', 'Johnson', 'Brown', 'Taylor', 'Wilson']
-        return `${firstNames[Math.floor(Math.random() * firstNames.length)]} ${
-          lastNames[Math.floor(Math.random() * lastNames.length)]
-        }`
-      case 'email':
-        const emailPrefix = `${Math.random().toString(36).substring(2, 8)}${timestamp}`
-        const domains = ['gmail.com', 'outlook.com', 'example.org']
-        return `${emailPrefix}@${domains[Math.floor(Math.random() * domains.length)]}`
-      case 'date':
-        const date = new Date(timestamp - Math.random() * 31536000000)
-        return date.toISOString().split('T')[0]
+      case 'long':
+        if (logicalType === 'timestamp-millis') {
+          return timestamp - Math.random() * 31536000000
+        }
+        return Math.floor(Math.random() * 1000000) + 1
+      case 'float':
+      case 'double':
+        return Number((Math.random() * 100).toFixed(2))
       case 'boolean':
         return Math.random() > 0.5
+      case 'string':
+        if (logicalType === 'email') {
+          const prefix = `${Math.random().toString(36).substring(2, 8)}${timestamp}`
+          const domains = ['gmail.com', 'outlook.com', 'example.org']
+          return `${prefix}@${domains[Math.floor(Math.random() * domains.length)]}`
+        }
+        const names = ['John', 'Emma', 'Michael', 'Sophie', 'Alex']
+        return names[Math.floor(Math.random() * names.length)]
+      case 'bytes':
+        return Array.from({ length: 8 }, () => Math.floor(Math.random() * 256))
+      case 'array':
+        return Array.from({ length: 3 }, () => Math.floor(Math.random() * 100))
+      case 'map':
+        return { key1: Math.floor(Math.random() * 100), key2: 'value' }
       default:
-        return ''
+        return null
     }
   }, [])
 
-  const escapeXML = (str) => {
-    return str
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;')
-      .replace(/"/g, '&quot;')
-      .replace(/'/g, '&apos;')
-  }
+  const generateAvroSchema = useCallback(() => {
+    return {
+      type: 'record',
+      namespace,
+      name: recordName,
+      fields: fields.map(field => ({
+        name: field.name,
+        type: field.type === 'null' ? 'null' : [field.type, 'null'],
+        ...(field.logicalType && { logicalType: field.logicalType }),
+        ...(field.defaultValue !== null && { default: field.defaultValue })
+      }))
+    }
+  }, [namespace, recordName, fields])
 
-  const generateXML = useCallback(() => {
+  const validateFields = useCallback(() => {
+    if (fields.length === 0) return 'Please add at least one field'
+    if (!namespace.trim()) return 'Namespace cannot be empty'
+    if (!recordName.trim()) return 'Record name cannot be empty'
+    if (fields.some(field => !field.name.trim())) return 'All field names must be filled'
+    if (new Set(fields.map(f => f.name)).size !== fields.length) return 'Field names must be unique'
+    return ''
+  }, [fields, namespace, recordName])
+
+  const generateAvro = useCallback(() => {
     const validationError = validateFields()
     if (validationError) {
       setError(validationError)
-      setXmlData('')
+      setAvroData('')
       return
     }
 
     setError('')
-    try {
-      const items = Array.from({ length: Math.min(count, MAX_ITEMS) }, () => {
-        const item = {}
-        fields.forEach(field => {
-          item[field.name] = generateRandomData(field.type)
-        })
-        return item
-      })
+    const items = Array.from({ length: Math.min(count, MAX_ITEMS) }, () => {
+      return fields.reduce((obj, field) => ({
+        ...obj,
+        [field.name]: generateRandomData(field)
+      }), {})
+    })
 
-      let xml = '<?xml version="1.0" encoding="UTF-8"?>\n'
-      xml += `<${rootElement}>\n`
-      
-      items.forEach(item => {
-        const attributes = fields
-          .filter(f => f.asAttribute)
-          .map(f => `${f.name}="${escapeXML(String(item[f.name]))}"`)
-          .join(' ')
-          
-        xml += `  <${itemElement}${attributes ? ' ' + attributes : ''}>\n`
-        
-        fields.filter(f => !f.asAttribute).forEach(field => {
-          const value = escapeXML(String(item[field.name]))
-          xml += `    <${field.name}>`
-          xml += useCDATA ? `<![CDATA[${value}]]>` : value
-          xml += `</${field.name}>\n`
-        })
-        
-        xml += `  </${itemElement}>\n`
-      })
-      
-      xml += `</${rootElement}>`
-      setXmlData(xml)
+    try {
+      const schema = generateAvroSchema()
+      const output = includeSchema 
+        ? { schema, data: items }
+        : items
+      setAvroData(JSON.stringify(output, null, 2))
       setIsCopied(false)
     } catch (e) {
-      setError('Error generating XML: ' + e.message)
+      setError('Error generating Avro data: ' + e.message)
     }
-  }, [count, fields, rootElement, itemElement, generateRandomData, useCDATA])
-
-  const validateFields = useCallback(() => {
-    if (fields.length === 0) return 'Please add at least one field'
-    if (!rootElement.trim()) return 'Root element cannot be empty'
-    if (!itemElement.trim()) return 'Item element cannot be empty'
-    if (fields.some(field => !field.name.trim())) return 'All field names must be filled'
-    if (new Set(fields.map(f => f.name)).size !== fields.length) return 'Field names must be unique'
-    return ''
-  }, [fields, rootElement, itemElement])
+  }, [count, fields, generateRandomData, validateFields, generateAvroSchema, includeSchema])
 
   const addField = () => {
-    const newFieldName = `field${fields.length + 1}`
-    if (!fields.some(f => f.name === newFieldName)) {
-      setFields([...fields, { name: newFieldName, type: 'text', asAttribute: false }])
+    if (fields.length < 10) {
+      setFields([...fields, { 
+        name: `field${fields.length + 1}`, 
+        type: 'string', 
+        logicalType: '', 
+        defaultValue: null 
+      }])
     }
   }
 
@@ -129,21 +144,21 @@ const XMLDataGenerator = () => {
 
   const copyToClipboard = async () => {
     try {
-      await navigator.clipboard.writeText(xmlData)
+      await navigator.clipboard.writeText(avroData)
       setIsCopied(true)
       setTimeout(() => setIsCopied(false), 2000)
     } catch (err) {
-      setError('Failed to copy to clipboard: ' + err.message)
+      setError('Failed to copy: ' + err.message)
     }
   }
 
-  const downloadAsXML = () => {
+  const downloadAsJSON = () => {
     try {
-      const blob = new Blob([xmlData], { type: 'application/xml;charset=utf-8' })
+      const blob = new Blob([avroData], { type: 'application/json;charset=utf-8' })
       const url = URL.createObjectURL(blob)
       const link = document.createElement('a')
       link.href = url
-      link.download = `${rootElement}-${Date.now()}.xml`
+      link.download = `${recordName}-${Date.now()}.json`
       document.body.appendChild(link)
       link.click()
       document.body.removeChild(link)
@@ -153,16 +168,12 @@ const XMLDataGenerator = () => {
     }
   }
 
-  const clearData = () => {
-    setXmlData('')
-    setIsCopied(false)
-    setError('')
-  }
-
   return (
     <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4">
       <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-3xl">
-        <h1 className="text-2xl font-bold mb-6 text-gray-800">XML Data Generator</h1>
+        <h1 className="text-2xl font-bold mb-6 text-gray-800">
+          Avro Data Generator
+        </h1>
 
         {error && (
           <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
@@ -173,7 +184,7 @@ const XMLDataGenerator = () => {
         <div className="space-y-4 mb-6">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Number of Items (1-{MAX_ITEMS})
+              Number of Records (1-{MAX_ITEMS})
             </label>
             <input
               type="number"
@@ -187,27 +198,27 @@ const XMLDataGenerator = () => {
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Root Element Name
+              Namespace
             </label>
             <input
               type="text"
-              value={rootElement}
-              onChange={(e) => setRootElement(e.target.value.trim() || 'items')}
+              value={namespace}
+              onChange={(e) => setNamespace(e.target.value.trim() || 'example.avro')}
               className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="e.g., items"
+              placeholder="e.g., example.avro"
             />
           </div>
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Item Element Name
+              Record Name
             </label>
             <input
               type="text"
-              value={itemElement}
-              onChange={(e) => setItemElement(e.target.value.trim() || 'item')}
+              value={recordName}
+              onChange={(e) => setRecordName(e.target.value.trim() || 'Record')}
               className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="e.g., item"
+              placeholder="e.g., Record"
             />
           </div>
 
@@ -231,17 +242,22 @@ const XMLDataGenerator = () => {
                 >
                   {FIELD_TYPES.map(type => (
                     <option key={type} value={type}>
-                      {type.charAt(0).toUpperCase() + type.slice(1)}
+                      {type}
                     </option>
                   ))}
                 </select>
-                <input
-                  type="checkbox"
-                  checked={field.asAttribute}
-                  onChange={(e) => updateField(index, 'asAttribute', e.target.checked)}
-                  className="h-4 w-4 text-blue-600 border-gray-300 rounded"
-                />
-                <label className="text-sm text-gray-600">Attribute</label>
+                <select
+                  value={field.logicalType}
+                  onChange={(e) => updateField(index, 'logicalType', e.target.value)}
+                  className="flex-1 p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="">None</option>
+                  {(LOGICAL_TYPES[field.type] || []).map(logical => (
+                    <option key={logical} value={logical}>
+                      {logical}
+                    </option>
+                  ))}
+                </select>
                 <button
                   onClick={() => removeField(index)}
                   disabled={fields.length <= 1}
@@ -253,35 +269,35 @@ const XMLDataGenerator = () => {
             ))}
             <button
               onClick={addField}
-              className="mt-2 text-sm text-blue-600 hover:text-blue-800"
               disabled={fields.length >= 10}
+              className="mt-2 text-sm text-blue-600 hover:text-blue-800 disabled:text-gray-400"
             >
               + Add Field {fields.length >= 10 && '(Max 10)'}
             </button>
           </div>
 
-          <div className="flex items-center gap-2">
-            <input
-              type="checkbox"
-              checked={useCDATA}
-              onChange={(e) => setUseCDATA(e.target.checked)}
-              className="h-4 w-4 text-blue-600 border-gray-300 rounded"
-            />
-            <label className="text-sm font-medium text-gray-700">
-              Use CDATA for elements
+          <div>
+            <label className="flex items-center text-sm font-medium text-gray-700">
+              <input
+                type="checkbox"
+                checked={includeSchema}
+                onChange={(e) => setIncludeSchema(e.target.checked)}
+                className="mr-2"
+              />
+              Include Schema in Output
             </label>
           </div>
         </div>
 
         <div className="flex flex-wrap gap-3 mb-6">
           <button
-            onClick={generateXML}
+            onClick={generateAvro}
             className="flex-1 bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
           >
-            Generate XML
+            Generate Avro Data
           </button>
 
-          {xmlData && (
+          {avroData && (
             <>
               <button
                 onClick={copyToClipboard}
@@ -295,14 +311,14 @@ const XMLDataGenerator = () => {
               </button>
 
               <button
-                onClick={downloadAsXML}
+                onClick={downloadAsJSON}
                 className="flex-1 bg-green-600 text-white py-2 px-4 rounded-md hover:bg-green-700 transition-colors focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
               >
-                Download as XML
+                Download as JSON
               </button>
 
               <button
-                onClick={clearData}
+                onClick={() => setAvroData('')}
                 className="flex-1 bg-red-600 text-white py-2 px-4 rounded-md hover:bg-red-700 transition-colors focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
               >
                 Clear
@@ -311,13 +327,13 @@ const XMLDataGenerator = () => {
           )}
         </div>
 
-        {xmlData && (
+        {avroData && (
           <div className="mt-4">
             <h2 className="text-lg font-semibold text-gray-700 mb-2">
-              Generated XML Data ({count} items):
+              Generated Avro Data ({count} records):
             </h2>
             <div className="bg-gray-50 p-4 rounded-md border border-gray-200 max-h-96 overflow-auto">
-              <pre className="text-sm font-mono text-gray-800 whitespace-pre-wrap">{xmlData}</pre>
+              <pre className="text-sm font-mono text-gray-800 whitespace-pre-wrap">{avroData}</pre>
             </div>
           </div>
         )}
@@ -326,4 +342,4 @@ const XMLDataGenerator = () => {
   )
 }
 
-export default XMLDataGenerator
+export default AvroDataGenerator

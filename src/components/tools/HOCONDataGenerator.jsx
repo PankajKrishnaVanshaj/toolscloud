@@ -1,19 +1,19 @@
 'use client'
 import React, { useState, useCallback } from 'react'
 
-const XMLDataGenerator = () => {
-  const [xmlData, setXmlData] = useState('')
+const HOCONDataGenerator = () => {
+  const [hoconData, setHoconData] = useState('')
   const [count, setCount] = useState(5)
-  const [rootElement, setRootElement] = useState('items')
-  const [itemElement, setItemElement] = useState('item')
+  const [rootKey, setRootKey] = useState('items')
   const [fields, setFields] = useState([
-    { name: 'id', type: 'number', asAttribute: false },
-    { name: 'name', type: 'text', asAttribute: false },
-    { name: 'email', type: 'email', asAttribute: false }
+    { name: 'id', type: 'number', includeQuotes: false },
+    { name: 'name', type: 'text', includeQuotes: true },
+    { name: 'email', type: 'email', includeQuotes: true }
   ])
   const [isCopied, setIsCopied] = useState(false)
   const [error, setError] = useState('')
-  const [useCDATA, setUseCDATA] = useState(false)
+  const [includeComments, setIncludeComments] = useState(true)
+  const [useSubstitutions, setUseSubstitutions] = useState(false)
 
   const MAX_ITEMS = 100
   const FIELD_TYPES = ['number', 'text', 'email', 'date', 'boolean']
@@ -43,75 +43,68 @@ const XMLDataGenerator = () => {
     }
   }, [])
 
-  const escapeXML = (str) => {
-    return str
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;')
-      .replace(/"/g, '&quot;')
-      .replace(/'/g, '&apos;')
-  }
+  const validateFields = useCallback(() => {
+    if (fields.length === 0) return 'Please add at least one field'
+    if (!rootKey.trim()) return 'Root key cannot be empty'
+    if (fields.some(field => !field.name.trim())) return 'All field names must be filled'
+    if (new Set(fields.map(f => f.name)).size !== fields.length) return 'Field names must be unique'
+    return ''
+  }, [fields, rootKey])
 
-  const generateXML = useCallback(() => {
+  const generateHOCON = useCallback(() => {
     const validationError = validateFields()
     if (validationError) {
       setError(validationError)
-      setXmlData('')
+      setHoconData('')
       return
     }
 
     setError('')
-    try {
-      const items = Array.from({ length: Math.min(count, MAX_ITEMS) }, () => {
-        const item = {}
-        fields.forEach(field => {
-          item[field.name] = generateRandomData(field.type)
-        })
-        return item
-      })
-
-      let xml = '<?xml version="1.0" encoding="UTF-8"?>\n'
-      xml += `<${rootElement}>\n`
-      
-      items.forEach(item => {
-        const attributes = fields
-          .filter(f => f.asAttribute)
-          .map(f => `${f.name}="${escapeXML(String(item[f.name]))}"`)
-          .join(' ')
-          
-        xml += `  <${itemElement}${attributes ? ' ' + attributes : ''}>\n`
-        
-        fields.filter(f => !f.asAttribute).forEach(field => {
-          const value = escapeXML(String(item[field.name]))
-          xml += `    <${field.name}>`
-          xml += useCDATA ? `<![CDATA[${value}]]>` : value
-          xml += `</${field.name}>\n`
-        })
-        
-        xml += `  </${itemElement}>\n`
-      })
-      
-      xml += `</${rootElement}>`
-      setXmlData(xml)
-      setIsCopied(false)
-    } catch (e) {
-      setError('Error generating XML: ' + e.message)
+    let output = ''
+    
+    // Add header comment if enabled
+    if (includeComments) {
+      output += `# Generated HOCON Data - ${new Date().toLocaleString()}\n`
     }
-  }, [count, fields, rootElement, itemElement, generateRandomData, useCDATA])
 
-  const validateFields = useCallback(() => {
-    if (fields.length === 0) return 'Please add at least one field'
-    if (!rootElement.trim()) return 'Root element cannot be empty'
-    if (!itemElement.trim()) return 'Item element cannot be empty'
-    if (fields.some(field => !field.name.trim())) return 'All field names must be filled'
-    if (new Set(fields.map(f => f.name)).size !== fields.length) return 'Field names must be unique'
-    return ''
-  }, [fields, rootElement, itemElement])
+    // Generate substitution definitions if enabled
+    const substitutions = {}
+    if (useSubstitutions) {
+      fields.forEach(field => {
+        if (field.type === 'text' || field.type === 'email') {
+          substitutions[field.name] = generateRandomData(field.type)
+          output += `${field.name} = ${field.includeQuotes ? `"${substitutions[field.name]}"` : substitutions[field.name]}\n`
+        }
+      })
+      output += '\n'
+    }
+
+    // Generate main data structure
+    output += `${rootKey} = [\n`
+    const items = Array.from({ length: Math.min(count, MAX_ITEMS) }, () => {
+      const objLines = fields.map(field => {
+        const value = useSubstitutions && substitutions[field.name] 
+          ? `\${${field.name}}`
+          : generateRandomData(field.type)
+        const formattedValue = field.includeQuotes && typeof value === 'string' && !value.startsWith('${')
+          ? `"${value}"`
+          : value
+        return includeComments 
+          ? `  ${field.name}: ${formattedValue} # ${field.type} field`
+          : `  ${field.name}: ${formattedValue}`
+      })
+      return `{\n${objLines.join('\n')}\n}`
+    })
+    output += items.join(',\n') + '\n]'
+
+    setHoconData(output)
+    setIsCopied(false)
+  }, [count, fields, rootKey, generateRandomData, validateFields, includeComments, useSubstitutions])
 
   const addField = () => {
     const newFieldName = `field${fields.length + 1}`
-    if (!fields.some(f => f.name === newFieldName)) {
-      setFields([...fields, { name: newFieldName, type: 'text', asAttribute: false }])
+    if (!fields.some(f => f.name === newFieldName) && fields.length < 10) {
+      setFields([...fields, { name: newFieldName, type: 'text', includeQuotes: true }])
     }
   }
 
@@ -129,21 +122,21 @@ const XMLDataGenerator = () => {
 
   const copyToClipboard = async () => {
     try {
-      await navigator.clipboard.writeText(xmlData)
+      await navigator.clipboard.writeText(hoconData)
       setIsCopied(true)
       setTimeout(() => setIsCopied(false), 2000)
     } catch (err) {
-      setError('Failed to copy to clipboard: ' + err.message)
+      setError('Failed to copy: ' + err.message)
     }
   }
 
-  const downloadAsXML = () => {
+  const downloadAsHOCON = () => {
     try {
-      const blob = new Blob([xmlData], { type: 'application/xml;charset=utf-8' })
+      const blob = new Blob([hoconData], { type: 'text/hocon;charset=utf-8' })
       const url = URL.createObjectURL(blob)
       const link = document.createElement('a')
       link.href = url
-      link.download = `${rootElement}-${Date.now()}.xml`
+      link.download = `${rootKey}-${Date.now()}.conf`
       document.body.appendChild(link)
       link.click()
       document.body.removeChild(link)
@@ -153,16 +146,12 @@ const XMLDataGenerator = () => {
     }
   }
 
-  const clearData = () => {
-    setXmlData('')
-    setIsCopied(false)
-    setError('')
-  }
-
   return (
     <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4">
       <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-3xl">
-        <h1 className="text-2xl font-bold mb-6 text-gray-800">XML Data Generator</h1>
+        <h1 className="text-2xl font-bold mb-6 text-gray-800">
+          HOCON Data Generator
+        </h1>
 
         {error && (
           <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
@@ -187,33 +176,41 @@ const XMLDataGenerator = () => {
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Root Element Name
+              Root Key Name
             </label>
             <input
               type="text"
-              value={rootElement}
-              onChange={(e) => setRootElement(e.target.value.trim() || 'items')}
+              value={rootKey}
+              onChange={(e) => setRootKey(e.target.value.trim() || 'items')}
               className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               placeholder="e.g., items"
             />
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Item Element Name
+          <div className="flex gap-4 mb-4">
+            <label className="flex items-center">
+              <input
+                type="checkbox"
+                checked={includeComments}
+                onChange={(e) => setIncludeComments(e.target.checked)}
+                className="mr-2"
+              />
+              Include Comments
             </label>
-            <input
-              type="text"
-              value={itemElement}
-              onChange={(e) => setItemElement(e.target.value.trim() || 'item')}
-              className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="e.g., item"
-            />
+            <label className="flex items-center">
+              <input
+                type="checkbox"
+                checked={useSubstitutions}
+                onChange={(e) => setUseSubstitutions(e.target.checked)}
+                className="mr-2"
+              />
+              Use Substitutions
+            </label>
           </div>
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Fields ({fields.length})
+              Fields ({fields.length}/10)
             </label>
             {fields.map((field, index) => (
               <div key={index} className="flex gap-2 mb-2 items-center">
@@ -237,11 +234,10 @@ const XMLDataGenerator = () => {
                 </select>
                 <input
                   type="checkbox"
-                  checked={field.asAttribute}
-                  onChange={(e) => updateField(index, 'asAttribute', e.target.checked)}
-                  className="h-4 w-4 text-blue-600 border-gray-300 rounded"
+                  checked={field.includeQuotes}
+                  onChange={(e) => updateField(index, 'includeQuotes', e.target.checked)}
+                  className="mr-2"
                 />
-                <label className="text-sm text-gray-600">Attribute</label>
                 <button
                   onClick={() => removeField(index)}
                   disabled={fields.length <= 1}
@@ -253,35 +249,23 @@ const XMLDataGenerator = () => {
             ))}
             <button
               onClick={addField}
-              className="mt-2 text-sm text-blue-600 hover:text-blue-800"
               disabled={fields.length >= 10}
+              className="mt-2 text-sm text-blue-600 hover:text-blue-800 disabled:text-gray-400"
             >
               + Add Field {fields.length >= 10 && '(Max 10)'}
             </button>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <input
-              type="checkbox"
-              checked={useCDATA}
-              onChange={(e) => setUseCDATA(e.target.checked)}
-              className="h-4 w-4 text-blue-600 border-gray-300 rounded"
-            />
-            <label className="text-sm font-medium text-gray-700">
-              Use CDATA for elements
-            </label>
           </div>
         </div>
 
         <div className="flex flex-wrap gap-3 mb-6">
           <button
-            onClick={generateXML}
+            onClick={generateHOCON}
             className="flex-1 bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
           >
-            Generate XML
+            Generate HOCON
           </button>
 
-          {xmlData && (
+          {hoconData && (
             <>
               <button
                 onClick={copyToClipboard}
@@ -295,14 +279,14 @@ const XMLDataGenerator = () => {
               </button>
 
               <button
-                onClick={downloadAsXML}
+                onClick={downloadAsHOCON}
                 className="flex-1 bg-green-600 text-white py-2 px-4 rounded-md hover:bg-green-700 transition-colors focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
               >
-                Download as XML
+                Download as .conf
               </button>
 
               <button
-                onClick={clearData}
+                onClick={() => setHoconData('')}
                 className="flex-1 bg-red-600 text-white py-2 px-4 rounded-md hover:bg-red-700 transition-colors focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
               >
                 Clear
@@ -311,13 +295,13 @@ const XMLDataGenerator = () => {
           )}
         </div>
 
-        {xmlData && (
+        {hoconData && (
           <div className="mt-4">
             <h2 className="text-lg font-semibold text-gray-700 mb-2">
-              Generated XML Data ({count} items):
+              Generated HOCON Data ({count} items):
             </h2>
             <div className="bg-gray-50 p-4 rounded-md border border-gray-200 max-h-96 overflow-auto">
-              <pre className="text-sm font-mono text-gray-800 whitespace-pre-wrap">{xmlData}</pre>
+              <pre className="text-sm font-mono text-gray-800 whitespace-pre-wrap">{hoconData}</pre>
             </div>
           </div>
         )}
@@ -326,4 +310,4 @@ const XMLDataGenerator = () => {
   )
 }
 
-export default XMLDataGenerator
+export default HOCONDataGenerator

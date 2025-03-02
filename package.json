@@ -10,7 +10,9 @@
   },
   "dependencies": {
     "@faker-js/faker": "^9.5.1",
+    "@iarna/toml": "^2.2.5",
     "bson": "^6.10.3",
+    "cbor": "^10.0.3",
     "chart.js": "^4.4.8",
     "crypto": "^1.0.1",
     "diff": "^7.0.0",

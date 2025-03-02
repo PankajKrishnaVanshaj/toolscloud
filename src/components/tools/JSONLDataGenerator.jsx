@@ -1,28 +1,27 @@
 'use client'
 import React, { useState, useCallback } from 'react'
+import { saveAs } from 'file-saver'
 
-const XMLDataGenerator = () => {
-  const [xmlData, setXmlData] = useState('')
+const JSONLDataGenerator = () => {
+  const [jsonlData, setJsonlData] = useState('')
   const [count, setCount] = useState(5)
-  const [rootElement, setRootElement] = useState('items')
-  const [itemElement, setItemElement] = useState('item')
   const [fields, setFields] = useState([
-    { name: 'id', type: 'number', asAttribute: false },
-    { name: 'name', type: 'text', asAttribute: false },
-    { name: 'email', type: 'email', asAttribute: false }
+    { name: 'id', type: 'number' },
+    { name: 'name', type: 'text' },
+    { name: 'email', type: 'email' }
   ])
   const [isCopied, setIsCopied] = useState(false)
   const [error, setError] = useState('')
-  const [useCDATA, setUseCDATA] = useState(false)
 
-  const MAX_ITEMS = 100
+  const MAX_ITEMS = 1000
   const FIELD_TYPES = ['number', 'text', 'email', 'date', 'boolean']
 
+  // Data generation functions
   const generateRandomData = useCallback((type) => {
     const timestamp = Date.now()
     switch (type) {
       case 'number':
-        return Math.floor(Math.random() * 10000) + 1
+        return Math.floor(Math.random() * 1000000)
       case 'text':
         const firstNames = ['John', 'Emma', 'Michael', 'Sophie', 'Alex']
         const lastNames = ['Smith', 'Johnson', 'Brown', 'Taylor', 'Wilson']
@@ -30,11 +29,10 @@ const XMLDataGenerator = () => {
           lastNames[Math.floor(Math.random() * lastNames.length)]
         }`
       case 'email':
-        const emailPrefix = `${Math.random().toString(36).substring(2, 8)}${timestamp}`
-        const domains = ['gmail.com', 'outlook.com', 'example.org']
-        return `${emailPrefix}@${domains[Math.floor(Math.random() * domains.length)]}`
+        const domains = ['gmail.com', 'outlook.com', 'yahoo.com']
+        return `${Math.random().toString(36).substring(2, 8)}${timestamp}@${domains[Math.floor(Math.random() * domains.length)]}`
       case 'date':
-        const date = new Date(timestamp - Math.random() * 31536000000)
+        const date = new Date(timestamp - Math.random() * 31536000000) // Within last year
         return date.toISOString().split('T')[0]
       case 'boolean':
         return Math.random() > 0.5
@@ -43,75 +41,50 @@ const XMLDataGenerator = () => {
     }
   }, [])
 
-  const escapeXML = (str) => {
-    return str
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;')
-      .replace(/"/g, '&quot;')
-      .replace(/'/g, '&apos;')
-  }
-
-  const generateXML = useCallback(() => {
+  const generateJSONL = useCallback(() => {
     const validationError = validateFields()
     if (validationError) {
       setError(validationError)
-      setXmlData('')
+      setJsonlData('')
+      console.error('Validation failed:', validationError)
       return
     }
 
     setError('')
+    console.log('Generating', count, 'JSONL lines...')
+
     try {
       const items = Array.from({ length: Math.min(count, MAX_ITEMS) }, () => {
-        const item = {}
-        fields.forEach(field => {
-          item[field.name] = generateRandomData(field.type)
-        })
-        return item
+        const obj = fields.reduce((acc, field) => ({
+          ...acc,
+          [field.name]: generateRandomData(field.type)
+        }), {})
+        return JSON.stringify(obj)
       })
 
-      let xml = '<?xml version="1.0" encoding="UTF-8"?>\n'
-      xml += `<${rootElement}>\n`
-      
-      items.forEach(item => {
-        const attributes = fields
-          .filter(f => f.asAttribute)
-          .map(f => `${f.name}="${escapeXML(String(item[f.name]))}"`)
-          .join(' ')
-          
-        xml += `  <${itemElement}${attributes ? ' ' + attributes : ''}>\n`
-        
-        fields.filter(f => !f.asAttribute).forEach(field => {
-          const value = escapeXML(String(item[field.name]))
-          xml += `    <${field.name}>`
-          xml += useCDATA ? `<![CDATA[${value}]]>` : value
-          xml += `</${field.name}>\n`
-        })
-        
-        xml += `  </${itemElement}>\n`
-      })
-      
-      xml += `</${rootElement}>`
-      setXmlData(xml)
+      const jsonlString = items.join('\n')
+      setJsonlData(jsonlString)
       setIsCopied(false)
-    } catch (e) {
-      setError('Error generating XML: ' + e.message)
+      console.log('Generated', items.length, 'lines')
+    } catch (err) {
+      setError('Generation failed: ' + err.message)
+      console.error('Generation failed:', err)
     }
-  }, [count, fields, rootElement, itemElement, generateRandomData, useCDATA])
+  }, [count, fields, generateRandomData])
 
-  const validateFields = useCallback(() => {
+  const validateFields = () => {
     if (fields.length === 0) return 'Please add at least one field'
-    if (!rootElement.trim()) return 'Root element cannot be empty'
-    if (!itemElement.trim()) return 'Item element cannot be empty'
     if (fields.some(field => !field.name.trim())) return 'All field names must be filled'
     if (new Set(fields.map(f => f.name)).size !== fields.length) return 'Field names must be unique'
     return ''
-  }, [fields, rootElement, itemElement])
+  }
 
   const addField = () => {
-    const newFieldName = `field${fields.length + 1}`
-    if (!fields.some(f => f.name === newFieldName)) {
-      setFields([...fields, { name: newFieldName, type: 'text', asAttribute: false }])
+    if (fields.length < 20) {
+      setFields([...fields, { 
+        name: `field${fields.length + 1}`, 
+        type: 'text' 
+      }])
     }
   }
 
@@ -129,32 +102,29 @@ const XMLDataGenerator = () => {
 
   const copyToClipboard = async () => {
     try {
-      await navigator.clipboard.writeText(xmlData)
+      await navigator.clipboard.writeText(jsonlData)
       setIsCopied(true)
+      console.log('JSONL copied to clipboard')
       setTimeout(() => setIsCopied(false), 2000)
     } catch (err) {
-      setError('Failed to copy to clipboard: ' + err.message)
+      setError('Failed to copy: ' + err.message)
+      console.error('Copy failed:', err.message)
     }
   }
 
-  const downloadAsXML = () => {
+  const downloadFile = () => {
     try {
-      const blob = new Blob([xmlData], { type: 'application/xml;charset=utf-8' })
-      const url = URL.createObjectURL(blob)
-      const link = document.createElement('a')
-      link.href = url
-      link.download = `${rootElement}-${Date.now()}.xml`
-      document.body.appendChild(link)
-      link.click()
-      document.body.removeChild(link)
-      URL.revokeObjectURL(url)
+      const blob = new Blob([jsonlData], { type: 'text/plain;charset=utf-8' })
+      saveAs(blob, `data-${Date.now()}.jsonl`)
+      console.log('Downloaded JSONL file')
     } catch (err) {
-      setError('Failed to download: ' + err.message)
+      setError('Download failed: ' + err.message)
+      console.error('Download failed:', err.message)
     }
   }
 
   const clearData = () => {
-    setXmlData('')
+    setJsonlData('')
     setIsCopied(false)
     setError('')
   }
@@ -162,7 +132,9 @@ const XMLDataGenerator = () => {
   return (
     <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4">
       <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-3xl">
-        <h1 className="text-2xl font-bold mb-6 text-gray-800">XML Data Generator</h1>
+        <h1 className="text-2xl font-bold mb-6 text-gray-800">
+          JSONL Data Generator
+        </h1>
 
         {error && (
           <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
@@ -173,41 +145,19 @@ const XMLDataGenerator = () => {
         <div className="space-y-4 mb-6">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Number of Items (1-{MAX_ITEMS})
+              Number of Lines (1-{MAX_ITEMS})
             </label>
             <input
               type="number"
               min="1"
               max={MAX_ITEMS}
               value={count}
-              onChange={(e) => setCount(Math.max(1, Math.min(MAX_ITEMS, Number(e.target.value) || 1)))}
+              onChange={(e) => {
+                const newCount = Math.max(1, Math.min(MAX_ITEMS, Number(e.target.value) || 1))
+                setCount(newCount)
+                console.log('Count updated to:', newCount)
+              }}
               className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Root Element Name
-            </label>
-            <input
-              type="text"
-              value={rootElement}
-              onChange={(e) => setRootElement(e.target.value.trim() || 'items')}
-              className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="e.g., items"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Item Element Name
-            </label>
-            <input
-              type="text"
-              value={itemElement}
-              onChange={(e) => setItemElement(e.target.value.trim() || 'item')}
-              className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="e.g., item"
             />
           </div>
 
@@ -235,13 +185,6 @@ const XMLDataGenerator = () => {
                     </option>
                   ))}
                 </select>
-                <input
-                  type="checkbox"
-                  checked={field.asAttribute}
-                  onChange={(e) => updateField(index, 'asAttribute', e.target.checked)}
-                  className="h-4 w-4 text-blue-600 border-gray-300 rounded"
-                />
-                <label className="text-sm text-gray-600">Attribute</label>
                 <button
                   onClick={() => removeField(index)}
                   disabled={fields.length <= 1}
@@ -253,35 +196,23 @@ const XMLDataGenerator = () => {
             ))}
             <button
               onClick={addField}
-              className="mt-2 text-sm text-blue-600 hover:text-blue-800"
-              disabled={fields.length >= 10}
+              disabled={fields.length >= 20}
+              className="mt-2 text-sm text-blue-600 hover:text-blue-800 disabled:text-gray-400"
             >
-              + Add Field {fields.length >= 10 && '(Max 10)'}
+              + Add Field {fields.length >= 20 && '(Max 20)'}
             </button>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <input
-              type="checkbox"
-              checked={useCDATA}
-              onChange={(e) => setUseCDATA(e.target.checked)}
-              className="h-4 w-4 text-blue-600 border-gray-300 rounded"
-            />
-            <label className="text-sm font-medium text-gray-700">
-              Use CDATA for elements
-            </label>
           </div>
         </div>
 
         <div className="flex flex-wrap gap-3 mb-6">
           <button
-            onClick={generateXML}
+            onClick={generateJSONL}
             className="flex-1 bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
           >
-            Generate XML
+            Generate JSONL
           </button>
 
-          {xmlData && (
+          {jsonlData && (
             <>
               <button
                 onClick={copyToClipboard}
@@ -295,10 +226,10 @@ const XMLDataGenerator = () => {
               </button>
 
               <button
-                onClick={downloadAsXML}
-                className="flex-1 bg-green-600 text-white py-2 px-4 rounded-md hover:bg-green-700 transition-colors focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
+                onClick={downloadFile}
+                className="flex-1 bg-purple-600 text-white py-2 px-4 rounded-md hover:bg-purple-700 transition-colors focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2"
               >
-                Download as XML
+                Download JSONL
               </button>
 
               <button
@@ -311,13 +242,16 @@ const XMLDataGenerator = () => {
           )}
         </div>
 
-        {xmlData && (
+        {jsonlData && (
           <div className="mt-4">
             <h2 className="text-lg font-semibold text-gray-700 mb-2">
-              Generated XML Data ({count} items):
+              Generated JSONL Data ({count} lines):
             </h2>
             <div className="bg-gray-50 p-4 rounded-md border border-gray-200 max-h-96 overflow-auto">
-              <pre className="text-sm font-mono text-gray-800 whitespace-pre-wrap">{xmlData}</pre>
+              <pre className="text-sm font-mono text-gray-800 whitespace-pre-wrap">{jsonlData}</pre>
+            </div>
+            <div className="mt-2 text-sm text-gray-600">
+              Total size: {(new TextEncoder().encode(jsonlData).length / 1024).toFixed(2)} KB
             </div>
           </div>
         )}
@@ -326,4 +260,4 @@ const XMLDataGenerator = () => {
   )
 }
 
-export default XMLDataGenerator
+export default JSONLDataGenerator

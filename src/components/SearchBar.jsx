@@ -55,9 +55,9 @@ export default function SearchBar() {
       {searchTerm && (
         <ul className="absolute bg-white shadow-lg border border-gray-200 rounded-md mt-1 w-80 max-h-60 overflow-auto z-10">
           {filteredTools.length > 0 ? (
-            filteredTools.map((tool) => (
+            filteredTools.map((tool,index) => (
               <li
-                key={tool.slug}
+                key={`${tool.slug}-${index}`}
                 className="p-2 hover:bg-gray-100 cursor-pointer flex items-center space-x-2"
                 onClick={() => handleSelectTool(tool.slug)}
               >
@@ -83,7 +83,9 @@ export default function SearchBar() {
 
       {/* Mobile Search Bar */}
       {showSearch && (
-        <div className="absolute top-16 left-0 w-full px-4 py-2 bg-white shadow-md border-t border-gray-200">          <div className="flex items-center border border-gray-300 rounded-lg">
+        <div className="absolute top-16 left-0 w-full px-4 py-2 bg-white shadow-md border-t border-gray-200">
+          {" "}
+          <div className="flex items-center border border-gray-300 rounded-lg">
             <input
               type="text"
               placeholder="Search..."
@@ -91,9 +93,7 @@ export default function SearchBar() {
               onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full py-2 px-4 border-none outline-none"
             />
-            
           </div>
-
           {/* Display filtered tools for mobile */}
           {searchTerm && (
             <ul className="bg-white shadow-md border border-gray-200 rounded-md mt-2 w-full max-h-80 overflow-auto">
