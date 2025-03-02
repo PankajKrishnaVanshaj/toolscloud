@@ -5594,7 +5594,7 @@ const ToolList = [
         icon: <MdVpnKey />,
         desc: "Generate OAuth tokens for secure API access.",
         code: "OAuthTokenGenerator",
-        // seo: SeoDataImport.OAuthTokenGenerator
+        seo: SeoDataImport.OAuthTokenGenerator
       },
       {
         name: "Password Entropy Calculator",

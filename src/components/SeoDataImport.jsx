@@ -299,6 +299,7 @@ import RandomISBNGenerator from "@/staticData/seoData/RandomISBNGenerator";
 import RandomSequenceGenerator from "@/staticData/seoData/RandomSequenceGenerator";
 import RandomBarcodeBatchGenerator from "@/staticData/seoData/RandomBarcodeBatchGenerator";
 import RandomSignatureGenerator from "@/staticData/seoData/RandomSignatureGenerator";
+import OAuthTokenGenerator from "@/staticData/seoData/OAuthTokenGenerator";
 
 const SeoDataImport = {
   WordCharacterCounter,
@@ -602,6 +603,7 @@ const SeoDataImport = {
   RandomSequenceGenerator,
   RandomBarcodeBatchGenerator,
   RandomSignatureGenerator,
+  OAuthTokenGenerator,
   
 };
 

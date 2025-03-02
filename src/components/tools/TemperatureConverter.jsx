@@ -1,117 +1,170 @@
-"use client";
+'use client';
 
-import { useState } from "react";
-import { IoSwapHorizontalSharp } from "react-icons/io5";
-
-const convertTemperature = (value, from, to) => {
-  if (isNaN(value) || value === "") return "";
-
-  const num = parseFloat(value);
-
-  if (num < 0 && from === "Kelvin") return "Invalid input (Kelvin cannot be negative)";
-
-  if (from === to) return num.toFixed(2);
-
-  if (from === "Celsius") {
-    return to === "Fahrenheit"
-      ? ((num * 9) / 5 + 32).toFixed(2)
-      : (num + 273.15).toFixed(2);
-  }
-  if (from === "Fahrenheit") {
-    return to === "Celsius"
-      ? (((num - 32) * 5) / 9).toFixed(2)
-      : (((num - 32) * 5) / 9 + 273.15).toFixed(2);
-  }
-  if (from === "Kelvin") {
-    return to === "Celsius"
-      ? (num - 273.15).toFixed(2)
-      : (((num - 273.15) * 9) / 5 + 32).toFixed(2);
-  }
-};
+import React, { useState } from 'react';
 
 const TemperatureConverter = () => {
-  const [inputValue, setInputValue] = useState("");
-  const [fromUnit, setFromUnit] = useState("Celsius");
-  const [toUnit, setToUnit] = useState("Fahrenheit");
-  const [result, setResult] = useState("");
+  const [value, setValue] = useState('');
+  const [unit, setUnit] = useState('C');
+  const [difference, setDifference] = useState('');
+  const [showDifference, setShowDifference] = useState(false);
 
-  const handleConversion = (e) => {
-    const value = e.target.value;
-    setInputValue(value);
-    setResult(convertTemperature(value, fromUnit, toUnit));
-  };
-
-  const handleUnitChange = (unit, isFromUnit) => {
-    if (isFromUnit) {
-      setFromUnit(unit);
-      setResult(convertTemperature(inputValue, unit, toUnit));
-    } else {
-      setToUnit(unit);
-      setResult(convertTemperature(inputValue, fromUnit, unit));
+  // Conversion functions to Celsius as base unit
+  const convertToCelsius = (inputValue, fromUnit) => {
+    if (!inputValue || isNaN(inputValue)) return null;
+    const val = parseFloat(inputValue);
+    
+    switch (fromUnit) {
+      case 'C': return val;
+      case 'F': return (val - 32) * 5/9;
+      case 'K': return val - 273.15;
+      case 'R': return (val - 491.67) * 5/9;
+      default: return null;
     }
   };
 
-  const swapUnits = () => {
-    setFromUnit(toUnit);
-    setToUnit(fromUnit);
-    setResult(convertTemperature(inputValue, toUnit, fromUnit));
+  const convertFromCelsius = (celsius, toUnit) => {
+    switch (toUnit) {
+      case 'C': return celsius;
+      case 'F': return celsius * 9/5 + 32;
+      case 'K': return celsius + 273.15;
+      case 'R': return (celsius + 273.15) * 9/5;
+      default: return null;
+    }
   };
 
+  const units = {
+    C: '°C (Celsius)',
+    F: '°F (Fahrenheit)',
+    K: 'K (Kelvin)',
+    R: '°R (Rankine)'
+  };
+
+  const convertAll = (inputValue, fromUnit) => {
+    const celsius = convertToCelsius(inputValue, fromUnit);
+    if (celsius === null) return {};
+    
+    return Object.keys(units).reduce((acc, u) => {
+      acc[u] = convertFromCelsius(celsius, u);
+      return acc;
+    }, {});
+  };
+
+  const calculateDifference = (baseValue, diff) => {
+    if (!baseValue || !diff || isNaN(diff)) return {};
+    const celsiusBase = convertToCelsius(baseValue, unit);
+    const celsiusDiff = parseFloat(diff);
+    
+    return Object.keys(units).reduce((acc, u) => {
+      acc[u] = convertFromCelsius(celsiusBase + celsiusDiff, u);
+      return acc;
+    }, {});
+  };
+
+  const results = convertAll(value, unit);
+  const differenceResults = showDifference ? calculateDifference(value, difference) : {};
+
   return (
-    <div className="mx-auto p-6 bg-gradient-to-r from-blue-50 to-blue-100 shadow-lg rounded-lg max-w-md">
-      <h1 className="text-2xl font-bold mb-4 text-center text-gray-700">
-        Temperature Converter
-      </h1>
+    <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4">
+      <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-2xl">
+        <h1 className="text-3xl font-bold text-center mb-6 text-gray-800">
+          Temperature Converter
+        </h1>
 
-      <div className="mb-4">
-        <input
-          type="number"
-          value={inputValue}
-          onChange={handleConversion}
-          className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500"
-          placeholder="Enter temperature"
-        />
-      </div>
+        <div className="grid gap-6">
+          {/* Input Section */}
+          <div className="grid gap-4 md:grid-cols-2">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Temperature
+              </label>
+              <input
+                type="number"
+                value={value}
+                onChange={(e) => setValue(e.target.value)}
+                placeholder="Enter temperature"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+              <select
+                value={unit}
+                onChange={(e) => setUnit(e.target.value)}
+                className="w-full mt-2 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                {Object.entries(units).map(([u, name]) => (
+                  <option key={u} value={u}>{name}</option>
+                ))}
+              </select>
+            </div>
 
-      <div className="flex gap-2 mb-4 items-center">
-        <select
-          value={fromUnit}
-          onChange={(e) => handleUnitChange(e.target.value, true)}
-          className="w-1/2 p-2 border rounded-lg"
-        >
-          {["Celsius", "Fahrenheit", "Kelvin"].map((unit) => (
-            <option key={unit} value={unit}>
-              {unit}
-            </option>
-          ))}
-        </select>
+            {/* Difference Section */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Temperature Difference (Optional)
+              </label>
+              <div className="flex items-center gap-2">
+                <input
+                  type="number"
+                  value={difference}
+                  onChange={(e) => {
+                    setDifference(e.target.value);
+                    setShowDifference(true);
+                  }}
+                  placeholder="Enter difference (°C)"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+                <button
+                  onClick={() => {
+                    setDifference('');
+                    setShowDifference(false);
+                  }}
+                  className="px-3 py-2 bg-gray-200 rounded-md hover:bg-gray-300"
+                >
+                  Clear
+                </button>
+              </div>
+              <p className="mt-1 text-xs text-gray-500">Difference in Celsius</p>
+            </div>
+          </div>
 
-        <button
-          onClick={swapUnits}
-          className="p-2 border rounded-lg bg-gray-200 hover:bg-gray-300 focus:outline-none"
-          aria-label="Swap Units"
-        >
-          <IoSwapHorizontalSharp className="text-2xl" />
-        </button>
+          {/* Results Section */}
+          {value && (
+            <div className="grid gap-4 md:grid-cols-2">
+              <div className="p-4 bg-gray-50 rounded-md">
+                <h2 className="text-lg font-semibold mb-2">Conversions:</h2>
+                <div className="grid grid-cols-2 gap-2 text-sm">
+                  {Object.entries(results).map(([u, val]) => (
+                    <p key={u}>{units[u]}: {val.toFixed(2)}</p>
+                  ))}
+                </div>
+              </div>
 
-        <select
-          value={toUnit}
-          onChange={(e) => handleUnitChange(e.target.value, false)}
-          className="w-1/2 p-2 border rounded-lg"
-        >
-          {["Celsius", "Fahrenheit", "Kelvin"].map((unit) => (
-            <option key={unit} value={unit}>
-              {unit}
-            </option>
-          ))}
-        </select>
-      </div>
-
-      {result && (
-        <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg text-lg text-center text-gray-800">
-          <strong>Converted Temperature:</strong> {result}° {toUnit}
+              {showDifference && difference && (
+                <div className="p-4 bg-blue-50 rounded-md">
+                  <h2 className="text-lg font-semibold mb-2">After Difference:</h2>
+                  <div className="grid grid-cols-2 gap-2 text-sm">
+                    {Object.entries(differenceResults).map(([u, val]) => (
+                      <p key={u}>{units[u]}: {val.toFixed(2)}</p>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
         </div>
-      )}
+
+        {/* Info Section */}
+        <div className="mt-6 text-sm text-gray-600">
+          <details>
+            <summary className="cursor-pointer font-medium">Conversion Formulas</summary>
+            <ul className="list-disc list-inside mt-2">
+              <li>°F = (°C × 9/5) + 32</li>
+              <li>K = °C + 273.15</li>
+              <li>°R = (°C + 273.15) × 9/5</li>
+              <li>°C = K - 273.15</li>
+              <li>°C = (°F - 32) × 5/9</li>
+            </ul>
+          </details>
+        </div>
+      </div>
     </div>
   );
 };

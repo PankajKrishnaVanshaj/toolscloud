@@ -2,87 +2,99 @@
 
 import React, { useState } from 'react';
 
-const SpeedConverter = () => {
+const ForceConverter = () => {
   const [value, setValue] = useState('');
-  const [unit, setUnit] = useState('m_s');
-  const [distance, setDistance] = useState('');
-  const [distanceUnit, setDistanceUnit] = useState('m');
-  const [time, setTime] = useState('');
-  const [timeUnit, setTimeUnit] = useState('s');
+  const [unit, setUnit] = useState('N');
+  const [mass, setMass] = useState('');
+  const [massUnit, setMassUnit] = useState('kg');
+  const [acceleration, setAcceleration] = useState('');
+  const [accUnit, setAccUnit] = useState('m_s2');
 
-  // Conversion factors to meters per second (m/s)
+  // Conversion factors to Newton (N)
   const conversionFactors = {
-    m_s: 1,           // Meters per second
-    km_h: 0.277778,   // Kilometers per hour
-    mi_h: 0.44704,    // Miles per hour (mph)
-    ft_s: 0.3048,     // Feet per second
-    kn: 0.514444,     // Knots
-    cm_s: 0.01,       // Centimeters per second
-    mm_s: 0.001,      // Millimeters per second
-    mi_s: 1609.34,    // Miles per second
-    mach: 343         // Mach (speed of sound in air at sea level, approx 343 m/s)
+    N: 1,           // Newton
+    dyn: 1e-5,      // Dyne
+    lbf: 4.448222,  // Pound-force
+    pdl: 0.138255,  // Poundal
+    kp: 9.80665,    // Kilopond (kilogram-force)
+    gf: 0.00980665, // Gram-force
+    tf: 9806.65,    // Ton-force (metric)
+    ozf: 0.2780139  // Ounce-force
   };
 
+  // Display names for force units
   const unitDisplayNames = {
-    m_s: 'm/s',
-    km_h: 'km/h',
-    mi_h: 'mi/h',
-    ft_s: 'ft/s',
-    kn: 'kn',
-    cm_s: 'cm/s',
-    mm_s: 'mm/s',
-    mi_s: 'mi/s',
-    mach: 'Mach'
+    N: 'N',
+    dyn: 'dyn',
+    lbf: 'lbf',
+    pdl: 'pdl',
+    kp: 'kp',
+    gf: 'gf',
+    tf: 'tf',
+    ozf: 'ozf'
   };
 
-  // Distance conversion factors to meters (m)
-  const distanceConversion = {
-    m: 1,
-    km: 1000,
-    mi: 1609.34,
-    ft: 0.3048,
-    yd: 0.9144,
-    cm: 0.01,
-    mm: 0.001
+  // Mass conversion factors to kilograms (kg)
+  const massConversion = {
+    kg: 1,
+    g: 1e-3,
+    lb: 0.45359237,
+    oz: 0.028349523,
+    t: 1000
   };
 
-  // Time conversion factors to seconds (s)
-  const timeConversion = {
-    s: 1,
-    min: 60,
-    h: 3600,
-    d: 86400
+  const massDisplayNames = {
+    kg: 'kg',
+    g: 'g',
+    lb: 'lb',
+    oz: 'oz',
+    t: 't'
+  };
+
+  // Acceleration conversion factors to meters per second squared (m/s²)
+  const accConversion = {
+    m_s2: 1,
+    cm_s2: 0.01,
+    ft_s2: 0.3048,
+    g: 9.80665  // Standard gravity
+  };
+
+  const accDisplayNames = {
+    m_s2: 'm/s²',
+    cm_s2: 'cm/s²',
+    ft_s2: 'ft/s²',
+    g: 'g'
   };
 
   const convertValue = (inputValue, fromUnit) => {
     if (!inputValue || isNaN(inputValue)) return {};
-    const valueInMs = inputValue * conversionFactors[fromUnit];
+    const valueInNewtons = inputValue * conversionFactors[fromUnit];
     
     return Object.keys(conversionFactors).reduce((acc, unit) => {
-      acc[unit] = valueInMs / conversionFactors[unit];
+      acc[unit] = valueInNewtons / conversionFactors[unit];
       return acc;
     }, {});
   };
 
-  const calculateDistanceTime = () => {
-    if (!distance || !time || isNaN(distance) || isNaN(time)) return null;
+  const calculateForce = () => {
+    if (!mass || !acceleration || isNaN(mass) || isNaN(acceleration)) return null;
     
-    const distanceInMeters = distance * distanceConversion[distanceUnit];
-    const timeInSeconds = time * timeConversion[timeUnit];
+    const massInKg = mass * massConversion[massUnit];
+    const accInMs2 = acceleration * accConversion[accUnit];
     
-    // Speed = Distance / Time
-    const calculatedSpeed = distanceInMeters / timeInSeconds;
-    return calculatedSpeed;
+    // Force (F) = mass × acceleration (N = kg × m/s²)
+    const forceInNewtons = massInKg * accInMs2;
+    return forceInNewtons;
   };
 
   const results = convertValue(value, unit);
-  const calculatedSpeed = calculateDistanceTime();
+  const calculatedForce = calculateForce();
 
   return (
     <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4">
       <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-2xl">
         <h1 className="text-3xl font-bold text-center mb-6 text-gray-800">
-          Speed Converter
+          Force Converter
         </h1>
 
         <div className="grid gap-6">
@@ -90,13 +102,13 @@ const SpeedConverter = () => {
           <div className="grid gap-4 md:grid-cols-3">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Speed
+                Force
               </label>
               <input
                 type="number"
                 value={value}
                 onChange={(e) => setValue(e.target.value)}
-                placeholder="Enter speed"
+                placeholder="Enter force"
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
               <select
@@ -110,59 +122,59 @@ const SpeedConverter = () => {
               </select>
             </div>
 
-            {/* Distance Section */}
+            {/* Mass Section */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Distance
+                Mass
               </label>
               <input
                 type="number"
-                value={distance}
-                onChange={(e) => setDistance(e.target.value)}
-                placeholder="Enter distance"
+                value={mass}
+                onChange={(e) => setMass(e.target.value)}
+                placeholder="Enter mass"
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
               <select
-                value={distanceUnit}
-                onChange={(e) => setDistanceUnit(e.target.value)}
+                value={massUnit}
+                onChange={(e) => setMassUnit(e.target.value)}
                 className="w-full mt-2 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
-                {Object.keys(distanceConversion).map((u) => (
-                  <option key={u} value={u}>{u}</option>
+                {Object.keys(massConversion).map((u) => (
+                  <option key={u} value={u}>{massDisplayNames[u]}</option>
                 ))}
               </select>
             </div>
 
-            {/* Time Section */}
+            {/* Acceleration Section */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Time
+                Acceleration
               </label>
               <input
                 type="number"
-                value={time}
-                onChange={(e) => setTime(e.target.value)}
-                placeholder="Enter time"
+                value={acceleration}
+                onChange={(e) => setAcceleration(e.target.value)}
+                placeholder="Enter acceleration"
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
               <select
-                value={timeUnit}
-                onChange={(e) => setTimeUnit(e.target.value)}
+                value={accUnit}
+                onChange={(e) => setAccUnit(e.target.value)}
                 className="w-full mt-2 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
-                {Object.keys(timeConversion).map((u) => (
-                  <option key={u} value={u}>{u}</option>
+                {Object.keys(accConversion).map((u) => (
+                  <option key={u} value={u}>{accDisplayNames[u]}</option>
                 ))}
               </select>
             </div>
           </div>
 
           {/* Results Section */}
-          {(value || (distance && time)) && (
+          {(value || calculatedForce) && (
             <div className="grid gap-4 md:grid-cols-2">
               {value && (
                 <div className="p-4 bg-gray-50 rounded-md">
-                  <h2 className="text-lg font-semibold mb-2">Speed Conversions:</h2>
+                  <h2 className="text-lg font-semibold mb-2">Force Conversions:</h2>
                   <div className="grid grid-cols-2 gap-2 text-sm">
                     {Object.entries(results).map(([unit, val]) => (
                       <p key={unit}>{unitDisplayNames[unit]}: {val.toExponential(4)}</p>
@@ -171,14 +183,13 @@ const SpeedConverter = () => {
                 </div>
               )}
               
-              {calculatedSpeed && (
+              {calculatedForce && (
                 <div className="p-4 bg-blue-50 rounded-md">
-                  <h2 className="text-lg font-semibold mb-2">Calculated Speed:</h2>
-                  <p>m/s: {calculatedSpeed.toExponential(4)}</p>
-                  <p>km/h: {(calculatedSpeed * 3.6).toExponential(4)}</p>
-                  <p>mi/h: {(calculatedSpeed * 2.23694).toExponential(4)}</p>
+                  <h2 className="text-lg font-semibold mb-2">Calculated Force:</h2>
+                  <p>N: {calculatedForce.toExponential(4)}</p>
+                  <p>lbf: {(calculatedForce / conversionFactors.lbf).toExponential(4)}</p>
                   <p className="mt-2 text-sm text-gray-600">
-                    v = d / t
+                    F = m × a
                   </p>
                 </div>
               )}
@@ -191,11 +202,11 @@ const SpeedConverter = () => {
           <details>
             <summary className="cursor-pointer font-medium">Conversion References</summary>
             <ul className="list-disc list-inside mt-2">
-              <li>1 m/s = 3.6 km/h</li>
-              <li>1 m/s = 2.23694 mi/h</li>
-              <li>1 mi/h = 1.60934 km/h</li>
-              <li>1 kn = 1.852 km/h</li>
-              <li>1 Mach ≈ 343 m/s (at sea level)</li>
+              <li>1 N = 10⁵ dyn</li>
+              <li>1 N = 0.224809 lbf</li>
+              <li>1 kp = 9.80665 N</li>
+              <li>1 tf = 9806.65 N</li>
+              <li>1 N = 7.23301 pdl</li>
             </ul>
           </details>
         </div>
@@ -204,4 +215,4 @@ const SpeedConverter = () => {
   );
 };
 
-export default SpeedConverter;
+export default ForceConverter;

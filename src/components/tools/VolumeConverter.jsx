@@ -1,118 +1,129 @@
-"use client";
+'use client';
 
-import { useState } from "react";
-
-// Utility function for volume conversions
-const volumeConversionRates = {
-  Liters: { Liters: 1, Milliliters: 1000, Gallons: 0.264172, Cups: 4.22675, Pints: 2.11338, Quarts: 1.05669, "Cubic Meters": 0.001, "Cubic Centimeters": 1000 },
-  Milliliters: { Liters: 0.001, Milliliters: 1, Gallons: 0.000264172, Cups: 0.00422675, Pints: 0.00211338, Quarts: 0.00105669, "Cubic Meters": 0.000001, "Cubic Centimeters": 1 },
-  Gallons: { Liters: 3.78541, Milliliters: 3785.41, Gallons: 1, Cups: 16, Pints: 8, Quarts: 4, "Cubic Meters": 0.00378541, "Cubic Centimeters": 3785.41 },
-  Cups: { Liters: 0.236588, Milliliters: 236.588, Gallons: 0.0625, Cups: 1, Pints: 0.5, Quarts: 0.25, "Cubic Meters": 0.000236588, "Cubic Centimeters": 236.588 },
-  Pints: { Liters: 0.473176, Milliliters: 473.176, Gallons: 0.125, Cups: 2, Pints: 1, Quarts: 0.5, "Cubic Meters": 0.000473176, "Cubic Centimeters": 473.176 },
-  Quarts: { Liters: 0.946353, Milliliters: 946.353, Gallons: 0.25, Cups: 4, Pints: 2, Quarts: 1, "Cubic Meters": 0.000946353, "Cubic Centimeters": 946.353 },
-  "Cubic Meters": { Liters: 1000, Milliliters: 1000000, Gallons: 264.172, Cups: 4226.75, Pints: 2113.38, Quarts: 1056.69, "Cubic Meters": 1, "Cubic Centimeters": 1000000 },
-  "Cubic Centimeters": { Liters: 0.001, Milliliters: 1, Gallons: 0.000264172, Cups: 0.00422675, Pints: 0.00211338, Quarts: 0.00105669, "Cubic Meters": 0.000001, "Cubic Centimeters": 1 },
-};
-
-
-const convertVolume = (value, from, to) => {
-  if (!value || isNaN(value)) return "";
-  const conversionRate = volumeConversionRates[from][to];
-  const result = parseFloat(value) * conversionRate;
-  return result.toFixed(4); // Round to 4 decimal places for display
-};
-
+import React, { useState } from 'react';
 
 const VolumeConverter = () => {
-  const [inputValue, setInputValue] = useState("");
-  const [fromUnit, setFromUnit] = useState("Liters");
-  const [toUnit, setToUnit] = useState("Milliliters");
-  const [result, setResult] = useState("");
+  const [value, setValue] = useState('');
+  const [unit, setUnit] = useState('L');
 
-  // Handle conversion and update result
-  const handleConversion = (value, from, to) => {
-    setResult(convertVolume(value, from, to));
+  // Conversion factors to Liters (L)
+  const conversionFactors = {
+    L: 1,              // Liter
+    mL: 1e-3,          // Milliliter
+    cm3: 1e-3,         // Cubic centimeter (cm³)
+    m3: 1e3,           // Cubic meter (m³)
+    in3: 0.0163871,    // Cubic inch (in³)
+    ft3: 28.3168,      // Cubic foot (ft³)
+    galUS: 3.78541,    // US Gallon
+    galUK: 4.54609,    // UK/Imperial Gallon
+    qtUS: 0.946353,    // US Quart
+    qtUK: 1.13652,     // UK/Imperial Quart
+    ptUS: 0.473176,    // US Pint
+    ptUK: 0.568261,    // UK/Imperial Pint
+    fl_ozUS: 0.0295735,// US Fluid Ounce
+    fl_ozUK: 0.0284131,// UK/Imperial Fluid Ounce
+    tbsp: 0.0147868,   // Tablespoon (US)
+    tsp: 0.00492892    // Teaspoon (US)
   };
 
-  const handleInputChange = (e) => {
-    const value = e.target.value;
-    setInputValue(value);
-    handleConversion(value, fromUnit, toUnit);
+  // Display names for units
+  const unitDisplayNames = {
+    L: 'L',
+    mL: 'mL',
+    cm3: 'cm³',
+    m3: 'm³',
+    in3: 'in³',
+    ft3: 'ft³',
+    galUS: 'gal (US)',
+    galUK: 'gal (UK)',
+    qtUS: 'qt (US)',
+    qtUK: 'qt (UK)',
+    ptUS: 'pt (US)',
+    ptUK: 'pt (UK)',
+    fl_ozUS: 'fl oz (US)',
+    fl_ozUK: 'fl oz (UK)',
+    tbsp: 'tbsp',
+    tsp: 'tsp'
   };
 
-  const swapUnits = () => {
-    setFromUnit(toUnit);
-    setToUnit(fromUnit);
-    handleConversion(inputValue, toUnit, fromUnit);
+  const convertValue = (inputValue, fromUnit) => {
+    if (!inputValue || isNaN(inputValue)) return {};
+    const valueInLiters = inputValue * conversionFactors[fromUnit];
+    
+    return Object.keys(conversionFactors).reduce((acc, unit) => {
+      acc[unit] = valueInLiters / conversionFactors[unit];
+      return acc;
+    }, {});
   };
+
+  const results = convertValue(value, unit);
 
   return (
-    <div className="mx-auto p-6 bg-gradient-to-r from-blue-50 to-blue-100 shadow-lg rounded-lg max-w-md">
-      <h1 className="text-2xl font-bold mb-4 text-blue-700 text-center">Volume Converter</h1>
+    <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4">
+      <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-2xl">
+        <h1 className="text-3xl font-bold text-center mb-6 text-gray-800">
+          Volume Converter
+        </h1>
 
-      <div className="mb-4">
-        <label htmlFor="volume-input" className="block mb-1 text-gray-700 font-medium">Enter Volume:</label>
-        <input
-          id="volume-input"
-          type="number"
-          value={inputValue}
-          onChange={handleInputChange}
-          className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
-          placeholder="Enter volume"
-        />
+        <div className="grid gap-6">
+          {/* Input Section */}
+          <div className="grid gap-4 md:grid-cols-2">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Volume
+              </label>
+              <input
+                type="number"
+                value={value}
+                onChange={(e) => setValue(e.target.value)}
+                placeholder="Enter volume"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+              <select
+                value={unit}
+                onChange={(e) => setUnit(e.target.value)}
+                className="w-full mt-2 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                {Object.keys(conversionFactors).map((u) => (
+                  <option key={u} value={u}>{unitDisplayNames[u]}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          {/* Results Section */}
+          {value && (
+            <div className="p-4 bg-gray-50 rounded-md">
+              <h2 className="text-lg font-semibold mb-2">Conversions:</h2>
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-2 text-sm">
+                {Object.entries(results).map(([unit, val]) => (
+                  <p key={unit}>
+                    {unitDisplayNames[unit]}: {val.toLocaleString('en-US', { 
+                      maximumFractionDigits: 6,
+                      useGrouping: true 
+                    })}
+                  </p>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Info Section */}
+        <div className="mt-6 text-sm text-gray-600">
+          <details>
+            <summary className="cursor-pointer font-medium">Conversion References</summary>
+            <ul className="list-disc list-inside mt-2">
+              <li>1 L = 1000 mL = 1000 cm³</li>
+              <li>1 m³ = 1000 L</li>
+              <li>1 gal (US) = 3.78541 L</li>
+              <li>1 gal (UK) = 4.54609 L</li>
+              <li>1 fl oz (US) = 29.5735 mL</li>
+              <li>1 tbsp = 3 tsp = 14.7868 mL</li>
+            </ul>
+          </details>
+        </div>
       </div>
-
-      <div className="flex gap-2 mb-4">
-        <div className="w-1/2">
-          <select
-            id="from-unit"
-            value={fromUnit}
-            onChange={(e) => {
-              setFromUnit(e.target.value);
-              handleConversion(inputValue, e.target.value, toUnit);
-            }}
-            className="w-full p-2 border rounded-lg"
-          >
-            {Object.keys(volumeConversionRates).map((unit) => (
-              <option key={unit} value={unit}>
-                {unit}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        <button
-          onClick={swapUnits}
-          className="p-2 border rounded-lg bg-gray-200 hover:bg-gray-300 transition-colors flex items-center justify-center"
-          aria-label="Swap Units"
-        >
-          🔄
-        </button>
-
-        <div className="w-1/2">
-          <select
-            id="to-unit"
-            value={toUnit}
-            onChange={(e) => {
-              setToUnit(e.target.value);
-              handleConversion(inputValue, fromUnit, e.target.value);
-            }}
-            className="w-full p-2 border rounded-lg"
-          >
-            {Object.keys(volumeConversionRates).map((unit) => (
-              <option key={unit} value={unit}>
-                {unit}
-              </option>
-            ))}
-          </select>
-        </div>
-      </div>
-
-      {result && (
-        <div className="p-3 bg-gray-100 rounded-lg text-lg text-center">
-          <strong>Converted Volume: </strong> {result} {toUnit}
-        </div>
-      )}
     </div>
   );
 };
