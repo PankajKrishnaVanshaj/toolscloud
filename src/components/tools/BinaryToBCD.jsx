@@ -1,21 +1,25 @@
 'use client';
 
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 
 const BinaryToBCD = () => {
   const [binaryInput, setBinaryInput] = useState('');
   const [bcdOutput, setBcdOutput] = useState('');
-  const [delimiter, setDelimiter] = useState('space'); // space, comma, none
+  const [delimiter, setDelimiter] = useState('space');
   const [error, setError] = useState('');
   const [isDragging, setIsDragging] = useState(false);
   const [showCopyAlert, setShowCopyAlert] = useState(false);
-  const [bitLength, setBitLength] = useState('auto'); // auto, 4, 8, 16
-  const [grouping, setGrouping] = useState('4'); // 4 (standard BCD), none
+  const [bitLength, setBitLength] = useState('auto');
+  const [bcdFormat, setBcdFormat] = useState('8421'); // 8-4-2-1, Excess-3
+  const [reverseMode, setReverseMode] = useState(false);
+  const [steps, setSteps] = useState([]);
+  const [showSteps, setShowSteps] = useState(false);
 
   const binaryToBCD = useCallback((binary) => {
     try {
       if (!binary) {
         setBcdOutput('');
+        setSteps([]);
         setError('');
         return;
       }
@@ -35,56 +39,146 @@ const BinaryToBCD = () => {
           binaryArray = binary.trim().split(/\s+/);
       }
 
-      const bcdCodes = binaryArray.map((bin) => {
-        if (!/^[01]+$/.test(bin)) throw new Error('Invalid binary format');
+      const conversionSteps = [];
+      const bcdCodes = binaryArray.map((bin, index) => {
+        if (!/^[01]+$/.test(bin)) throw new Error(`Invalid binary at position ${index + 1}: ${bin}`);
         if (bitLength !== 'auto' && bin.length !== parseInt(bitLength)) {
           throw new Error(`Binary must be ${bitLength} bits when not in auto mode`);
         }
 
         const decimal = parseInt(bin, 2);
-        if (decimal > (2 ** (bitLength === 'auto' ? bin.length : parseInt(bitLength)) - 1)) {
-          throw new Error('Binary value exceeds bit length capacity');
-        }
+        const maxValue = bitLength === 'auto' ? 2 ** bin.length - 1 : 2 ** parseInt(bitLength) - 1;
+        if (decimal > maxValue) throw new Error(`Value ${decimal} exceeds ${bitLength === 'auto' ? bin.length : bitLength}-bit limit`);
 
-        // Convert decimal to BCD
         let bcd = '';
         let num = decimal;
+        const segmentSteps = [];
+
         if (num === 0) {
-          bcd = '0000'; // Special case for 0
+          bcd = '0000';
+          segmentSteps.push('0 = 0000');
         } else {
           while (num > 0) {
             const digit = num % 10;
-            bcd = digit.toString(2).padStart(4, '0') + bcd;
+            let bcdDigit = digit.toString(2).padStart(4, '0');
+            if (bcdFormat === 'excess3') {
+              const excessDigit = digit + 3;
+              bcdDigit = excessDigit.toString(2).padStart(4, '0');
+            }
+            segmentSteps.push(`${digit} = ${bcdDigit}`);
+            bcd = bcdDigit + bcd;
             num = Math.floor(num / 10);
           }
         }
 
-        if (grouping === '4') {
-          return bcd.match(/.{1,4}/g).join(' ');
-        }
-        return bcd;
+        conversionSteps.push({
+          binary: bin,
+          decimal,
+          bcd,
+          steps: segmentSteps.reverse(), // Reverse to show natural order
+        });
+
+        return bcd.match(/.{1,4}/g).join(' ');
       });
 
       setBcdOutput(bcdCodes.join(delimiter === 'none' ? '' : delimiter === 'space' ? ' ' : ', '));
+      setSteps(conversionSteps);
       setError('');
     } catch (err) {
       setError('Error converting binary to BCD: ' + err.message);
       setBcdOutput('');
+      setSteps([]);
     }
-  }, [delimiter, bitLength, grouping]);
+  }, [delimiter, bitLength, bcdFormat]);
 
-  const handleInputChange = (e) => {
+  const bcdToBinary = useCallback((bcd) => {
+    try {
+      if (!bcd) {
+        setBinaryInput('');
+        setSteps([]);
+        setError('');
+        return;
+      }
+
+      let bcdArray;
+      switch (delimiter) {
+        case 'space':
+          bcdArray = bcd.trim().split(/\s+/);
+          break;
+        case 'comma':
+          bcdArray = bcd.split(',').map(str => str.trim());
+          break;
+        case 'none':
+          bcdArray = bcd.trim().match(/.{4}/g) || [];
+          break;
+        default:
+          bcdArray = bcd.trim().split(/\s+/);
+      }
+
+      const conversionSteps = [];
+      const binaries = bcdArray.map((bcdSegment, index) => {
+        if (!/^[01]+$/.test(bcdSegment) || bcdSegment.length % 4 !== 0) {
+          throw new Error(`Invalid BCD at position ${index + 1}: ${bcdSegment}`);
+        }
+
+        let decimal = 0;
+        const segmentSteps = [];
+        for (let i = 0; i < bcdSegment.length; i += 4) {
+          const bcdDigit = bcdSegment.slice(i, i + 4);
+          let digit = parseInt(bcdDigit, 2);
+          if (bcdFormat === 'excess3') digit -= 3;
+          if (digit < 0 || digit > 9) throw new Error(`BCD digit ${bcdDigit} out of range`);
+          segmentSteps.push(`${bcdDigit} = ${digit}`);
+          decimal = decimal * 10 + digit;
+        }
+
+        let binary = decimal.toString(2);
+        if (bitLength !== 'auto') {
+          binary = binary.padStart(parseInt(bitLength), '0');
+        }
+
+        conversionSteps.push({
+          bcd: bcdSegment,
+          decimal,
+          binary,
+          steps: segmentSteps,
+        });
+
+        return binary;
+      });
+
+      setBinaryInput(binaries.join(delimiter === 'none' ? '' : delimiter === 'space' ? ' ' : ', '));
+      setSteps(conversionSteps);
+      setError('');
+    } catch (err) {
+      setError('Error converting BCD to binary: ' + err.message);
+      setBinaryInput('');
+      setSteps([]);
+    }
+  }, [delimiter, bitLength, bcdFormat]);
+
+  const handleInputChange = (e, isReverse = false) => {
     const value = e.target.value;
-    setBinaryInput(value);
-    binaryToBCD(value);
+    if (isReverse) {
+      setBcdOutput(value);
+      bcdToBinary(value);
+    } else {
+      setBinaryInput(value);
+      binaryToBCD(value);
+    }
   };
 
-  const handleFileUpload = (file) => {
+  const handleFileUpload = (file, isReverse = false) => {
     const reader = new FileReader();
     reader.onload = (e) => {
       const text = e.target.result;
-      setBinaryInput(text);
-      binaryToBCD(text);
+      if (isReverse) {
+        setBcdOutput(text);
+        bcdToBinary(text);
+      } else {
+        setBinaryInput(text);
+        binaryToBCD(text);
+      }
     };
     reader.onerror = () => setError('Error reading file');
     reader.readAsText(file);
@@ -95,15 +189,15 @@ const BinaryToBCD = () => {
     setIsDragging(false);
     const file = e.dataTransfer.files[0];
     if (file && file.type === 'text/plain') {
-      handleFileUpload(file);
+      handleFileUpload(file, reverseMode);
     } else {
       setError('Please drop a valid text file');
     }
   };
 
-  const copyToClipboard = async () => {
+  const copyToClipboard = async (text) => {
     try {
-      await navigator.clipboard.writeText(bcdOutput);
+      await navigator.clipboard.writeText(text);
       setShowCopyAlert(true);
       setTimeout(() => setShowCopyAlert(false), 2000);
     } catch (err) {
@@ -111,12 +205,12 @@ const BinaryToBCD = () => {
     }
   };
 
-  const downloadOutput = () => {
-    const blob = new Blob([bcdOutput], { type: 'text/plain' });
+  const downloadOutput = (text, filename) => {
+    const blob = new Blob([text], { type: 'text/plain' });
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = 'bcd_output.txt';
+    a.download = filename;
     a.click();
     window.URL.revokeObjectURL(url);
   };
@@ -125,13 +219,14 @@ const BinaryToBCD = () => {
     setBinaryInput('');
     setBcdOutput('');
     setError('');
+    setSteps([]);
   };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-yellow-100 to-blue-100 flex items-center justify-center p-4">
-      <div className="bg-white p-6 rounded-xl shadow-2xl w-full max-w-2xl relative">
-        <h1 className="text-3xl font-bold mb-6 text-gray-800 text-center">
-          Advanced Binary to BCD Converter
+      <div className="bg-white p-6 rounded-xl shadow-2xl w-full max-w-3xl relative">
+        <h1 className="text-4xl font-extrabold mb-6 text-gray-800 text-center">
+          Advanced Binary ↔ BCD Converter
         </h1>
 
         {/* Copy Alert */}
@@ -142,14 +237,25 @@ const BinaryToBCD = () => {
         )}
 
         {/* Controls */}
-        <div className="flex flex-wrap gap-4 mb-6 justify-center">
+        <div className="flex flex-wrap gap-4 mb-6 justify-center items-center bg-gray-50 p-4 rounded-md">
+          <div>
+            <label className="text-sm text-gray-600 mr-2">Mode:</label>
+            <button
+              onClick={() => setReverseMode(!reverseMode)}
+              className={`px-3 py-1 rounded-md transition-colors ${
+                reverseMode ? 'bg-blue-500 text-white' : 'bg-yellow-500 text-white'
+              } hover:bg-opacity-80`}
+            >
+              {reverseMode ? 'BCD to Binary' : 'Binary to BCD'}
+            </button>
+          </div>
           <div>
             <label className="text-sm text-gray-600 mr-2">Delimiter:</label>
             <select
               value={delimiter}
               onChange={(e) => {
                 setDelimiter(e.target.value);
-                binaryToBCD(binaryInput);
+                reverseMode ? bcdToBinary(bcdOutput) : binaryToBCD(binaryInput);
               }}
               className="px-3 py-1 border rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-500"
             >
@@ -164,7 +270,7 @@ const BinaryToBCD = () => {
               value={bitLength}
               onChange={(e) => {
                 setBitLength(e.target.value);
-                binaryToBCD(binaryInput);
+                reverseMode ? bcdToBinary(bcdOutput) : binaryToBCD(binaryInput);
               }}
               className="px-3 py-1 border rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-500"
             >
@@ -175,17 +281,17 @@ const BinaryToBCD = () => {
             </select>
           </div>
           <div>
-            <label className="text-sm text-gray-600 mr-2">Grouping:</label>
+            <label className="text-sm text-gray-600 mr-2">BCD Format:</label>
             <select
-              value={grouping}
+              value={bcdFormat}
               onChange={(e) => {
-                setGrouping(e.target.value);
-                binaryToBCD(binaryInput);
+                setBcdFormat(e.target.value);
+                reverseMode ? bcdToBinary(bcdOutput) : binaryToBCD(binaryInput);
               }}
               className="px-3 py-1 border rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-500"
             >
-              <option value="4">4-bit Groups</option>
-              <option value="none">None</option>
+              <option value="8421">8-4-2-1</option>
+              <option value="excess3">Excess-3</option>
             </select>
           </div>
           <button
@@ -208,39 +314,43 @@ const BinaryToBCD = () => {
           onDragLeave={() => setIsDragging(false)}
           onDrop={handleDrop}
         >
-          <label className="block text-gray-700 mb-2">Enter Binary:</label>
+          <label className="block text-gray-700 mb-2">
+            {reverseMode ? 'Enter BCD:' : 'Enter Binary:'}
+          </label>
           <textarea
-            value={binaryInput}
-            onChange={handleInputChange}
+            value={reverseMode ? bcdOutput : binaryInput}
+            onChange={(e) => handleInputChange(e, reverseMode)}
             className="w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-500 resize-y font-mono"
             rows="6"
-            placeholder="Enter binary (e.g., 1001 1010)"
+            placeholder={reverseMode ? 'Enter BCD (e.g., 0000 1001)' : 'Enter binary (e.g., 1001 1010)'}
           />
           <p className="text-sm text-gray-500 mt-1">
-            Drag and drop a text file with binary data
+            Drag and drop a text file with data
           </p>
         </div>
 
         {/* Output Section */}
         <div className="mb-6">
-          <label className="block text-gray-700 mb-2">BCD Output:</label>
+          <label className="block text-gray-700 mb-2">
+            {reverseMode ? 'Binary Output:' : 'BCD Output:'}
+          </label>
           <div className="relative">
             <textarea
-              value={bcdOutput}
+              value={reverseMode ? binaryInput : bcdOutput}
               readOnly
               className="w-full p-2 border rounded-md bg-gray-50 text-gray-600 min-h-[150px] resize-y font-mono"
-              placeholder="BCD output will appear here..."
+              placeholder="Output will appear here..."
             />
-            {bcdOutput && (
+            {(reverseMode ? binaryInput : bcdOutput) && (
               <div className="absolute right-2 top-2 space-x-2">
                 <button
-                  onClick={copyToClipboard}
+                  onClick={() => copyToClipboard(reverseMode ? binaryInput : bcdOutput)}
                   className="bg-yellow-500 text-white px-3 py-1 rounded-md hover:bg-yellow-600 transition-colors"
                 >
                   Copy
                 </button>
                 <button
-                  onClick={downloadOutput}
+                  onClick={() => downloadOutput(reverseMode ? binaryInput : bcdOutput, reverseMode ? 'binary_output.txt' : 'bcd_output.txt')}
                   className="bg-blue-500 text-white px-3 py-1 rounded-md hover:bg-blue-600 transition-colors"
                 >
                   Download
@@ -255,10 +365,39 @@ const BinaryToBCD = () => {
           <div className="text-red-500 text-sm text-center mb-4">{error}</div>
         )}
 
+        {/* Steps Toggle and Display */}
+        <div className="mb-6">
+          <button
+            onClick={() => setShowSteps(!showSteps)}
+            className="w-full px-4 py-2 bg-indigo-500 text-white rounded-md hover:bg-indigo-600 transition-colors"
+          >
+            {showSteps ? 'Hide Conversion Steps' : 'Show Conversion Steps'}
+          </button>
+          {showSteps && steps.length > 0 && (
+            <div className="mt-4 p-4 bg-gray-50 rounded-md">
+              <h2 className="text-lg font-semibold mb-2">Conversion Steps:</h2>
+              {steps.map((step, index) => (
+                <div key={index} className="mb-4">
+                  <p className="font-medium">
+                    {reverseMode ? 'BCD' : 'Binary'} Segment {index + 1}: {reverseMode ? step.bcd : step.binary}
+                  </p>
+                  <p>Decimal: {step.decimal}</p>
+                  <p>{reverseMode ? 'Binary' : 'BCD'}: {reverseMode ? step.binary : step.bcd}</p>
+                  <ul className="list-disc list-inside text-sm text-gray-600">
+                    {step.steps.map((s, i) => (
+                      <li key={i}>{s}</li>
+                    ))}
+                  </ul>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
         {/* Info */}
         <div className="text-gray-600 text-sm text-center">
-          <p>Converts binary to BCD (Binary-Coded Decimal)</p>
-          <p>Supports file drag-and-drop, bit lengths, and grouping</p>
+          <p>Converts between Binary and BCD with advanced options</p>
+          <p>Supports 8-4-2-1 and Excess-3 formats, file input, and detailed steps</p>
         </div>
       </div>
     </div>
