@@ -300,6 +300,9 @@ import RandomSequenceGenerator from "@/staticData/seoData/RandomSequenceGenerato
 import RandomBarcodeBatchGenerator from "@/staticData/seoData/RandomBarcodeBatchGenerator";
 import RandomSignatureGenerator from "@/staticData/seoData/RandomSignatureGenerator";
 import OAuthTokenGenerator from "@/staticData/seoData/OAuthTokenGenerator";
+import ImageCollageGridMaker from "@/staticData/seoData/ImageCollageGridMaker";
+import BinaryToIEEE754Converter from "@/staticData/seoData/BinaryToIEEE754Converter";
+import IEEE754ToBinaryConverter from "@/staticData/seoData/IEEE754ToBinaryConverter";
 
 const SeoDataImport = {
   WordCharacterCounter,
@@ -604,6 +607,9 @@ const SeoDataImport = {
   RandomBarcodeBatchGenerator,
   RandomSignatureGenerator,
   OAuthTokenGenerator,
+  ImageCollageGridMaker,
+  BinaryToIEEE754Converter,
+  IEEE754ToBinaryConverter
   
 };
 

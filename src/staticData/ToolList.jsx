@@ -2419,7 +2419,7 @@ const ToolList = [
         icon: <MdImage />,
         desc: "Create grid-based collages with custom layouts.",
         code: "ImageCollageGridMaker",
-        // seo: SeoDataImport.ImageCollageGridMaker
+        seo: SeoDataImport.ImageCollageGridMaker
       },
       {
         name: "Image Pattern Generator",
@@ -4656,7 +4656,7 @@ const ToolList = [
         icon: <MdTransform />,
         desc: "Convert Binary to IEEE 754 floating-point representation.",
         code: "BinaryToIEEE754",
-        // seo: SeoDataImport.BinaryToIEEE754Converter
+        seo: SeoDataImport.BinaryToIEEE754Converter
       },
       {
         name: "IEEE 754 to Binary",
@@ -4664,7 +4664,7 @@ const ToolList = [
         icon: <MdTransform />,
         desc: "Convert IEEE 754 floating-point to Binary format.",
         code: "IEEE754ToBinary",
-        // seo: SeoDataImport.IEEE754ToBinaryConverter
+        seo: SeoDataImport.IEEE754ToBinaryConverter
       },
       {
         name: "Binary to Hamming Code",
