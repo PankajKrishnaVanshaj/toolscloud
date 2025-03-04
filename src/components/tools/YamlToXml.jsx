@@ -7,8 +7,8 @@ const YamlToXml = () => {
   const [yamlInput, setYamlInput] = useState('');
   const [xmlOutput, setXmlOutput] = useState('');
   const [error, setError] = useState('');
-  const [indent, setIndent] = useState(2); // XML indentation spaces
-  const [rootNode, setRootNode] = useState('root'); // Default root node name
+  const [indent, setIndent] = useState(2);
+  const [rootNode, setRootNode] = useState('root');
 
   const convertYamlToXml = (yamlText) => {
     setError('');
@@ -20,10 +20,7 @@ const YamlToXml = () => {
     }
 
     try {
-      // Parse YAML to JSON
       const jsonData = yaml.load(yamlText);
-
-      // Convert JSON to XML
       const xml = jsonToXml(jsonData, rootNode, 0);
       setXmlOutput(xml);
     } catch (err) {
@@ -34,24 +31,20 @@ const YamlToXml = () => {
   const jsonToXml = (obj, nodeName, level) => {
     const indentStr = ' '.repeat(level * indent);
 
-    // Handle null or undefined
     if (obj === null || obj === undefined) {
       return `${indentStr}<${nodeName}/>`;
     }
 
-    // Handle primitive types
     if (typeof obj !== 'object') {
       return `${indentStr}<${nodeName}>${escapeXml(obj.toString())}</${nodeName}>`;
     }
 
-    // Handle arrays
     if (Array.isArray(obj)) {
       return obj
         .map(item => jsonToXml(item, 'item', level))
         .join('\n');
     }
 
-    // Handle objects
     const children = Object.entries(obj)
       .map(([key, value]) => jsonToXml(value, key, level + 1))
       .join('\n');
@@ -61,6 +54,7 @@ const YamlToXml = () => {
       : `${indentStr}<${nodeName}/>`;
   };
 
+  // Fixed XML escaping function
   const escapeXml = (unsafe) => {
     return unsafe.replace(/[<>&'"]/g, (c) => {
       switch (c) {
@@ -90,7 +84,6 @@ const YamlToXml = () => {
         </h1>
 
         <div className="grid gap-6">
-          {/* Input Section */}
           <div className="grid gap-4 md:grid-cols-2">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -124,7 +117,6 @@ const YamlToXml = () => {
             </div>
           </div>
 
-          {/* Options Section */}
           <div className="grid gap-4 md:grid-cols-2">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -161,7 +153,6 @@ const YamlToXml = () => {
             Convert to XML
           </button>
 
-          {/* Error Section */}
           {error && (
             <div className="p-4 bg-red-50 rounded-md text-red-700">
               <p>{error}</p>
@@ -169,7 +160,6 @@ const YamlToXml = () => {
           )}
         </div>
 
-        {/* Info Section */}
         <div className="mt-6 text-sm text-gray-600">
           <details>
             <summary className="cursor-pointer font-medium">Features & Usage</summary>

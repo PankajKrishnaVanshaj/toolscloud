@@ -4898,14 +4898,7 @@ const ToolList = [
         code: "PhysicsUnitConverter",
         seo: SeoDataImport.PhysicsUnitConverter,
       },
-      {
-        name: "Chemical Equation Balancer",
-        slug: "chemical-equation-balancer",
-        icon: <MdScience />,
-        desc: "Balance chemical equations automatically for accurate reactions.",
-        code: "ChemicalEquationBalancer",
-        seo: SeoDataImport.ChemicalEquationBalancer, // Corrected missing SEO field
-      },
+    
       {
         name: "Astronomical Unit Converter",
         slug: "astronomical-unit-converter",
@@ -4923,6 +4916,14 @@ const ToolList = [
         seo: SeoDataImport.PeriodicTableExplorer,
       },
       // New 50 Science Tools
+      {
+        name: "Chemical Equation Balancer",
+        slug: "chemical-equation-balancer",
+        icon: <MdScience />,
+        desc: "Balance chemical equations automatically for accurate reactions.",
+        code: "ChemicalEquationBalancer",
+        // seo: SeoDataImport.ChemicalEquationBalancer, 
+      },
       {
         name: "Molarity Calculator",
         slug: "molarity-calculator",
