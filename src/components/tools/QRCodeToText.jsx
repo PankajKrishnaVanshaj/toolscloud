@@ -1,8 +1,8 @@
 'use client';
 
 import React, { useState, useCallback } from 'react';
-import { QrReader } from 'qrcode-reader'; // Note: This is a simplified import; actual implementation may vary
-import Jimp from 'jimp';
+import * as Jimp from 'jimp';  // Change to named import
+import QRCodeReader from 'qrcode-reader';  // Change to default import
 
 const QRCodeToText = () => {
   const [file, setFile] = useState(null);
@@ -19,7 +19,7 @@ const QRCodeToText = () => {
 
     try {
       const image = await Jimp.read(await imageFile.arrayBuffer());
-      const qr = new QrReader();
+      const qr = new QRCodeReader();  // Update instantiation
       
       const result = await new Promise((resolve, reject) => {
         qr.decode(image.bitmap, (err, value) => {
