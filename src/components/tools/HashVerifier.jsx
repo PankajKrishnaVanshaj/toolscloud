@@ -1,30 +1,22 @@
-// components/HashGenerator.js
+// components/HashVerifier.js
 'use client';
 
 import React, { useState } from 'react';
-import { MD5, SHA1, SHA256, SHA512, HmacSHA256 } from 'crypto-js';
+import { MD5, SHA1, SHA256, SHA512 } from 'crypto-js';
 
-const HashGenerator = () => {
+const HashVerifier = () => {
   const [inputText, setInputText] = useState('');
   const [hashOutput, setHashOutput] = useState('');
-  const [algorithm, setAlgorithm] = useState('sha256');
-  const [hmacKey, setHmacKey] = useState('');
-  const [outputFormat, setOutputFormat] = useState('hex'); // hex, base64
+  const [verifyHash, setVerifyHash] = useState('');
+  const [algorithm, setAlgorithm] = useState('md5');
+  const [verificationResult, setVerificationResult] = useState(null);
   const [error, setError] = useState('');
 
   const hashFunctions = {
-    md5: (text) => MD5(text).toString(),
-    sha1: (text) => SHA1(text).toString(),
-    sha256: (text) => SHA256(text).toString(),
-    sha512: (text) => SHA512(text).toString(),
-    hmacSha256: (text, key) => HmacSHA256(text, key).toString()
-  };
-
-  const formatOutput = (hash) => {
-    if (outputFormat === 'base64') {
-      return btoa(hash);
-    }
-    return hash;
+    md5: MD5,
+    sha1: SHA1,
+    sha256: SHA256,
+    sha512: SHA512
   };
 
   // Generate hash
@@ -34,24 +26,23 @@ const HashGenerator = () => {
         setError('Please enter text to hash');
         return;
       }
-      if (algorithm === 'hmacSha256' && !hmacKey) {
-        setError('Please enter HMAC key for HMAC-SHA256');
-        return;
-      }
-
-      let hash;
-      if (algorithm === 'hmacSha256') {
-        hash = hashFunctions[algorithm](inputText, hmacKey);
-      } else {
-        hash = hashFunctions[algorithm](inputText);
-      }
-      
-      const formattedHash = formatOutput(hash);
-      setHashOutput(formattedHash);
+      const hash = hashFunctions[algorithm](inputText).toString();
+      setHashOutput(hash);
       setError('');
+      verifyHash && verifyHashValue(hash);
     } catch (err) {
       setError('Hash generation failed: ' + err.message);
     }
+  };
+
+  // Verify hash
+  const verifyHashValue = (generatedHash = hashOutput) => {
+    if (!verifyHash) {
+      setVerificationResult(null);
+      return;
+    }
+    const isValid = generatedHash.toLowerCase() === verifyHash.toLowerCase();
+    setVerificationResult(isValid);
   };
 
   // Handle form submission
@@ -69,14 +60,15 @@ const HashGenerator = () => {
   const clearAll = () => {
     setInputText('');
     setHashOutput('');
-    setHmacKey('');
+    setVerifyHash('');
+    setVerificationResult(null);
     setError('');
   };
 
   return (
     <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4">
       <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-2xl">
-        <h1 className="text-2xl font-bold text-center mb-6">Hash Generator</h1>
+        <h1 className="text-2xl font-bold text-center mb-6">Hash Verifier</h1>
         
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Algorithm Selection */}
@@ -93,40 +85,8 @@ const HashGenerator = () => {
               <option value="sha1">SHA-1</option>
               <option value="sha256">SHA-256</option>
               <option value="sha512">SHA-512</option>
-              <option value="hmacSha256">HMAC-SHA256</option>
             </select>
           </div>
-
-          {/* Output Format */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Output Format
-            </label>
-            <select
-              value={outputFormat}
-              onChange={(e) => setOutputFormat(e.target.value)}
-              className="w-full p-2 border rounded focus:ring focus:ring-blue-200"
-            >
-              <option value="hex">Hexadecimal</option>
-              <option value="base64">Base64</option>
-            </select>
-          </div>
-
-          {/* HMAC Key (for HMAC-SHA256) */}
-          {algorithm === 'hmacSha256' && (
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                HMAC Key
-              </label>
-              <input
-                type="text"
-                value={hmacKey}
-                onChange={(e) => setHmacKey(e.target.value)}
-                className="w-full p-2 border rounded focus:ring focus:ring-blue-200"
-                placeholder="Enter HMAC secret key"
-              />
-            </div>
-          )}
 
           {/* Input Text */}
           <div>
@@ -165,6 +125,30 @@ const HashGenerator = () => {
             </div>
           </div>
 
+          {/* Verify Hash */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Hash to Verify
+            </label>
+            <input
+              type="text"
+              value={verifyHash}
+              onChange={(e) => {
+                setVerifyHash(e.target.value);
+                hashOutput && verifyHashValue();
+              }}
+              className="w-full p-2 border rounded focus:ring focus:ring-blue-200 font-mono"
+              placeholder="Enter hash to verify against"
+            />
+            {verificationResult !== null && (
+              <p className={`mt-2 text-sm ${
+                verificationResult ? 'text-green-600' : 'text-red-600'
+              }`}>
+                {verificationResult ? '✓ Hash matches' : '✗ Hash does not match'}
+              </p>
+            )}
+          </div>
+
           {/* Error Message */}
           {error && (
             <div className="text-red-500 text-sm text-center">{error}</div>
@@ -192,4 +176,4 @@ const HashGenerator = () => {
   );
 };
 
-export default HashGenerator;
+export default HashVerifier;

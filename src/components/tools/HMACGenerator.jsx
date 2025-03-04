@@ -1,82 +1,70 @@
-// components/HashGenerator.js
+// components/HMACGenerator.js
 'use client';
 
 import React, { useState } from 'react';
-import { MD5, SHA1, SHA256, SHA512, HmacSHA256 } from 'crypto-js';
+import { HmacMD5, HmacSHA1, HmacSHA256, HmacSHA512 } from 'crypto-js';
 
-const HashGenerator = () => {
-  const [inputText, setInputText] = useState('');
-  const [hashOutput, setHashOutput] = useState('');
+const HMACGenerator = () => {
+  const [message, setMessage] = useState('');
+  const [secretKey, setSecretKey] = useState('');
   const [algorithm, setAlgorithm] = useState('sha256');
-  const [hmacKey, setHmacKey] = useState('');
   const [outputFormat, setOutputFormat] = useState('hex'); // hex, base64
+  const [generatedHmac, setGeneratedHmac] = useState('');
   const [error, setError] = useState('');
 
-  const hashFunctions = {
-    md5: (text) => MD5(text).toString(),
-    sha1: (text) => SHA1(text).toString(),
-    sha256: (text) => SHA256(text).toString(),
-    sha512: (text) => SHA512(text).toString(),
-    hmacSha256: (text, key) => HmacSHA256(text, key).toString()
+  const hmacFunctions = {
+    md5: HmacMD5,
+    sha1: HmacSHA1,
+    sha256: HmacSHA256,
+    sha512: HmacSHA512
   };
 
-  const formatOutput = (hash) => {
-    if (outputFormat === 'base64') {
-      return btoa(hash);
-    }
-    return hash;
-  };
-
-  // Generate hash
-  const generateHash = () => {
+  // Generate HMAC
+  const generateHmac = () => {
     try {
-      if (!inputText) {
-        setError('Please enter text to hash');
+      if (!message) {
+        setError('Please enter a message');
         return;
       }
-      if (algorithm === 'hmacSha256' && !hmacKey) {
-        setError('Please enter HMAC key for HMAC-SHA256');
+      if (!secretKey) {
+        setError('Please enter a secret key');
         return;
       }
 
-      let hash;
-      if (algorithm === 'hmacSha256') {
-        hash = hashFunctions[algorithm](inputText, hmacKey);
-      } else {
-        hash = hashFunctions[algorithm](inputText);
-      }
-      
-      const formattedHash = formatOutput(hash);
-      setHashOutput(formattedHash);
+      const hmac = hmacFunctions[algorithm](message, secretKey);
+      const output = outputFormat === 'base64' ? hmac.toString(CryptoJS.enc.Base64) : hmac.toString();
+      setGeneratedHmac(output);
       setError('');
     } catch (err) {
-      setError('Hash generation failed: ' + err.message);
+      setError('HMAC generation failed: ' + err.message);
     }
   };
 
   // Handle form submission
   const handleSubmit = (e) => {
     e.preventDefault();
-    generateHash();
+    generateHmac();
   };
 
-  // Copy to clipboard
+  // Copy generated HMAC to clipboard
   const copyToClipboard = () => {
-    navigator.clipboard.writeText(hashOutput);
+    if (generatedHmac) {
+      navigator.clipboard.writeText(generatedHmac);
+    }
   };
 
   // Clear all fields
   const clearAll = () => {
-    setInputText('');
-    setHashOutput('');
-    setHmacKey('');
+    setMessage('');
+    setSecretKey('');
+    setGeneratedHmac('');
     setError('');
   };
 
   return (
     <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4">
       <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-2xl">
-        <h1 className="text-2xl font-bold text-center mb-6">Hash Generator</h1>
+        <h1 className="text-2xl font-bold text-center mb-6">HMAC Generator</h1>
         
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Algorithm Selection */}
@@ -89,11 +77,10 @@ const HashGenerator = () => {
               onChange={(e) => setAlgorithm(e.target.value)}
               className="w-full p-2 border rounded focus:ring focus:ring-blue-200"
             >
-              <option value="md5">MD5</option>
-              <option value="sha1">SHA-1</option>
-              <option value="sha256">SHA-256</option>
-              <option value="sha512">SHA-512</option>
-              <option value="hmacSha256">HMAC-SHA256</option>
+              <option value="md5">HMAC-MD5</option>
+              <option value="sha1">HMAC-SHA1</option>
+              <option value="sha256">HMAC-SHA256</option>
+              <option value="sha512">HMAC-SHA512</option>
             </select>
           </div>
 
@@ -112,48 +99,46 @@ const HashGenerator = () => {
             </select>
           </div>
 
-          {/* HMAC Key (for HMAC-SHA256) */}
-          {algorithm === 'hmacSha256' && (
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                HMAC Key
-              </label>
-              <input
-                type="text"
-                value={hmacKey}
-                onChange={(e) => setHmacKey(e.target.value)}
-                className="w-full p-2 border rounded focus:ring focus:ring-blue-200"
-                placeholder="Enter HMAC secret key"
-              />
-            </div>
-          )}
-
-          {/* Input Text */}
+          {/* Message */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Input Text
+              Message
             </label>
             <textarea
-              value={inputText}
-              onChange={(e) => setInputText(e.target.value)}
-              className="w-full p-2 border rounded focus:ring focus:ring-blue-200 h-32"
-              placeholder="Enter text to hash"
+              value={message}
+              onChange={(e) => setMessage(e.target.value)}
+              className="w-full p-2 border rounded focus:ring focus:ring-blue-200 h-24"
+              placeholder="Enter the message to authenticate"
             />
           </div>
 
-          {/* Generated Hash */}
+          {/* Secret Key */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Generated Hash
+              Secret Key
+            </label>
+            <input
+              type="text"
+              value={secretKey}
+              onChange={(e) => setSecretKey(e.target.value)}
+              className="w-full p-2 border rounded focus:ring focus:ring-blue-200"
+              placeholder="Enter your secret key"
+            />
+          </div>
+
+          {/* Generated HMAC */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Generated HMAC
             </label>
             <div className="relative">
               <textarea
-                value={hashOutput}
+                value={generatedHmac}
                 readOnly
-                className="w-full p-2 border rounded bg-gray-50 h-32 font-mono text-sm"
-                placeholder="Generated hash will appear here"
+                className="w-full p-2 border rounded bg-gray-50 h-24 font-mono text-sm"
+                placeholder="Generated HMAC will appear here"
               />
-              {hashOutput && (
+              {generatedHmac && (
                 <button
                   type="button"
                   onClick={copyToClipboard}
@@ -176,7 +161,7 @@ const HashGenerator = () => {
               type="submit"
               className="px-6 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
             >
-              Generate Hash
+              Generate HMAC
             </button>
             <button
               type="button"
@@ -192,4 +177,4 @@ const HashGenerator = () => {
   );
 };
 
-export default HashGenerator;
+export default HMACGenerator;
