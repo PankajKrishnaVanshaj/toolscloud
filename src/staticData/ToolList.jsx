@@ -209,7 +209,7 @@ import {
   MdSchema,
 } from "react-icons/md";
 import { LuScanBarcode } from "react-icons/lu";
-import SeoDataImport from "@/components/SeoDataImport";
+import SeoDataImport from "./SeoDataImport";
 
 const ToolList = [
   {
