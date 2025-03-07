@@ -1,20 +1,20 @@
-// app/components/PDFAnnotationRemover.jsx
-'use client'
-import React, { useState, useCallback } from 'react'
-import { Document, Page, pdfjs } from 'react-pdf'
-import 'react-pdf/dist/esm/Page/AnnotationLayer.css'
-import 'react-pdf/dist/esm/Page/TextLayer.css'
+'use client';
+import React, { useState, useCallback } from 'react';
+import { Document, Page, pdfjs } from 'react-pdf';
+import 'react-pdf/dist/esm/Page/AnnotationLayer.css';
+import 'react-pdf/dist/esm/Page/TextLayer.css';
+import { PDFDocument } from 'pdf-lib'; // Use pdf-lib for PDF manipulation
 
-// Set up the PDF.js worker
-pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`
+// Set up the PDF.js worker for react-pdf rendering
+pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`;
 
 const PDFAnnotationRemover = () => {
-  const [file, setFile] = useState(null)
-  const [numPages, setNumPages] = useState(null)
-  const [currentPage, setCurrentPage] = useState(1)
-  const [annotations, setAnnotations] = useState([])
-  const [selectedAnnotations, setSelectedAnnotations] = useState(new Set())
-  const [isProcessing, setIsProcessing] = useState(false)
+  const [file, setFile] = useState(null);
+  const [numPages, setNumPages] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [annotations, setAnnotations] = useState([]);
+  const [selectedAnnotations, setSelectedAnnotations] = useState(new Set());
+  const [isProcessing, setIsProcessing] = useState(false);
   const [settings, setSettings] = useState({
     removeAll: false,
     removeTypes: {
@@ -22,117 +22,130 @@ const PDFAnnotationRemover = () => {
       highlight: true,
       underline: true,
       stamp: true,
-    }
-  })
+    },
+  });
 
   const onFileChange = (event) => {
-    const selectedFile = event.target.files[0]
+    const selectedFile = event.target.files[0];
     if (selectedFile && selectedFile.type === 'application/pdf') {
-      setFile(selectedFile)
-      setCurrentPage(1)
-      setAnnotations([])
-      setSelectedAnnotations(new Set())
+      setFile(selectedFile);
+      setCurrentPage(1);
+      setAnnotations([]);
+      setSelectedAnnotations(new Set());
     }
-  }
+  };
 
   const onDocumentLoadSuccess = async ({ numPages }) => {
-    setNumPages(numPages)
-    await loadAnnotations(1)
-  }
+    setNumPages(numPages);
+    await loadAnnotations(1);
+  };
 
   const loadAnnotations = useCallback(async (pageNum) => {
-    if (!file) return
+    if (!file) return;
 
-    const pdf = await pdfjs.getDocument(URL.createObjectURL(file)).promise
-    const page = await pdf.getPage(pageNum)
-    const annots = await page.getAnnotations()
-    setAnnotations(annots)
-  }, [file])
+    const pdf = await pdfjs.getDocument(URL.createObjectURL(file)).promise;
+    const page = await pdf.getPage(pageNum);
+    const annots = await page.getAnnotations();
+    setAnnotations(annots);
+  }, [file]);
 
   const handlePageChange = async (newPage) => {
-    setCurrentPage(newPage)
-    await loadAnnotations(newPage)
-    setSelectedAnnotations(new Set())
-  }
+    setCurrentPage(newPage);
+    await loadAnnotations(newPage);
+    setSelectedAnnotations(new Set());
+  };
 
   const toggleAnnotationSelection = (annotId) => {
-    setSelectedAnnotations(prev => {
-      const newSet = new Set(prev)
+    setSelectedAnnotations((prev) => {
+      const newSet = new Set(prev);
       if (newSet.has(annotId)) {
-        newSet.delete(annotId)
+        newSet.delete(annotId);
       } else {
-        newSet.add(annotId)
+        newSet.add(annotId);
       }
-      return newSet
-    })
-  }
+      return newSet;
+    });
+  };
 
   const handleSettingsChange = (e) => {
-    const { name, checked } = e.target
+    const { name, checked } = e.target;
     if (name === 'removeAll') {
-      setSettings(prev => ({ ...prev, removeAll: checked }))
+      setSettings((prev) => ({ ...prev, removeAll: checked }));
     } else {
-      setSettings(prev => ({
+      setSettings((prev) => ({
         ...prev,
         removeTypes: {
           ...prev.removeTypes,
-          [name]: checked
-        }
-      }))
+          [name]: checked,
+        },
+      }));
     }
-  }
+  };
 
-  const removeAnnotations = async () => {
-    if (!file) return
+  const removeAnnotations = useCallback(async () => {
+    if (!file) return;
 
-    setIsProcessing(true)
+    setIsProcessing(true);
     try {
-      const pdfDoc = await pdfjs.getDocument(URL.createObjectURL(file)).promise
-      const newPdf = await pdfjs.createDocument()
+      // Load the PDF with pdf-lib
+      const pdfBytes = await file.arrayBuffer();
+      const pdfDoc = await PDFDocument.load(pdfBytes);
 
-      for (let i = 1; i <= numPages; i++) {
-        const page = await pdfDoc.getPage(i)
-        const annotations = await page.getAnnotations()
-        
-        // Filter annotations based on settings
-        const annotationsToRemove = settings.removeAll 
+      // Process each page
+      const pages = pdfDoc.getPages();
+      for (let i = 0; i < pages.length; i++) {
+        const page = pages[i];
+        const annotations = await pdfjs
+          .getDocument({ data: pdfBytes })
+          .promise.then((doc) => doc.getPage(i + 1).then((p) => p.getAnnotations()));
+
+        // Filter annotations to remove
+        const annotationsToRemove = settings.removeAll
           ? annotations
-          : annotations.filter(annot => 
-              (settings.removeTypes.text && annot.subtype === 'Text') ||
-              (settings.removeTypes.highlight && annot.subtype === 'Highlight') ||
-              (settings.removeTypes.underline && annot.subtype === 'Underline') ||
-              (settings.removeTypes.stamp && annot.subtype === 'Stamp') ||
-              selectedAnnotations.has(annot.id)
-            )
+          : annotations.filter(
+              (annot) =>
+                (settings.removeTypes.text && annot.subtype === 'Text') ||
+                (settings.removeTypes.highlight && annot.subtype === 'Highlight') ||
+                (settings.removeTypes.underline && annot.subtype === 'Underline') ||
+                (settings.removeTypes.stamp && annot.subtype === 'Stamp') ||
+                selectedAnnotations.has(annot.id)
+            );
 
-        if (annotationsToRemove.length === 0) {
-          newPdf.addPage(page)
-        } else {
-          // Create new page without selected annotations
-          const newPage = await newPdf.addPage(page)
-          const remainingAnnotations = annotations.filter(
-            annot => !annotationsToRemove.some(rem => rem.id === annot.id)
-          )
-          await newPage.addAnnotations(remainingAnnotations)
+        // Remove annotations from the page
+        if (annotationsToRemove.length > 0) {
+          const annotIdsToRemove = annotationsToRemove.map((annot) => annot.id);
+          const existingAnnots = page.node.getAnnots();
+          if (existingAnnots) {
+            const remainingAnnots = existingAnnots.filter(
+              (annot) => !annotIdsToRemove.includes(annot.get('Id')?.toString())
+            );
+            page.node.setAnnots(remainingAnnots);
+          }
         }
       }
 
-      const pdfBytes = await newPdf.save()
-      const blob = new Blob([pdfBytes], { type: 'application/pdf' })
-      const url = URL.createObjectURL(blob)
-      const link = document.createElement('a')
-      link.href = url
-      link.download = `cleaned_${file.name}`
-      document.body.appendChild(link)
-      link.click()
-      document.body.removeChild(link)
-      URL.revokeObjectURL(url)
+      // Save and download the new PDF
+      const pdfBytesCleaned = await pdfDoc.save();
+      const blob = new Blob([pdfBytesCleaned], { type: 'application/pdf' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `cleaned_${file.name}`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+
+      // Update the file state to reflect the cleaned PDF in the preview
+      setFile(blob);
+      await loadAnnotations(currentPage); // Reload annotations for the current page
     } catch (error) {
-      console.error('Annotation removal failed:', error)
+      console.error('Annotation removal failed:', error);
+      alert('An error occurred while removing annotations');
     } finally {
-      setIsProcessing(false)
+      setIsProcessing(false);
     }
-  }
+  }, [file, numPages, settings, selectedAnnotations, currentPage, loadAnnotations]);
 
   return (
     <div className="min-h-screen bg-gray-100 py-8">
@@ -222,7 +235,7 @@ const PDFAnnotationRemover = () => {
                 <div className="mt-4">
                   <h3 className="text-sm font-medium text-gray-700">Annotations on this page:</h3>
                   <div className="max-h-40 overflow-y-auto">
-                    {annotations.map(annot => (
+                    {annotations.map((annot) => (
                       <label key={annot.id} className="flex items-center py-1">
                         <input
                           type="checkbox"
@@ -253,7 +266,7 @@ const PDFAnnotationRemover = () => {
         </button>
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default PDFAnnotationRemover
+export default PDFAnnotationRemover;

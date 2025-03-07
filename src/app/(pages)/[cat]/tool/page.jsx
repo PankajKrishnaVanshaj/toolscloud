@@ -1,29 +1,37 @@
-import dynamic from "next/dynamic";
 import ToolList from "@/staticData/ToolList";
 import ToolSuggestion from "@/components/ToolSuggestion";
 import Link from "next/link";
+import DynamicTool from "@/components/DynamicTool";
+import loadSeoData from "@/components/DynamicSeoData";
+import { ShareButton } from "@/components/ShareButton";
 
-// ✅ need to `await` params
 export async function generateMetadata({ params }) {
   const { cat } = await params;
   if (!cat) return {};
 
-  const matchedTool = findMatchedTool(cat);
-  return matchedTool?.seo || {};
+  const matchedTool = await findMatchedTool(cat, false); // Skip desc for metadata
+  if (!matchedTool) return {};
+
+  // Dynamically load SEO data based on tool code
+  const seo = await loadSeoData(matchedTool.code);
+  return seo;
 }
 
-// Function to find the tool
-const findMatchedTool = (toolSlug) => {
-  return ToolList.reduce((acc, category) => {
+const findMatchedTool = async (toolSlug) => {
+  const matched = ToolList.reduce((acc, category) => {
     if (acc) return acc;
     const foundTool = category.tools.find((tool) => tool.slug === toolSlug);
     return foundTool ? { ...foundTool, category: category.category } : null;
   }, null);
+  if (matched && matched.descLoader) {
+    matched.desc = await matched.descLoader();
+  }
+  return matched;
 };
 
 const Tool = async ({ params }) => {
-  const { cat } = await params; // ✅  need to await
-  const matchedTool = findMatchedTool(cat);
+  const { cat } = await params;
+  const matchedTool = await findMatchedTool(cat);
 
   if (!matchedTool) {
     return (
@@ -33,48 +41,43 @@ const Tool = async ({ params }) => {
     );
   }
 
-  // ✅ Correct way to dynamically import the tool component
-  const DynamicComponent = dynamic(() =>
-    import(`@/components/tools/${matchedTool.code}`).catch(() => () => (
-      <p className="text-red-600">Component not found</p>
-    ))
-  );
-
   return (
     <section>
       <div className="p-6 lg:p-8">
-        {/* Tool Header */}
         <div className="flex items-center space-x-2 mb-1">
           <span className="text-3xl text-primary">{matchedTool.icon}</span>
           <h1 className="text-2xl lg:text-3xl font-bold bg-gradient-to-r from-primary to-secondary text-transparent bg-clip-text">
             {matchedTool.name}
           </h1>
+          <span>
+            <ShareButton
+              url={matchedTool.slug}
+              title={`${matchedTool.name} - PK ToolsCloud`}
+              text={`Try ${matchedTool.name} for free at PK ToolsCloud!`}
+            />
+          </span>
         </div>
 
-        {/* Tool Description */}
         <p className="text-gray-700 text-lg leading-relaxed">
           {matchedTool.desc}
         </p>
 
-        {/* Category Info */}
-        <div className="mt-2">
+        <div className="mt-0.5">
           <p className="text-sm bg-gradient-to-r from-primary to-secondary text-transparent bg-clip-text bg-gray-100 px-3 py-2 inline-block rounded-md">
             <strong className="text-primary">Category:</strong>{" "}
             {matchedTool.category}
           </p>
+          
         </div>
 
-        {/*  usage of DynamicComponent */}
         <div className="mt-6 p-4 lg:p-6 bg-gray-50 rounded-lg shadow-inner">
-          <DynamicComponent />
+          <DynamicTool code={matchedTool.code} />
         </div>
 
-        {/* Tool Suggestions */}
         <div className="my-8">
           <ToolSuggestion />
         </div>
 
-        {/* Categories Section */}
         <div className="py-12 px-6 max-w-6xl mx-auto">
           <h2 className="text-3xl font-bold text-center bg-gradient-to-r from-primary to-secondary text-transparent bg-clip-text">
             Browse by Categories

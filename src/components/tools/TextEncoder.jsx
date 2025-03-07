@@ -1,15 +1,26 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useCallback } from "react";
 
 const TextEncoder = () => {
   const [inputText, setInputText] = useState("");
   const [encodedText, setEncodedText] = useState("");
+  const [changes, setChanges] = useState([]);
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [isCopied, setIsCopied] = useState(false);
   const [options, setOptions] = useState({
     encodeType: "base64", // base64, url, hex, html
     applyToLines: false,  // Apply encoding to each line separately
   });
+
+  // Debounce function to limit state updates
+  const debounce = (func, wait) => {
+    let timeout;
+    return (...args) => {
+      clearTimeout(timeout);
+      timeout = setTimeout(() => func(...args), wait);
+    };
+  };
 
   // Encode text based on options
   const encodeText = (text) => {
@@ -32,8 +43,9 @@ const TextEncoder = () => {
             encodedLine = encodeURIComponent(encodedLine);
             break;
           case "hex":
-            encodedLine = encodedLine.split("")
-              .map(char => char.charCodeAt(0).toString(16).padStart(2, "0"))
+            encodedLine = line
+              .split("")
+              .map((char) => char.charCodeAt(0).toString(16).padStart(2, "0"))
               .join("");
             break;
           case "html":
@@ -52,7 +64,6 @@ const TextEncoder = () => {
     }
 
     const result = encodedLines.join("\n");
-
     return {
       original: text,
       encoded: result,
@@ -72,37 +83,55 @@ const TextEncoder = () => {
     return changes;
   };
 
-  const handleEncode = async () => {
+  const handleEncode = useCallback(async () => {
     setError("");
     setEncodedText("");
+    setChanges([]);
     setIsLoading(true);
 
     try {
-      await new Promise(resolve => setTimeout(resolve, 300)); // Simulate processing
       const result = encodeText(inputText);
 
       if (result.error) {
         setError(result.error);
-        return;
+      } else {
+        setEncodedText(result.encoded);
+        setChanges(result.changes);
       }
-
-      setEncodedText(result.encoded);
     } catch (err) {
-      setError("An error occurred while encoding the text");
+      setError("An unexpected error occurred while encoding the text");
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [inputText, options]);
 
   const reset = () => {
     setInputText("");
     setEncodedText("");
+    setChanges([]);
     setError("");
+    setIsCopied(false);
   };
 
   const handleOptionChange = (option, value) => {
-    setOptions(prev => ({ ...prev, [option]: value }));
+    setOptions((prev) => ({ ...prev, [option]: value }));
   };
+
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(encodedText);
+      setIsCopied(true);
+      setTimeout(() => setIsCopied(false), 2000);
+    } catch (err) {
+      setError("Failed to copy to clipboard");
+    }
+  };
+
+  // Debounced input handler
+  const debouncedSetInputText = useCallback(
+    debounce((value) => setInputText(value), 300),
+    []
+  );
 
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center p-6">
@@ -114,30 +143,48 @@ const TextEncoder = () => {
         {/* Input Section */}
         <div className="space-y-6">
           <div>
-            <label className="block text-gray-700 font-medium mb-2">
+            <label
+              htmlFor="input-text"
+              className="block text-gray-700 font-medium mb-2"
+            >
               Enter Text to Encode:
             </label>
             <textarea
+              id="input-text"
               value={inputText}
-              onChange={(e) => setInputText(e.target.value)}
+              onChange={(e) => debouncedSetInputText(e.target.value)}
               className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 h-40 resize-y transition-all"
               placeholder="e.g., Hello World"
               maxLength={5000}
+              aria-describedby="char-count"
             />
-            <div className="text-right text-sm text-gray-500 mt-1">
+            <div
+              id="char-count"
+              className="text-right text-sm text-gray-500 mt-1"
+            >
               {inputText.length}/5000 characters
             </div>
           </div>
 
           {/* Options */}
           <div className="space-y-2">
-            <p className="text-sm font-medium text-gray-700">Encoding Options:</p>
+            <p className="text-sm font-medium text-gray-700">
+              Encoding Options:
+            </p>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
               <div>
-                <label className="block text-sm text-gray-600 mb-1">Encode Type:</label>
+                <label
+                  htmlFor="encode-type"
+                  className="block text-sm text-gray-600 mb-1"
+                >
+                  Encode Type:
+                </label>
                 <select
+                  id="encode-type"
                   value={options.encodeType}
-                  onChange={(e) => handleOptionChange("encodeType", e.target.value)}
+                  onChange={(e) =>
+                    handleOptionChange("encodeType", e.target.value)
+                  }
                   className="w-full p-1 border rounded focus:outline-none focus:ring-2 focus:ring-indigo-500"
                 >
                   <option value="base64">Base64</option>
@@ -150,8 +197,11 @@ const TextEncoder = () => {
                 <input
                   type="checkbox"
                   checked={options.applyToLines}
-                  onChange={() => handleOptionChange("applyToLines", !options.applyToLines)}
+                  onChange={() =>
+                    handleOptionChange("applyToLines", !options.applyToLines)
+                  }
                   className="h-4 w-4 text-indigo-600 focus:ring-indigo-500"
+                  aria-label="Apply to lines separately"
                 />
                 <span>Apply to Lines Separately</span>
               </label>
@@ -168,6 +218,7 @@ const TextEncoder = () => {
                   ? "bg-indigo-400 cursor-not-allowed"
                   : "bg-indigo-600 hover:bg-indigo-700"
               }`}
+              aria-label="Encode text"
             >
               {isLoading ? "Encoding..." : "Encode Text"}
             </button>
@@ -175,6 +226,7 @@ const TextEncoder = () => {
               onClick={reset}
               disabled={isLoading}
               className="flex-1 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-all font-semibold disabled:opacity-50"
+              aria-label="Reset form"
             >
               Reset
             </button>
@@ -183,7 +235,10 @@ const TextEncoder = () => {
 
         {/* Error Display */}
         {error && (
-          <div className="mt-6 p-4 bg-red-50 text-red-700 rounded-lg text-center">
+          <div
+            className="mt-6 p-4 bg-red-50 text-red-700 rounded-lg text-center"
+            role="alert"
+          >
             {error}
           </div>
         )}
@@ -200,21 +255,24 @@ const TextEncoder = () => {
             <div className="mt-4 text-sm text-gray-600">
               <p className="font-medium">Changes Applied:</p>
               <ul className="list-disc list-inside mt-2">
-                {encodeText(inputText).changes.map((change, index) => (
+                {changes.map((change, index) => (
                   <li key={index}>{change}</li>
                 ))}
               </ul>
             </div>
             <button
-              onClick={() => navigator.clipboard.writeText(encodedText)}
-              className="mt-4 w-full py-2 bg-indigo-500 text-white rounded-lg hover:bg-indigo-600 transition-all font-semibold"
+              onClick={handleCopy}
+              className={`mt-4 w-full py-2 text-white rounded-lg font-semibold transition-all ${
+                isCopied
+                  ? "bg-green-500 hover:bg-green-600"
+                  : "bg-indigo-500 hover:bg-indigo-600"
+              }`}
+              aria-label="Copy encoded text to clipboard"
             >
-              Copy Encoded Text to Clipboard
+              {isCopied ? "Copied!" : "Copy Encoded Text to Clipboard"}
             </button>
           </div>
         )}
-
-        
       </div>
     </div>
   );

@@ -1,109 +1,118 @@
-// app/components/PDFPageExtractor.jsx
-'use client'
-import React, { useState, useCallback } from 'react'
-import { Document, Page, pdfjs } from 'react-pdf'
-import 'react-pdf/dist/esm/Page/AnnotationLayer.css'
-import 'react-pdf/dist/esm/Page/TextLayer.css'
+'use client';
+import React, { useState, useCallback } from 'react';
+import { Document, Page, pdfjs } from 'react-pdf';
+import 'react-pdf/dist/esm/Page/AnnotationLayer.css';
+import 'react-pdf/dist/esm/Page/TextLayer.css';
+import { PDFDocument } from 'pdf-lib'; // Use pdf-lib instead of pdfjs-dist
 
-// Set up PDF.js worker
-pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`
+// Set up PDF.js worker for react-pdf rendering
+pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`;
 
 const PDFPageExtractor = () => {
-  const [file, setFile] = useState(null)
-  const [numPages, setNumPages] = useState(null)
-  const [selectedPages, setSelectedPages] = useState(new Set())
-  const [previewPage, setPreviewPage] = useState(1)
-  const [isProcessing, setIsProcessing] = useState(false)
-  const [rangeInput, setRangeInput] = useState('')
+  const [file, setFile] = useState(null);
+  const [numPages, setNumPages] = useState(null);
+  const [selectedPages, setSelectedPages] = useState(new Set());
+  const [previewPage, setPreviewPage] = useState(1);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [rangeInput, setRangeInput] = useState('');
 
   const onFileChange = (event) => {
-    const selectedFile = event.target.files[0]
+    const selectedFile = event.target.files[0];
     if (selectedFile && selectedFile.type === 'application/pdf') {
-      setFile(selectedFile)
-      setSelectedPages(new Set())
-      setPreviewPage(1)
-      setRangeInput('')
+      setFile(selectedFile);
+      setSelectedPages(new Set());
+      setPreviewPage(1);
+      setRangeInput('');
     }
-  }
+  };
 
   const onDocumentLoadSuccess = ({ numPages }) => {
-    setNumPages(numPages)
-  }
+    setNumPages(numPages);
+  };
 
   const togglePageSelection = (pageNumber) => {
-    setSelectedPages(prev => {
-      const newSet = new Set(prev)
+    setSelectedPages((prev) => {
+      const newSet = new Set(prev);
       if (newSet.has(pageNumber)) {
-        newSet.delete(pageNumber)
+        newSet.delete(pageNumber);
       } else {
-        newSet.add(pageNumber)
+        newSet.add(pageNumber);
       }
-      return newSet
-    })
-  }
+      return newSet;
+    });
+  };
 
   const handleRangeInput = (e) => {
-    setRangeInput(e.target.value)
-    const pages = parsePageRange(e.target.value, numPages)
-    setSelectedPages(new Set(pages))
-  }
+    setRangeInput(e.target.value);
+    const pages = parsePageRange(e.target.value, numPages);
+    setSelectedPages(new Set(pages));
+  };
 
   const parsePageRange = (range, totalPages) => {
-    const pages = new Set()
-    const parts = range.split(',')
-    
-    parts.forEach(part => {
-      const trimmed = part.trim()
+    const pages = new Set();
+    const parts = range.split(',');
+
+    parts.forEach((part) => {
+      const trimmed = part.trim();
       if (trimmed.includes('-')) {
-        const [start, end] = trimmed.split('-').map(n => parseInt(n))
+        const [start, end] = trimmed.split('-').map((n) => parseInt(n));
         if (!isNaN(start) && !isNaN(end)) {
           for (let i = Math.max(1, start); i <= Math.min(totalPages, end); i++) {
-            pages.add(i)
+            pages.add(i);
           }
         }
       } else {
-        const num = parseInt(trimmed)
+        const num = parseInt(trimmed);
         if (!isNaN(num) && num >= 1 && num <= totalPages) {
-          pages.add(num)
+          pages.add(num);
         }
       }
-    })
-    return pages
-  }
+    });
+    return pages;
+  };
 
   const extractPages = useCallback(async () => {
-    if (!file || selectedPages.size === 0) return
+    if (!file || selectedPages.size === 0) return;
 
-    setIsProcessing(true)
+    setIsProcessing(true);
     try {
-      const pdfBytes = await file.arrayBuffer()
-      const pdfDoc = await pdfjs.getDocument(pdfBytes).promise
-      const newPdfDoc = await pdfjs.createDocument()
+      // Load the source PDF with pdf-lib
+      const pdfBytes = await file.arrayBuffer();
+      const srcDoc = await PDFDocument.load(pdfBytes);
 
-      const sortedPages = Array.from(selectedPages).sort((a, b) => a - b)
-      
-      for (const pageNum of sortedPages) {
-        const page = await pdfDoc.getPage(pageNum)
-        await newPdfDoc.addPage(page)
-      }
+      // Create a new PDF document
+      const newPdfDoc = await PDFDocument.create();
 
-      const pdfBytesExtracted = await newPdfDoc.save()
-      const blob = new Blob([pdfBytesExtracted], { type: 'application/pdf' })
-      const url = URL.createObjectURL(blob)
-      const link = document.createElement('a')
-      link.href = url
-      link.download = `extracted_${file.name}`
-      document.body.appendChild(link)
-      link.click()
-      document.body.removeChild(link)
-      URL.revokeObjectURL(url)
+      // Copy selected pages (pdf-lib uses 0-based indexing)
+      const sortedPages = Array.from(selectedPages).sort((a, b) => a - b);
+      const copiedPages = await newPdfDoc.copyPages(
+        srcDoc,
+        sortedPages.map((pageNum) => pageNum - 1) // Convert to 0-based index
+      );
+
+      // Add copied pages to the new document
+      copiedPages.forEach((page) => {
+        newPdfDoc.addPage(page);
+      });
+
+      // Save the new PDF
+      const pdfBytesExtracted = await newPdfDoc.save();
+      const blob = new Blob([pdfBytesExtracted], { type: 'application/pdf' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `extracted_${file.name}`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
     } catch (error) {
-      console.error('Extraction failed:', error)
-      alert('An error occurred while extracting pages')
+      console.error('Extraction failed:', error);
+      alert('An error occurred while extracting pages');
     } finally {
-      setIsProcessing(false)
+      setIsProcessing(false);
     }
-  }, [file, selectedPages])
+  }, [file, selectedPages]);
 
   return (
     <div className="min-h-screen bg-gray-100 py-8">
@@ -161,21 +170,21 @@ const PDFPageExtractor = () => {
             {/* Page Grid */}
             <div className="mt-4 grid grid-cols-5 sm:grid-cols-8 md:grid-cols-10 gap-2 max-h-64 overflow-y-auto">
               {[...Array(numPages)].map((_, index) => {
-                const pageNum = index + 1
-                const isSelected = selectedPages.has(pageNum)
+                const pageNum = index + 1;
+                const isSelected = selectedPages.has(pageNum);
                 return (
                   <button
                     key={pageNum}
                     onClick={() => togglePageSelection(pageNum)}
                     className={`p-2 border rounded-md text-sm ${
-                      isSelected 
-                        ? 'bg-blue-500 text-white border-blue-600' 
+                      isSelected
+                        ? 'bg-blue-500 text-white border-blue-600'
                         : 'bg-white border-gray-300 hover:bg-gray-100'
                     }`}
                   >
                     {pageNum}
                   </button>
-                )
+                );
               })}
             </div>
           </div>
@@ -186,11 +195,7 @@ const PDFPageExtractor = () => {
           <div className="mb-6">
             <h2 className="text-lg font-semibold mb-2">Preview</h2>
             <div className="border p-4 bg-gray-50 rounded-md">
-              <Document
-                file={file}
-                onLoadSuccess={onDocumentLoadSuccess}
-                className="flex justify-center"
-              >
+              <Document file={file} onLoadSuccess={onDocumentLoadSuccess} className="flex justify-center">
                 <Page pageNumber={previewPage} width={400} />
               </Document>
               {numPages && (
@@ -224,11 +229,13 @@ const PDFPageExtractor = () => {
           disabled={!file || selectedPages.size === 0 || isProcessing}
           className="w-full py-2 px-4 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
         >
-          {isProcessing ? 'Processing...' : `Extract ${selectedPages.size} Page${selectedPages.size !== 1 ? 's' : ''}`}
+          {isProcessing
+            ? 'Processing...'
+            : `Extract ${selectedPages.size} Page${selectedPages.size !== 1 ? 's' : ''}`}
         </button>
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default PDFPageExtractor
+export default PDFPageExtractor;

@@ -1,8 +1,7 @@
 'use client';
 
 import React, { useState, useCallback } from 'react';
-import * as Jimp from 'jimp';  // Change to named import
-import QRCodeReader from 'qrcode-reader';  // Change to default import
+import { BrowserQRCodeReader } from '@zxing/library';
 
 const QRCodeToText = () => {
   const [file, setFile] = useState(null);
@@ -18,22 +17,22 @@ const QRCodeToText = () => {
     setGeneratedQR(null);
 
     try {
-      const image = await Jimp.read(await imageFile.arrayBuffer());
-      const qr = new QRCodeReader();  // Update instantiation
-      
-      const result = await new Promise((resolve, reject) => {
-        qr.decode(image.bitmap, (err, value) => {
-          if (err) reject(err);
-          else resolve(value);
-        });
-      });
+      const reader = new BrowserQRCodeReader();
+      const imgUrl = URL.createObjectURL(imageFile);
+      const result = await reader.decodeFromImageUrl(imgUrl);
 
       if (result) {
-        setText(result);
-        setHistory(prev => [...prev, { text: result, timestamp: new Date().toISOString() }].slice(-10));
+        setText(result.getText());
+        setHistory((prev) => [
+          ...prev,
+          { text: result.getText(), timestamp: new Date().toISOString() },
+        ].slice(-10));
       } else {
         setError('No QR code found in the image');
       }
+
+      // Clean up the object URL
+      URL.revokeObjectURL(imgUrl);
     } catch (err) {
       setError(`Failed to decode QR code: ${err.message}`);
     }
@@ -75,8 +74,9 @@ const QRCodeToText = () => {
       setError('Please enter text to generate a QR code');
       return;
     }
-    // Using a simple online QR code generator API for demonstration
-    const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(text)}`;
+    const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(
+      text
+    )}`;
     setGeneratedQR(qrUrl);
   };
 
@@ -173,7 +173,10 @@ const QRCodeToText = () => {
               <div className="space-y-2 text-sm max-h-40 overflow-auto">
                 {history.map((item, index) => (
                   <div key={index} className="p-2 bg-gray-100 rounded">
-                    <p>{item.timestamp}: {item.text.slice(0, 50)}{item.text.length > 50 ? '...' : ''}</p>
+                    <p>
+                      {item.timestamp}: {item.text.slice(0, 50)}
+                      {item.text.length > 50 ? '...' : ''}
+                    </p>
                   </div>
                 ))}
               </div>

@@ -1,99 +1,103 @@
-// app/components/PDFPageDeleter.jsx
-'use client'
-import React, { useState, useCallback } from 'react'
-import { Document, Page, pdfjs } from 'react-pdf'
-import 'react-pdf/dist/esm/Page/AnnotationLayer.css'
-import 'react-pdf/dist/esm/Page/TextLayer.css'
+'use client';
+import React, { useState, useCallback } from 'react';
+import { Document, Page, pdfjs } from 'react-pdf';
+import 'react-pdf/dist/esm/Page/AnnotationLayer.css';
+import 'react-pdf/dist/esm/Page/TextLayer.css';
+import { PDFDocument } from 'pdf-lib'; // Use pdf-lib for PDF manipulation
 
-// Set up pdfjs worker
-pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.js`
+// Set up pdfjs worker for react-pdf rendering
+pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.js`;
 
 const PDFPageDeleter = () => {
-  const [file, setFile] = useState(null)
-  const [numPages, setNumPages] = useState(null)
-  const [selectedPages, setSelectedPages] = useState(new Set())
-  const [previewPage, setPreviewPage] = useState(1)
-  const [isProcessing, setIsProcessing] = useState(false)
-  const [error, setError] = useState(null)
+  const [file, setFile] = useState(null);
+  const [numPages, setNumPages] = useState(null);
+  const [selectedPages, setSelectedPages] = useState(new Set());
+  const [previewPage, setPreviewPage] = useState(1);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [error, setError] = useState(null);
 
   const onFileChange = (event) => {
-    const selectedFile = event.target.files[0]
+    const selectedFile = event.target.files[0];
     if (selectedFile && selectedFile.type === 'application/pdf') {
-      setFile(selectedFile)
-      setSelectedPages(new Set())
-      setPreviewPage(1)
-      setError(null)
+      setFile(selectedFile);
+      setSelectedPages(new Set());
+      setPreviewPage(1);
+      setError(null);
     }
-  }
+  };
 
   const onDocumentLoadSuccess = ({ numPages }) => {
-    setNumPages(numPages)
-  }
+    setNumPages(numPages);
+  };
 
   const togglePageSelection = (page) => {
-    setSelectedPages(prev => {
-      const newSelection = new Set(prev)
+    setSelectedPages((prev) => {
+      const newSelection = new Set(prev);
       if (newSelection.has(page)) {
-        newSelection.delete(page)
+        newSelection.delete(page);
       } else {
-        newSelection.add(page)
+        newSelection.add(page);
       }
-      return newSelection
-    })
-  }
+      return newSelection;
+    });
+  };
 
   const selectAllPages = () => {
-    setSelectedPages(new Set(Array.from({ length: numPages }, (_, i) => i + 1)))
-  }
+    setSelectedPages(new Set(Array.from({ length: numPages }, (_, i) => i + 1)));
+  };
 
   const clearSelection = () => {
-    setSelectedPages(new Set())
-  }
+    setSelectedPages(new Set());
+  };
 
   const deletePages = useCallback(async () => {
-    if (!file || selectedPages.size === 0) return
+    if (!file || selectedPages.size === 0) return;
 
-    setIsProcessing(true)
-    setError(null)
+    setIsProcessing(true);
+    setError(null);
 
     try {
-      // Load the PDF
-      const arrayBuffer = await file.arrayBuffer()
-      const pdfDoc = await pdfjs.getDocument(arrayBuffer).promise
-      
-      // Create new PDF
-      const newPdfDoc = await pdfjs.createDocument()
-      const totalPages = pdfDoc.numPages
+      // Load the PDF with pdf-lib
+      const arrayBuffer = await file.arrayBuffer();
+      const srcDoc = await PDFDocument.load(arrayBuffer);
 
-      // Copy pages that aren't selected for deletion
-      for (let i = 1; i <= totalPages; i++) {
-        if (!selectedPages.has(i)) {
-          const [page] = await newPdfDoc.copyPages(pdfDoc, [i - 1])
-          newPdfDoc.addPage(page)
+      // Create a new PDF document
+      const newPdfDoc = await PDFDocument.create();
+      const totalPages = srcDoc.getPageCount();
+
+      // Copy pages that aren't selected for deletion (0-based indexing)
+      const pagesToKeep = [];
+      for (let i = 0; i < totalPages; i++) {
+        if (!selectedPages.has(i + 1)) { // Convert to 1-based for comparison
+          pagesToKeep.push(i);
         }
       }
 
-      // Save and download new PDF
-      const pdfBytes = await newPdfDoc.save()
-      const blob = new Blob([pdfBytes], { type: 'application/pdf' })
-      const url = URL.createObjectURL(blob)
-      const link = document.createElement('a')
-      link.href = url
-      link.download = `modified_${file.name}`
-      document.body.appendChild(link)
-      link.click()
-      document.body.removeChild(link)
-      URL.revokeObjectURL(url)
+      const copiedPages = await newPdfDoc.copyPages(srcDoc, pagesToKeep);
+      copiedPages.forEach((page) => newPdfDoc.addPage(page));
 
-      // Update preview with new file
-      setFile(blob)
-      setSelectedPages(new Set())
+      // Save and download the new PDF
+      const pdfBytes = await newPdfDoc.save();
+      const blob = new Blob([pdfBytes], { type: 'application/pdf' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `modified_${file.name}`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+
+      // Update preview with the new file
+      setFile(blob);
+      setSelectedPages(new Set());
+      setPreviewPage(1); // Reset to first page
     } catch (err) {
-      setError('Failed to process PDF: ' + err.message)
+      setError('Failed to process PDF: ' + err.message);
     } finally {
-      setIsProcessing(false)
+      setIsProcessing(false);
     }
-  }, [file, selectedPages])
+  }, [file, selectedPages]);
 
   return (
     <div className="min-h-screen bg-gray-100 py-8">
@@ -142,7 +146,7 @@ const PDFPageDeleter = () => {
               </div>
               <div className="max-h-96 overflow-y-auto border rounded-md p-2">
                 <div className="grid grid-cols-5 gap-2">
-                  {Array.from({ length: numPages || 0 }, (_, i) => i + 1).map(page => (
+                  {Array.from({ length: numPages || 0 }, (_, i) => i + 1).map((page) => (
                     <button
                       key={page}
                       onClick={() => togglePageSelection(page)}
@@ -204,13 +208,15 @@ const PDFPageDeleter = () => {
               disabled={isProcessing || selectedPages.size === 0}
               className="py-2 px-4 bg-red-600 text-white rounded-md hover:bg-red-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
             >
-              {isProcessing ? 'Processing...' : `Delete ${selectedPages.size} Page${selectedPages.size === 1 ? '' : 's'}`}
+              {isProcessing
+                ? 'Processing...'
+                : `Delete ${selectedPages.size} Page${selectedPages.size === 1 ? '' : 's'}`}
             </button>
           </div>
         )}
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default PDFPageDeleter
+export default PDFPageDeleter;

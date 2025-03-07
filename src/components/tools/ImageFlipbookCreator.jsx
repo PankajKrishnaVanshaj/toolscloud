@@ -1,4 +1,3 @@
-// components/ImageFlipbookCreator.jsx
 "use client";
 import React, { useState, useRef, useEffect } from "react";
 
@@ -13,53 +12,56 @@ const ImageFlipbookCreator = () => {
   // Handle image uploads
   const handleImageUpload = (e) => {
     const files = Array.from(e.target.files);
-    const newImages = files.map(file => URL.createObjectURL(file));
-    setImages(prev => [...prev, ...newImages]);
+    const newImages = files.map((file) => URL.createObjectURL(file));
+    setImages((prev) => [...prev, ...newImages]);
   };
 
   // Animation control
   useEffect(() => {
     if (isPlaying && images.length > 0) {
       intervalRef.current = setInterval(() => {
-        setCurrentFrame(prev => (prev + 1) % images.length);
+        setCurrentFrame((prev) => (prev + 1) % images.length);
       }, frameRate);
     }
     return () => clearInterval(intervalRef.current);
   }, [isPlaying, frameRate, images.length]);
 
   const togglePlay = () => {
-    setIsPlaying(prev => !prev);
+    setIsPlaying((prev) => !prev);
   };
 
   const goToNext = () => {
-    setCurrentFrame(prev => (prev + 1) % images.length);
+    setCurrentFrame((prev) => (prev + 1) % images.length);
   };
 
   const goToPrevious = () => {
-    setCurrentFrame(prev => (prev - 1 + images.length) % images.length);
+    setCurrentFrame((prev) => (prev - 1 + images.length) % images.length);
   };
 
-  // Export as GIF (basic implementation)
+  // Export as GIF
   const exportAsGIF = async () => {
-    if (images.length === 0) return;
-    
+    if (images.length === 0) {
+      alert("Please upload images to create a GIF.");
+      return;
+    }
+
     try {
-      const { default: GIFEncoder } = await import('gif-encoder-2');
+      const { default: GIFEncoder } = await import("gif-encoder-2");
       const canvas = canvasRef.current;
       const ctx = canvas.getContext("2d");
-      
+
       // Set canvas size based on first image
       const firstImg = new Image();
-      firstImg.onload = () => {
+      firstImg.onload = async () => {
         canvas.width = firstImg.width;
         canvas.height = firstImg.height;
-        
+
         const encoder = new GIFEncoder(canvas.width, canvas.height);
         encoder.start();
         encoder.setRepeat(0); // 0 for infinite loop
         encoder.setDelay(frameRate);
-        
-        const processFrame = (index) => {
+
+        const processFrame = async (index) => {
           if (index >= images.length) {
             encoder.finish();
             const buffer = encoder.out.getData();
@@ -80,10 +82,18 @@ const ImageFlipbookCreator = () => {
             encoder.addFrame(ctx);
             processFrame(index + 1);
           };
+          img.onerror = () => {
+            console.error(`Failed to load image at index ${index}`);
+            processFrame(index + 1); // Skip to next frame on error
+          };
           img.src = images[index];
         };
 
-        processFrame(0);
+        await processFrame(0);
+      };
+      firstImg.onerror = () => {
+        console.error("Failed to load first image for sizing");
+        alert("Error loading images. Please try again.");
       };
       firstImg.src = images[0];
     } catch (error) {
@@ -158,7 +168,9 @@ const ImageFlipbookCreator = () => {
                   <button
                     onClick={togglePlay}
                     className={`${
-                      isPlaying ? "bg-red-500 hover:bg-red-600" : "bg-blue-500 hover:bg-blue-600"
+                      isPlaying
+                        ? "bg-red-500 hover:bg-red-600"
+                        : "bg-blue-500 hover:bg-blue-600"
                     } text-white px-4 py-2 rounded-md transition-colors`}
                   >
                     {isPlaying ? "Pause" : "Play"}
