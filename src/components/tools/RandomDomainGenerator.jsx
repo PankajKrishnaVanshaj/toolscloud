@@ -1,115 +1,141 @@
 "use client";
-import React, { useState } from 'react';
-import { faker } from '@faker-js/faker'; // For random data generation
+
+import React, { useState, useCallback } from "react";
+import { faker } from "@faker-js/faker";
+import { FaCopy, FaDownload, FaTrash, FaHistory, FaUndo } from "react-icons/fa";
 
 const RandomDomainGenerator = () => {
-  const [tldType, setTldType] = useState('predefined'); // TLD type: predefined or custom
-  const [predefinedTld, setPredefinedTld] = useState('com'); // Selected predefined TLD
-  const [customTld, setCustomTld] = useState(''); // User-defined custom TLD
-  const [domainLength, setDomainLength] = useState(10); // Length of domain name (excluding TLD)
-  const [batchSize, setBatchSize] = useState(5); // Number of domains to generate
-  const [domains, setDomains] = useState([]); // Generated domains
-  const [error, setError] = useState('');
-  const [history, setHistory] = useState([]); // History of batches
+  const [tldType, setTldType] = useState("predefined");
+  const [predefinedTld, setPredefinedTld] = useState("com");
+  const [customTld, setCustomTld] = useState("");
+  const [domainLength, setDomainLength] = useState(10);
+  const [batchSize, setBatchSize] = useState(5);
+  const [domains, setDomains] = useState([]);
+  const [error, setError] = useState("");
+  const [history, setHistory] = useState([]);
+  const [options, setOptions] = useState({
+    includeNumbers: true,
+    includeHyphens: false,
+    prefix: "",
+    separator: "\n",
+  });
+  const [showAlert, setShowAlert] = useState(false);
 
-  // Common predefined TLDs
   const tldOptions = [
-    'com', 'org', 'net', 'edu', 'gov', 'io', 'co', 'tech', 'app', 'blog'
+    "com",
+    "org",
+    "net",
+    "edu",
+    "gov",
+    "io",
+    "co",
+    "tech",
+    "app",
+    "blog",
+    "shop",
+    "online",
+    "dev",
   ];
 
   // Validate custom TLD
   const validateCustomTld = (tld) => {
     if (!tld) return false;
-    const tldRegex = /^[a-zA-Z]{2,63}$/; // TLD must be 2-63 letters
+    const tldRegex = /^[a-zA-Z]{2,63}$/;
     return tldRegex.test(tld);
   };
 
-  // Get the effective TLD based on type
+  // Get effective TLD
   const getEffectiveTld = () => {
-    return tldType === 'predefined' ? predefinedTld : customTld.toLowerCase();
+    return tldType === "predefined" ? predefinedTld : customTld.toLowerCase();
   };
 
   // Generate a single domain name
-  const generateDomain = () => {
+  const generateDomain = useCallback(() => {
     try {
       const effectiveTld = getEffectiveTld();
-      if (tldType === 'custom' && !validateCustomTld(customTld)) {
-        throw new Error('Invalid custom TLD: Use 2-63 letters only');
+      if (tldType === "custom" && !validateCustomTld(customTld)) {
+        throw new Error("Invalid custom TLD: Use 2-63 letters only");
       }
-      const name = faker.string.alphanumeric({
-        length: domainLength,
-        casing: 'lower',
-      }).replace(/[^a-z0-9]/g, ''); // Ensure valid domain characters
-      return `${name}.${effectiveTld}`;
+
+      let chars = "abcdefghijklmnopqrstuvwxyz";
+      if (options.includeNumbers) chars += "0123456789";
+      if (options.includeHyphens) chars += "-";
+
+      const name = faker.string.fromCharacters(chars, domainLength).replace(/^-|-$/g, ""); // Remove leading/trailing hyphens
+      const domain = `${options.prefix}${name}.${effectiveTld}`;
+      return domain.toLowerCase();
     } catch (err) {
       throw new Error(`Domain generation failed: ${err.message}`);
     }
-  };
+  }, [tldType, predefinedTld, customTld, domainLength, options]);
 
   // Generate a batch of domains
   const generateBatch = () => {
     try {
-      const newDomains = Array.from({ length: batchSize }, generateDomain);
+      const newDomains = Array.from({ length: Math.min(batchSize, 100) }, generateDomain);
       setDomains(newDomains);
       setHistory((prev) => [
-        { 
-          domains: newDomains, 
-          tld: getEffectiveTld(), 
-          length: domainLength, 
-          tldType, 
-          timestamp: new Date() 
+        {
+          domains: newDomains,
+          tld: getEffectiveTld(),
+          length: domainLength,
+          tldType,
+          options,
+          timestamp: new Date(),
         },
         ...prev.slice(0, 9), // Limit to 10 batches
       ]);
-      setError('');
+      setError("");
     } catch (err) {
-      setError(`Generation failed: ${err.message}`);
+      setError(err.message);
     }
   };
 
   // Copy domains to clipboard
   const handleCopy = () => {
     if (domains.length > 0) {
-      navigator.clipboard.writeText(domains.join('\n'));
-      setError('Domains copied to clipboard!');
-      setTimeout(() => setError(''), 2000);
+      navigator.clipboard
+        .writeText(domains.join(options.separator))
+        .then(() => {
+          setShowAlert(true);
+          setTimeout(() => setShowAlert(false), 2000);
+        })
+        .catch((err) => setError("Failed to copy: " + err.message));
     }
   };
 
-  // Download domains as a text file
-  const handleDownload = () => {
+  // Download domains as a file
+  const handleDownload = (format) => {
     if (domains.length > 0) {
       const effectiveTld = getEffectiveTld();
-      const blob = new Blob([domains.join('\n')], { type: 'text/plain' });
+      let content, type, extension;
+      if (format === "txt") {
+        content = domains.join(options.separator);
+        type = "text/plain";
+        extension = "txt";
+      } else {
+        content = "Domain\n" + domains.join("\n");
+        type = "text/csv";
+        extension = "csv";
+      }
+      const blob = new Blob([content], { type });
       const url = URL.createObjectURL(blob);
-      const link = document.createElement('a');
+      const link = document.createElement("a");
       link.href = url;
-      link.download = `domains_${effectiveTld}_${Date.now()}.txt`;
+      link.download = `domains_${effectiveTld}_${Date.now()}.${extension}`;
       link.click();
       URL.revokeObjectURL(url);
     }
   };
 
-  // Download as CSV
-  const handleDownloadCsv = () => {
-    if (domains.length > 0) {
-      const effectiveTld = getEffectiveTld();
-      const csvContent = 'Domain\n' + domains.join('\n');
-      const blob = new Blob([csvContent], { type: 'text/csv' });
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = `domains_${effectiveTld}_${Date.now()}.csv`;
-      link.click();
-      URL.revokeObjectURL(url);
-    }
-  };
-
-  // Reset
+  // Reset form
   const handleReset = () => {
     setDomains([]);
-    setError('');
-    setCustomTld('');
+    setError("");
+    setCustomTld("");
+    setDomainLength(10);
+    setBatchSize(5);
+    setOptions({ includeNumbers: true, includeHyphens: false, prefix: "", separator: "\n" });
   };
 
   // Load from history
@@ -117,183 +143,273 @@ const RandomDomainGenerator = () => {
     setDomains(entry.domains);
     setTldType(entry.tldType);
     setDomainLength(entry.length);
-    if (entry.tldType === 'predefined') {
+    setOptions(entry.options);
+    if (entry.tldType === "predefined") {
       setPredefinedTld(entry.tld);
+      setCustomTld("");
     } else {
       setCustomTld(entry.tld);
+      setPredefinedTld("com");
     }
   };
 
   return (
-    <div className="max-w-3xl mx-auto p-6 bg-gray-100 min-h-screen">
-      <h2 className="text-3xl font-extrabold text-gray-900 mb-6 text-center">
-        Random Domain Generator
-      </h2>
-
-      {/* Controls */}
-      <div className="mb-6 space-y-4">
-        <div className="flex flex-col sm:flex-row gap-4">
-          <div className="flex-1">
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              TLD Type
-            </label>
-            <select
-              value={tldType}
-              onChange={(e) => setTldType(e.target.value)}
-              className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              <option value="predefined">Predefined TLD</option>
-              <option value="custom">Custom TLD</option>
-            </select>
+    <div className="min-h-screen flex items-center justify-center">
+      <div className="relative bg-white rounded-2xl shadow-xl p-6 sm:p-8 w-full">
+        {/* Alert Notification */}
+        {showAlert && (
+          <div className="absolute top-4 right-4 bg-green-500 text-white px-3 py-1 rounded-md text-sm animate-fade-in">
+            Domains copied to clipboard!
           </div>
-          {tldType === 'predefined' ? (
-            <div className="flex-1">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Predefined TLD
+        )}
+
+        <h2 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-6 text-center">
+          Random Domain Generator
+        </h2>
+
+        {/* Controls */}
+        <div className="space-y-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                TLD Type
               </label>
               <select
-                value={predefinedTld}
-                onChange={(e) => setPredefinedTld(e.target.value)}
+                value={tldType}
+                onChange={(e) => setTldType(e.target.value)}
                 className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
-                {tldOptions.map((option) => (
-                  <option key={option} value={option}>
-                    .{option}
-                  </option>
-                ))}
+                <option value="predefined">Predefined TLD</option>
+                <option value="custom">Custom TLD</option>
               </select>
             </div>
-          ) : (
-            <div className="flex-1">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Custom TLD (2-63 letters)
+            {tldType === "predefined" ? (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Predefined TLD
+                </label>
+                <select
+                  value={predefinedTld}
+                  onChange={(e) => setPredefinedTld(e.target.value)}
+                  className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  {tldOptions.map((option) => (
+                    <option key={option} value={option}>
+                      .{option}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            ) : (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Custom TLD (2-63 letters)
+                </label>
+                <input
+                  type="text"
+                  value={customTld}
+                  onChange={(e) => setCustomTld(e.target.value.toLowerCase())}
+                  placeholder="e.g., xyz"
+                  className={`w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                    customTld && !validateCustomTld(customTld) ? "border-red-500" : "border-gray-300"
+                  }`}
+                />
+              </div>
+            )}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Domain Length (1-63)
               </label>
               <input
-                type="text"
-                value={customTld}
-                onChange={(e) => setCustomTld(e.target.value.toLowerCase())}
-                placeholder="e.g., xyz"
-                className={`w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                  customTld && !validateCustomTld(customTld) ? 'border-red-500' : 'border-gray-300'
-                }`}
+                type="number"
+                value={domainLength}
+                onChange={(e) => setDomainLength(Math.max(1, Math.min(63, Number(e.target.value) || 1)))}
+                min={1}
+                max={63}
+                className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
-          )}
-          <div className="flex-1">
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Domain Length (excluding TLD)
-            </label>
-            <input
-              type="number"
-              value={domainLength}
-              onChange={(e) => setDomainLength(Math.min(63, Math.max(1, e.target.value)))}
-              min={1}
-              max={63}
-              className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Batch Size (1-100)
+              </label>
+              <input
+                type="number"
+                value={batchSize}
+                onChange={(e) => setBatchSize(Math.max(1, Math.min(100, Number(e.target.value) || 1)))}
+                min={1}
+                max={100}
+                className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
           </div>
-          <div className="flex-1">
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Batch Size
-            </label>
-            <input
-              type="number"
-              value={batchSize}
-              onChange={(e) => setBatchSize(Math.min(100, Math.max(1, e.target.value)))}
-              min={1}
-              max={100}
-              className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
+
+          {/* Advanced Options */}
+          <div className="p-4 bg-gray-50 rounded-lg space-y-4">
+            <p className="text-sm font-medium text-gray-700">Advanced Options:</p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm text-gray-600 mb-1">Prefix:</label>
+                <input
+                  type="text"
+                  value={options.prefix}
+                  onChange={(e) => setOptions((prev) => ({ ...prev, prefix: e.target.value.toLowerCase() }))}
+                  className="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="e.g., www"
+                />
+              </div>
+              <div>
+                <label className="block text-sm text-gray-600 mb-1">Output Separator:</label>
+                <select
+                  value={options.separator}
+                  onChange={(e) => setOptions((prev) => ({ ...prev, separator: e.target.value }))}
+                  className="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="\n">Newline</option>
+                  <option value=", ">Comma</option>
+                  <option value=" ">Space</option>
+                  <option value="; ">Semicolon</option>
+                </select>
+              </div>
+              <div className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  checked={options.includeNumbers}
+                  onChange={() => setOptions((prev) => ({ ...prev, includeNumbers: !prev.includeNumbers }))}
+                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                />
+                <label className="text-sm text-gray-600">Include Numbers</label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  checked={options.includeHyphens}
+                  onChange={() => setOptions((prev) => ({ ...prev, includeHyphens: !prev.includeHyphens }))}
+                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                />
+                <label className="text-sm text-gray-600">Include Hyphens</label>
+              </div>
+            </div>
+          </div>
+
+          {/* Buttons */}
+          <div className="flex flex-col sm:flex-row gap-4">
+            <button
+              onClick={generateBatch}
+              disabled={tldType === "custom" && !validateCustomTld(customTld)}
+              className="flex-1 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors flex items-center justify-center"
+            >
+              Generate Batch
+            </button>
+            <button
+              onClick={handleCopy}
+              disabled={!domains.length}
+              className="flex-1 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors flex items-center justify-center"
+            >
+              <FaCopy className="mr-2" />
+              Copy
+            </button>
+            <button
+              onClick={() => handleDownload("txt")}
+              disabled={!domains.length}
+              className="flex-1 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors flex items-center justify-center"
+            >
+              <FaDownload className="mr-2" />
+              TXT
+            </button>
+            <button
+              onClick={() => handleDownload("csv")}
+              disabled={!domains.length}
+              className="flex-1 py-2 bg-teal-600 text-white rounded-md hover:bg-teal-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors flex items-center justify-center"
+            >
+              <FaDownload className="mr-2" />
+              CSV
+            </button>
+            <button
+              onClick={handleReset}
+              className="flex-1 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors flex items-center justify-center"
+            >
+              <FaTrash className="mr-2" />
+              Reset
+            </button>
           </div>
         </div>
 
-        <div className="flex flex-wrap gap-3">
-          <button
-            onClick={generateBatch}
-            disabled={tldType === 'custom' && !validateCustomTld(customTld)}
-            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+        {/* Output */}
+        {domains.length > 0 && (
+          <div className="mt-6 p-4 bg-blue-50 rounded-lg">
+            <h3 className="text-lg font-semibold text-gray-800 text-center">
+              Generated Domains ({domains.length})
+            </h3>
+            <div className="mt-3 text-sm text-gray-700 font-mono whitespace-pre-wrap break-all max-h-64 overflow-y-auto">
+              {domains.join(options.separator)}
+            </div>
+          </div>
+        )}
+
+        {/* Error Message */}
+        {error && (
+          <div
+            className={`mt-4 text-sm p-3 rounded-md ${
+              error.includes("copied") ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"
+            }`}
           >
-            Generate Batch
-          </button>
-          <button
-            onClick={handleCopy}
-            disabled={domains.length === 0}
-            className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
-          >
-            Copy
-          </button>
-          <button
-            onClick={handleDownload}
-            disabled={domains.length === 0}
-            className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
-          >
-            Download TXT
-          </button>
-          <button
-            onClick={handleDownloadCsv}
-            disabled={domains.length === 0}
-            className="px-4 py-2 bg-teal-600 text-white rounded-md hover:bg-teal-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
-          >
-            Download CSV
-          </button>
-          <button
-            onClick={handleReset}
-            className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors"
-          >
-            Reset
-          </button>
+            {error}
+          </div>
+        )}
+
+        {/* History */}
+        {history.length > 0 && (
+          <div className="mt-6 p-4 bg-gray-100 rounded-lg">
+            <h3 className="font-semibold text-gray-700 flex items-center">
+              <FaHistory className="mr-2" /> Batch History (Last 10)
+            </h3>
+            <ul className="mt-2 text-sm text-gray-600 space-y-2 max-h-64 overflow-y-auto">
+              {history.map((entry, index) => (
+                <li key={index} className="flex items-center justify-between">
+                  <span>
+                    .{entry.tld} ({entry.domains.length}, {entry.length} chars) -{" "}
+                    {entry.timestamp.toLocaleString()}
+                  </span>
+                  <button
+                    onClick={() => loadFromHistory(entry)}
+                    className="text-blue-500 hover:text-blue-700 transition-colors"
+                  >
+                    <FaUndo />
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+
+        {/* Features Info */}
+        <div className="mt-6 p-4 bg-blue-100 rounded-lg border border-blue-300">
+          <h3 className="font-semibold text-blue-700">Features</h3>
+          <ul className="list-disc list-inside text-blue-600 text-sm">
+            <li>Predefined or custom TLDs</li>
+            <li>Customizable domain length and batch size</li>
+            <li>Include numbers, hyphens, and prefixes</li>
+            <li>Copy or download as TXT/CSV with custom separators</li>
+            <li>Track and restore previous batches</li>
+          </ul>
         </div>
       </div>
 
-      {/* Output */}
-      {domains.length > 0 && (
-        <div className="mb-6">
-          <h3 className="text-lg font-semibold text-gray-800 mb-2">
-            Generated Domains ({domains.length})
-          </h3>
-          <div className="w-full p-3 bg-white border border-gray-300 rounded-lg font-mono text-sm overflow-y-auto max-h-64">
-            {domains.map((domain, index) => (
-              <div key={index} className="py-1">
-                {domain}
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Error/Success Messages */}
-      {error && (
-        <div
-          className={`mb-4 text-sm p-3 rounded-md ${
-            error.includes('copied') ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
-          }`}
-        >
-          {error}
-        </div>
-      )}
-
-      {/* History */}
-      {history.length > 0 && (
-        <div className="mt-6">
-          <h3 className="text-lg font-semibold text-gray-800 mb-2">Batch History</h3>
-          <div className="space-y-2 max-h-64 overflow-y-auto">
-            {history.map((entry, index) => (
-              <div
-                key={index}
-                onClick={() => loadFromHistory(entry)}
-                className="p-3 bg-white border border-gray-200 rounded-md hover:bg-gray-50 cursor-pointer"
-              >
-                <p className="text-sm font-medium text-gray-800">
-                  .{entry.tld} Batch ({entry.domains.length}, {entry.length} chars) - {entry.timestamp.toLocaleString()}
-                </p>
-                <p className="text-xs text-gray-600 truncate">
-                  {entry.domains[0]}...
-                </p>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
+      {/* Tailwind Animation */}
+      <style jsx>{`
+        @keyframes fadeIn {
+          from {
+            opacity: 0;
+          }
+          to {
+            opacity: 1;
+          }
+        }
+        .animate-fade-in {
+          animation: fadeIn 0.3s ease-in;
+        }
+      `}</style>
     </div>
   );
 };
