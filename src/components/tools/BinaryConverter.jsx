@@ -1,21 +1,28 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
+import { FaCopy, FaDownload, FaSync } from 'react-icons/fa';
 
 const BinaryConverter = () => {
   const [inputValue, setInputValue] = useState('');
   const [inputType, setInputType] = useState('binary');
   const [output, setOutput] = useState({ binary: '', decimal: '', hex: '', text: '' });
   const [error, setError] = useState(null);
+  const [options, setOptions] = useState({
+    spaceEvery8: true,
+    uppercaseHex: true,
+    includeSpaces: false,
+  });
+  const [history, setHistory] = useState([]);
 
   const inputTypes = [
     { value: 'binary', label: 'Binary' },
     { value: 'decimal', label: 'Decimal' },
     { value: 'hex', label: 'Hexadecimal' },
-    { value: 'text', label: 'Text' }
+    { value: 'text', label: 'Text' },
   ];
 
-  const convertValue = () => {
+  const convertValue = useCallback(() => {
     setError(null);
     setOutput({ binary: '', decimal: '', hex: '', text: '' });
 
@@ -29,14 +36,13 @@ const BinaryConverter = () => {
 
       switch (inputType) {
         case 'binary':
-          // Validate binary input
           if (!/^[01\s]+$/.test(inputValue)) {
             throw new Error('Invalid binary input: Use only 0s and 1s');
           }
-          binary = inputValue.replace(/\s/g, ''); // Remove spaces
+          binary = inputValue.replace(/\s/g, '');
           break;
         case 'decimal':
-          const decimalNum = parseInt(inputValue, 10);
+          const decimalNum = parseInt(inputValue.replace(/\s/g, ''), 10);
           if (isNaN(decimalNum) || decimalNum < 0) {
             throw new Error('Invalid decimal input: Enter a positive number');
           }
@@ -60,39 +66,39 @@ const BinaryConverter = () => {
       }
 
       const decimal = parseInt(binary, 2);
-      const hex = decimal.toString(16).toUpperCase();
+      const hex = decimal.toString(16);
       const text = binaryToText(binary);
 
-      setOutput({
-        binary: formatBinary(binary),
-        decimal: decimal.toString(),
-        hex: hex,
-        text: text
-      });
+      const formattedBinary = options.spaceEvery8 ? formatBinary(binary) : binary;
+      const formattedHex = options.uppercaseHex ? hex.toUpperCase() : hex;
+
+      const result = {
+        binary: formattedBinary,
+        decimal: options.includeSpaces ? decimal.toString().replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1 ') : decimal.toString(),
+        hex: options.includeSpaces ? formattedHex.match(/.{1,2}/g)?.join(' ') || formattedHex : formattedHex,
+        text,
+      };
+
+      setOutput(result);
+      setHistory(prev => [...prev, { input: inputValue, type: inputType, output: result }].slice(-5));
     } catch (err) {
       setError(err.message);
     }
-  };
+  }, [inputValue, inputType, options]);
 
   const textToBinary = (text) => {
     return text
       .split('')
-      .map(char => {
-        const code = char.charCodeAt(0);
-        return code.toString(2).padStart(8, '0');
-      })
+      .map(char => char.charCodeAt(0).toString(2).padStart(8, '0'))
       .join('');
   };
 
   const binaryToText = (binary) => {
     const bytes = binary.match(/.{1,8}/g) || [];
-    return bytes
-      .map(byte => String.fromCharCode(parseInt(byte, 2)))
-      .join('');
+    return bytes.map(byte => String.fromCharCode(parseInt(byte, 2))).join('');
   };
 
   const formatBinary = (binary) => {
-    // Add spaces every 8 bits for readability
     return binary.replace(/(.{8})/g, '$1 ').trim();
   };
 
@@ -101,18 +107,38 @@ const BinaryConverter = () => {
     convertValue();
   };
 
+  const handleCopy = (value) => {
+    navigator.clipboard.writeText(value);
+    alert('Copied to clipboard!');
+  };
+
+  const handleDownload = () => {
+    const content = JSON.stringify(output, null, 2);
+    const blob = new Blob([content], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `conversion-${Date.now()}.json`;
+    link.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const handleReset = () => {
+    setInputValue('');
+    setOutput({ binary: '', decimal: '', hex: '', text: '' });
+    setError(null);
+  };
+
   return (
-    <div className="w-full max-w-4xl mx-auto my-8">
-      <div className="bg-white rounded-lg shadow-lg p-6">
-        <h2 className="text-2xl font-bold mb-4 text-gray-800">Binary Converter</h2>
+    <div className="min-h-screen  flex items-center justify-center ">
+      <div className="w-full bg-white rounded-xl shadow-lg p-6 sm:p-8">
+        <h2 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-6">Binary Converter</h2>
 
         {/* Input Form */}
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="flex gap-4">
-            <div className="flex-1">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Input Type
-              </label>
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Input Type</label>
               <select
                 value={inputType}
                 onChange={(e) => setInputType(e.target.value)}
@@ -123,10 +149,8 @@ const BinaryConverter = () => {
                 ))}
               </select>
             </div>
-            <div className="flex-2">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Input Value
-              </label>
+            <div className="sm:col-span-2">
+              <label className="block text-sm font-medium text-gray-700 mb-1">Input Value</label>
               <textarea
                 value={inputValue}
                 onChange={(e) => setInputValue(e.target.value)}
@@ -140,66 +164,132 @@ const BinaryConverter = () => {
               />
             </div>
           </div>
-          <button
-            type="submit"
-            className="w-full py-2 px-4 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
-          >
-            Convert
-          </button>
+
+          {/* Conversion Options */}
+          <div className="p-4 bg-gray-50 rounded-lg">
+            <h3 className="text-lg font-semibold text-gray-700 mb-3">Options</h3>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <label className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  checked={options.spaceEvery8}
+                  onChange={(e) => setOptions(prev => ({ ...prev, spaceEvery8: e.target.checked }))}
+                  className="h-4 w-4 text-blue-600 focus:ring-blue-500"
+                />
+                <span className="text-sm text-gray-600">Space every 8 bits</span>
+              </label>
+              <label className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  checked={options.uppercaseHex}
+                  onChange={(e) => setOptions(prev => ({ ...prev, uppercaseHex: e.target.checked }))}
+                  className="h-4 w-4 text-blue-600 focus:ring-blue-500"
+                />
+                <span className="text-sm text-gray-600">Uppercase Hex</span>
+              </label>
+              <label className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  checked={options.includeSpaces}
+                  onChange={(e) => setOptions(prev => ({ ...prev, includeSpaces: e.target.checked }))}
+                  className="h-4 w-4 text-blue-600 focus:ring-blue-500"
+                />
+                <span className="text-sm text-gray-600">Include Spaces</span>
+              </label>
+            </div>
+          </div>
+
+          <div className="flex flex-col sm:flex-row gap-3">
+            <button
+              type="submit"
+              className="flex-1 py-2 px-4 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors flex items-center justify-center"
+            >
+              Convert
+            </button>
+            <button
+              type="button"
+              onClick={handleReset}
+              className="flex-1 py-2 px-4 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors flex items-center justify-center"
+            >
+              <FaSync className="mr-2" /> Reset
+            </button>
+          </div>
         </form>
 
         {/* Error Message */}
         {error && (
-          <div className="mt-4 p-3 bg-red-100 text-red-700 rounded-md">
+          <div className="mt-6 p-4 bg-red-100 text-red-700 rounded-lg">
             {error}
           </div>
         )}
 
         {/* Output */}
         {output.binary && (
-          <div className="mt-6 space-y-4">
+          <div className="mt-6 space-y-6">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="p-4 bg-gray-50 rounded-md">
-                <h3 className="font-semibold text-gray-700">Binary</h3>
-                <pre className="text-sm font-mono text-gray-800 whitespace-pre-wrap break-all">
-                  {output.binary}
-                </pre>
-              </div>
-              <div className="p-4 bg-gray-50 rounded-md">
-                <h3 className="font-semibold text-gray-700">Decimal</h3>
-                <pre className="text-sm font-mono text-gray-800 whitespace-pre-wrap break-all">
-                  {output.decimal}
-                </pre>
-              </div>
-              <div className="p-4 bg-gray-50 rounded-md">
-                <h3 className="font-semibold text-gray-700">Hexadecimal</h3>
-                <pre className="text-sm font-mono text-gray-800 whitespace-pre-wrap break-all">
-                  {output.hex}
-                </pre>
-              </div>
-              <div className="p-4 bg-gray-50 rounded-md">
-                <h3 className="font-semibold text-gray-700">Text</h3>
-                <pre className="text-sm font-mono text-gray-800 whitespace-pre-wrap break-all">
-                  {output.text}
-                </pre>
-              </div>
+              {Object.entries(output).map(([key, value]) => (
+                <div key={key} className="p-4 bg-gray-50 rounded-lg">
+                  <div className="flex justify-between items-center mb-2">
+                    <h3 className="font-semibold text-gray-700 capitalize">{key}</h3>
+                    <button
+                      onClick={() => handleCopy(value)}
+                      className="text-blue-600 hover:text-blue-800"
+                      title="Copy to clipboard"
+                    >
+                      <FaCopy />
+                    </button>
+                  </div>
+                  <pre className="text-sm font-mono text-gray-800 whitespace-pre-wrap break-all">
+                    {value}
+                  </pre>
+                </div>
+              ))}
             </div>
+            <button
+              onClick={handleDownload}
+              className="w-full py-2 px-4 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors flex items-center justify-center"
+            >
+              <FaDownload className="mr-2" /> Download Results
+            </button>
           </div>
         )}
 
-        {/* Notes */}
-        {!output.binary && !error && (
-          <div className="mt-4 text-sm text-gray-600">
-            <p>Convert between binary, decimal, hexadecimal, and text formats.</p>
-            <p className="mt-1">Examples:</p>
-            <ul className="list-disc pl-5">
-              <li>Binary: <code>01001000 01100101 01101100 01101100 01101111</code> = "Hello"</li>
-              <li>Decimal: <code>72</code> = "H"</li>
-              <li>Hex: <code>48</code> = "H"</li>
-              <li>Text: <code>Hello</code></li>
+        {/* History */}
+        {history.length > 0 && (
+          <div className="mt-6 p-4 bg-gray-100 rounded-lg">
+            <h3 className="font-semibold text-gray-700 mb-3">Conversion History (Last 5)</h3>
+            <ul className="space-y-2 text-sm text-gray-600">
+              {history.slice().reverse().map((entry, index) => (
+                <li key={index} className="flex justify-between items-center">
+                  <span>{`${entry.type}: ${entry.input.slice(0, 20)}${entry.input.length > 20 ? '...' : ''}`}</span>
+                  <button
+                    onClick={() => {
+                      setInputValue(entry.input);
+                      setInputType(entry.type);
+                      setOutput(entry.output);
+                    }}
+                    className="text-blue-600 hover:text-blue-800"
+                  >
+                    Restore
+                  </button>
+                </li>
+              ))}
             </ul>
           </div>
         )}
+
+        {/* Features */}
+        <div className="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
+          <h3 className="font-semibold text-blue-700 mb-2">Features</h3>
+          <ul className="list-disc list-inside text-blue-600 text-sm space-y-1">
+            <li>Convert between Binary, Decimal, Hex, and Text</li>
+            <li>Custom formatting options</li>
+            <li>Copy individual outputs</li>
+            <li>Download results as JSON</li>
+            <li>History tracking (last 5 conversions)</li>
+            <li>Responsive design</li>
+          </ul>
+        </div>
       </div>
     </div>
   );

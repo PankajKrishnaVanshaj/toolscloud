@@ -1101,7 +1101,6 @@ const ToolList = [
         desc: "Generate and test SQL queries visually.",
         code: "SQLQueryBuilder",
       },
-      // New 100 Developer Tools
       {
         name: "XML Formatter",
         slug: "xml-formatter",

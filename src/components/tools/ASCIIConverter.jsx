@@ -1,31 +1,52 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
+import { FaCopy, FaDownload, FaSync, FaTable } from 'react-icons/fa';
 
 const ASCIIConverter = () => {
   const [inputText, setInputText] = useState('');
   const [outputText, setOutputText] = useState('');
-  const [mode, setMode] = useState('textToASCII'); // 'textToASCII' or 'asciiToText'
+  const [mode, setMode] = useState('textToASCII');
   const [copied, setCopied] = useState(false);
   const [error, setError] = useState(null);
+  const [options, setOptions] = useState({
+    separator: ' ',
+    range: 'standard', // 'standard' (0-127) or 'extended' (0-255)
+    format: 'decimal', // 'decimal', 'hex', 'binary'
+  });
+  const [showTable, setShowTable] = useState(false);
 
-  const textToASCII = (text) => {
+  const textToASCII = useCallback((text) => {
+    const maxValue = options.range === 'standard' ? 127 : 255;
     return text
       .split('')
-      .map(char => char.charCodeAt(0))
-      .join(' ');
-  };
+      .map(char => {
+        const code = char.charCodeAt(0);
+        if (code > maxValue) throw new Error(`Character '${char}' exceeds ${options.range} range (${maxValue})`);
+        return options.format === 'hex' 
+          ? code.toString(16).padStart(2, '0').toUpperCase()
+          : options.format === 'binary' 
+          ? code.toString(2).padStart(8, '0')
+          : code.toString();
+      })
+      .join(options.separator);
+  }, [options]);
 
-  const asciiToText = (ascii) => {
-    const codes = ascii.split(/\s+/).map(code => {
-      const num = parseInt(code, 10);
-      if (isNaN(num) || num < 0 || num > 127) {
-        throw new Error(`Invalid ASCII code: ${code} (must be 0-127)`);
+  const asciiToText = useCallback((ascii) => {
+    const maxValue = options.range === 'standard' ? 127 : 255;
+    const codes = ascii.split(options.separator).map(code => {
+      const num = options.format === 'hex' 
+        ? parseInt(code, 16) 
+        : options.format === 'binary' 
+        ? parseInt(code, 2) 
+        : parseInt(code, 10);
+      if (isNaN(num) || num < 0 || num > maxValue) {
+        throw new Error(`Invalid ${options.format} code: ${code} (must be 0-${maxValue})`);
       }
       return num;
     });
     return String.fromCharCode(...codes);
-  };
+  }, [options]);
 
   const processText = () => {
     setError(null);
@@ -33,7 +54,7 @@ const ASCIIConverter = () => {
     setCopied(false);
 
     if (!inputText.trim()) {
-      setError('Please enter some text or ASCII codes');
+      setError('Please enter some text or codes');
       return;
     }
 
@@ -43,7 +64,7 @@ const ASCIIConverter = () => {
         : asciiToText(inputText);
       setOutputText(result);
     } catch (err) {
-      setError('Error processing input: ' + err.message);
+      setError('Error: ' + err.message);
     }
   };
 
@@ -60,63 +81,141 @@ const ASCIIConverter = () => {
     }
   };
 
-  // Common ASCII characters for reference
-  const asciiTable = [
-    { char: 'A', code: 65, description: 'Uppercase A' },
-    { char: 'a', code: 97, description: 'Lowercase a' },
-    { char: '0', code: 48, description: 'Digit 0' },
-    { char: ' ', code: 32, description: 'Space' },
-    { char: '@', code: 64, description: 'At sign' },
-    { char: '\n', code: 10, description: 'Line Feed (LF)' }
-  ];
+  const handleDownload = () => {
+    if (outputText) {
+      const blob = new Blob([outputText], { type: 'text/plain' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `ascii-${mode}-${Date.now()}.txt`;
+      link.click();
+      URL.revokeObjectURL(url);
+    }
+  };
+
+  const handleReset = () => {
+    setInputText('');
+    setOutputText('');
+    setError(null);
+    setCopied(false);
+  };
+
+  const asciiTable = Array.from({ length: options.range === 'standard' ? 128 : 256 }, (_, i) => ({
+    code: i,
+    char: String.fromCharCode(i),
+    hex: i.toString(16).padStart(2, '0').toUpperCase(),
+    binary: i.toString(2).padStart(8, '0'),
+  })).filter(entry => entry.char.trim() || entry.code === 32);
 
   return (
-    <div className="w-full max-w-4xl mx-auto my-8">
-      <div className="bg-white rounded-lg shadow-lg p-6">
-        <h2 className="text-2xl font-bold mb-4 text-gray-800">ASCII Converter</h2>
+    <div className="min-h-screen  flex items-center justify-center ">
+      <div className="w-full  bg-white rounded-xl shadow-lg p-6 sm:p-8">
+        <h2 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-6">ASCII Converter</h2>
 
         {/* Input Form */}
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-6">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Input {mode === 'textToASCII' ? 'Text' : 'ASCII Codes'}
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Input {mode === 'textToASCII' ? 'Text' : `${options.format.toUpperCase()} Codes`}
             </label>
             <textarea
               value={inputText}
               onChange={(e) => setInputText(e.target.value)}
-              className="w-full h-32 p-2 border border-gray-300 rounded-md font-mono text-sm resize-y focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full h-32 sm:h-48 p-4 border border-gray-300 rounded-lg resize-y focus:ring-2 focus:ring-blue-500 font-mono text-sm"
               placeholder={mode === 'textToASCII' 
                 ? 'Hello World' 
+                : options.format === 'hex' 
+                ? '48 65 6C 6C 6F 20 57 6F 72 6C 64' 
+                : options.format === 'binary' 
+                ? '01001000 01100101 01101100 01101100 01101111 00100000 01010111 01101111 01110010 01101100 01100100' 
                 : '72 101 108 108 111 32 87 111 114 108 100'}
             />
           </div>
 
-          <div className="flex gap-4 items-center">
-            <div className="flex-1">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Conversion Mode
-              </label>
+          {/* Options */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Mode</label>
               <select
                 value={mode}
                 onChange={(e) => setMode(e.target.value)}
-                className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
               >
                 <option value="textToASCII">Text to ASCII</option>
                 <option value="asciiToText">ASCII to Text</option>
               </select>
             </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Format</label>
+              <select
+                value={options.format}
+                onChange={(e) => setOptions(prev => ({ ...prev, format: e.target.value }))}
+                className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="decimal">Decimal</option>
+                <option value="hex">Hexadecimal</option>
+                <option value="binary">Binary</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Range</label>
+              <select
+                value={options.range}
+                onChange={(e) => setOptions(prev => ({ ...prev, range: e.target.value }))}
+                className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="standard">Standard (0-127)</option>
+                <option value="extended">Extended (0-255)</option>
+              </select>
+            </div>
+            <div className="sm:col-span-3">
+              <label className="block text-sm font-medium text-gray-700 mb-1">Separator</label>
+              <input
+                type="text"
+                value={options.separator}
+                onChange={(e) => setOptions(prev => ({ ...prev, separator: e.target.value || ' ' }))}
+                className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
+                placeholder="Space by default"
+              />
+            </div>
+          </div>
+
+          {/* Buttons */}
+          <div className="flex flex-col sm:flex-row gap-3">
             <button
               type="submit"
-              className="flex-1 py-2 px-4 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+              className="flex-1 py-2 px-4 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors flex items-center justify-center"
             >
               Convert
+            </button>
+            <button
+              onClick={handleCopy}
+              disabled={!outputText}
+              className={`flex-1 py-2 px-4 rounded-md transition-colors flex items-center justify-center ${
+                copied ? 'bg-green-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+              } ${!outputText && 'opacity-50 cursor-not-allowed'}`}
+            >
+              <FaCopy className="mr-2" /> {copied ? 'Copied!' : 'Copy'}
+            </button>
+            <button
+              onClick={handleDownload}
+              disabled={!outputText}
+              className="flex-1 py-2 px-4 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+            >
+              <FaDownload className="mr-2" /> Download
+            </button>
+            <button
+              onClick={handleReset}
+              className="flex-1 py-2 px-4 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors flex items-center justify-center"
+            >
+              <FaSync className="mr-2" /> Reset
             </button>
           </div>
         </form>
 
-        {/* Error Message */}
+        {/* Error */}
         {error && (
-          <div className="mt-4 p-3 bg-red-100 text-red-700 rounded-md">
+          <div className="mt-6 p-4 bg-red-50 text-red-700 rounded-lg border border-red-200">
             {error}
           </div>
         )}
@@ -124,53 +223,62 @@ const ASCIIConverter = () => {
         {/* Output */}
         {outputText && (
           <div className="mt-6">
-            <div className="flex justify-between items-center mb-2">
-              <h3 className="font-semibold text-gray-700">
-                {mode === 'textToASCII' ? 'ASCII Codes' : 'Text Output'}
-              </h3>
-              <button
-                onClick={handleCopy}
-                className={`px-3 py-1 text-sm rounded transition-colors ${
-                  copied ? 'bg-green-500 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                }`}
-              >
-                {copied ? 'Copied!' : 'Copy'}
-              </button>
-            </div>
-            <pre className="p-4 bg-gray-50 rounded-md text-sm font-mono text-gray-800 whitespace-pre-wrap break-all">
+            <h3 className="font-semibold text-gray-700 mb-2">
+              {mode === 'textToASCII' ? `${options.format.toUpperCase()} Codes` : 'Text Output'}
+            </h3>
+            <pre className="p-4 bg-gray-50 rounded-lg text-sm font-mono text-gray-800 whitespace-pre-wrap break-all border border-gray-200">
               {outputText}
             </pre>
           </div>
         )}
 
-        {/* ASCII Reference Table */}
+        {/* ASCII Table */}
         <div className="mt-6">
-          <h3 className="font-semibold text-gray-700 mb-2">Common ASCII Characters</h3>
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm text-left text-gray-500">
-              <thead className="text-xs text-gray-700 uppercase bg-gray-100">
-                <tr>
-                  <th className="px-4 py-2">Character</th>
-                  <th className="px-4 py-2">ASCII Code</th>
-                  <th className="px-4 py-2">Description</th>
-                </tr>
-              </thead>
-              <tbody>
-                {asciiTable.map((entry, index) => (
-                  <tr key={index} className="border-b">
-                    <td className="px-4 py-2 font-mono">
-                      {entry.char === '\n' ? '\\n' : entry.char}
-                    </td>
-                    <td className="px-4 py-2 font-mono">{entry.code}</td>
-                    <td className="px-4 py-2">{entry.description}</td>
+          <button
+            onClick={() => setShowTable(!showTable)}
+            className="w-full py-2 px-4 bg-gray-600 text-white rounded-md hover:bg-gray-700 transition-colors flex items-center justify-center"
+          >
+            <FaTable className="mr-2" /> {showTable ? 'Hide' : 'Show'} ASCII Table
+          </button>
+          {showTable && (
+            <div className="mt-4 overflow-x-auto max-h-64 border border-gray-200 rounded-lg">
+              <table className="w-full text-sm text-left text-gray-500">
+                <thead className="text-xs text-gray-700 uppercase bg-gray-100 sticky top-0">
+                  <tr>
+                    <th className="px-4 py-2">Dec</th>
+                    <th className="px-4 py-2">Hex</th>
+                    <th className="px-4 py-2">Bin</th>
+                    <th className="px-4 py-2">Char</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-          <p className="mt-2 text-sm text-gray-600">
-            Enter text to convert to ASCII codes (e.g., 'A' → 65) or space-separated ASCII codes to convert to text (e.g., 65 → 'A'). Valid range: 0-127.
-          </p>
+                </thead>
+                <tbody>
+                  {asciiTable.map((entry, index) => (
+                    <tr key={index} className="border-b">
+                      <td className="px-4 py-2 font-mono">{entry.code}</td>
+                      <td className="px-4 py-2 font-mono">{entry.hex}</td>
+                      <td className="px-4 py-2 font-mono">{entry.binary}</td>
+                      <td className="px-4 py-2 font-mono">
+                        {entry.char.trim() ? entry.char : entry.code === 32 ? 'SPACE' : '\\n'}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+
+        {/* Info */}
+        <div className="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
+          <h3 className="font-semibold text-blue-700 mb-2">Features</h3>
+          <ul className="list-disc list-inside text-blue-600 text-sm space-y-1">
+            <li>Convert text to ASCII and vice versa</li>
+            <li>Support for decimal, hex, and binary formats</li>
+            <li>Standard (0-127) and extended (0-255) ranges</li>
+            <li>Customizable separator</li>
+            <li>Copy and download results</li>
+            <li>Full ASCII table reference</li>
+          </ul>
         </div>
       </div>
     </div>

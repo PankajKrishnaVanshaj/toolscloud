@@ -1,14 +1,21 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
+import { FaCopy, FaDownload, FaSync } from 'react-icons/fa';
 
 const UnitTestGenerator = () => {
   const [inputCode, setInputCode] = useState('');
   const [generatedTests, setGeneratedTests] = useState('');
   const [error, setError] = useState(null);
   const [copied, setCopied] = useState(false);
+  const [testOptions, setTestOptions] = useState({
+    framework: 'jest', // 'jest' or 'mocha'
+    includeEdgeCases: true,
+    includeTypeChecks: true,
+    includeComments: true,
+  });
 
-  const generateUnitTests = (code) => {
+  const generateUnitTests = useCallback((code) => {
     setError(null);
     setGeneratedTests('');
     setCopied(false);
@@ -19,19 +26,17 @@ const UnitTestGenerator = () => {
     }
 
     try {
-      // Basic parsing for function declarations
+      // Parse functions
       const functionRegex = /function\s+(\w+)\s*\(([^)]*)\)\s*{([^}]*)}/g;
       const arrowFunctionRegex = /const\s+(\w+)\s*=\s*\(([^)]*)\)\s*=>\s*{([^}]*)}/g;
       let match;
       const functions = [];
 
-      // Parse regular functions
       while ((match = functionRegex.exec(code)) !== null) {
         const [, name, params, body] = match;
         functions.push({ name, params: params.split(',').map(p => p.trim()).filter(Boolean), body });
       }
 
-      // Parse arrow functions
       while ((match = arrowFunctionRegex.exec(code)) !== null) {
         const [, name, params, body] = match;
         functions.push({ name, params: params.split(',').map(p => p.trim()).filter(Boolean), body });
@@ -42,41 +47,70 @@ const UnitTestGenerator = () => {
         return;
       }
 
-      // Generate Jest tests
-      let testCode = `// Generated Unit Tests using Jest\n\n`;
-      testCode += `const { ${functions.map(f => f.name).join(', ')} } = require('./yourModule'); // Adjust the import path\n\n`;
+      // Generate tests based on selected framework
+      let testCode = testOptions.includeComments 
+        ? `// Generated Unit Tests using ${testOptions.framework.toUpperCase()}\n// Generated on ${new Date().toLocaleString()}\n\n`
+        : '';
+      
+      testCode += testOptions.framework === 'jest'
+        ? `const { ${functions.map(f => f.name).join(', ')} } = require('./yourModule');\n\n`
+        : `const { ${functions.map(f => f.name).join(', ')} } = require('./yourModule');\nconst assert = require('assert');\n\n`;
 
       functions.forEach(func => {
-        testCode += `describe('${func.name}', () => {\n`;
+        const describe = testOptions.framework === 'jest' ? 'describe' : 'describe';
+        const it = testOptions.framework === 'jest' ? 'it' : 'it';
+        const expect = testOptions.framework === 'jest' 
+          ? 'expect' 
+          : (assertion => `assert(${assertion})`);
         
-        // Basic test for function existence
-        testCode += `  it('should be defined', () => {\n`;
-        testCode += `    expect(${func.name}).toBeDefined();\n`;
+        testCode += `${describe}('${func.name}', () => {\n`;
+
+        // Existence test
+        testCode += testOptions.includeComments ? `  // Test function existence\n` : '';
+        testCode += `  ${it}('should be defined', () => {\n`;
+        testCode += testOptions.framework === 'jest'
+          ? `    ${expect}(${func.name}).toBeDefined();\n`
+          : `    ${expect(`typeof ${func.name} !== 'undefined'`)};\n`;
         testCode += `  });\n\n`;
 
-        // Test for basic return value (assuming simple cases)
-        const paramValues = func.params.map((_, i) => i + 1); // Simple numeric inputs
-        testCode += `  it('should return a value with basic inputs', () => {\n`;
-        if (paramValues.length > 0) {
-          testCode += `    const result = ${func.name}(${paramValues.join(', ')});\n`;
-          testCode += `    expect(result).toBeDefined();\n`;
-        } else {
-          testCode += `    const result = ${func.name}();\n`;
-          testCode += `    expect(result).toBeDefined();\n`;
-        }
-        testCode += `  });\n`;
+        const paramValues = func.params.map((_, i) => i + 1);
+        
+        // Basic functionality test
+        testCode += testOptions.includeComments ? `  // Test basic functionality\n` : '';
+        testCode += `  ${it}('should return a value with basic inputs', () => {\n`;
+        const call = `${func.name}(${paramValues.join(', ')})`;
+        testCode += `    const result = ${call};\n`;
+        testCode += testOptions.framework === 'jest'
+          ? `    ${expect}(result).toBeDefined();\n`
+          : `    ${expect(`result !== undefined`)};\n`;
+        testCode += `  });\n\n`;
 
-        // Test for parameter handling (if any)
-        if (func.params.length > 0) {
-          testCode += `\n  it('should handle parameters correctly', () => {\n`;
-          testCode += `    const result = ${func.name}(${paramValues.join(', ')});\n`;
-          // Add a basic expectation based on function body analysis
+        // Parameter handling and type checking
+        if (func.params.length > 0 && testOptions.includeTypeChecks) {
+          testCode += testOptions.includeComments ? `  // Test parameter type handling\n` : '';
+          testCode += `  ${it}('should handle parameter types correctly', () => {\n`;
+          testCode += `    const result = ${call};\n`;
           const hasReturn = func.body.includes('return');
           if (hasReturn) {
-            testCode += `    expect(typeof result).toMatch(/number|string|boolean|object/);\n`;
+            testCode += testOptions.framework === 'jest'
+              ? `    ${expect}(typeof result).toMatch(/number|string|boolean|object/);\n`
+              : `    ${expect(`['number', 'string', 'boolean', 'object'].includes(typeof result)`)};\n`;
           } else {
-            testCode += `    expect(result).toBeUndefined();\n`;
+            testCode += testOptions.framework === 'jest'
+              ? `    ${expect}(result).toBeUndefined();\n`
+              : `    ${expect(`result === undefined`)};\n`;
           }
+          testCode += `  });\n\n`;
+        }
+
+        // Edge cases
+        if (testOptions.includeEdgeCases && func.params.length > 0) {
+          testCode += testOptions.includeComments ? `  // Test edge cases\n` : '';
+          testCode += `  ${it}('should handle edge cases', () => {\n`;
+          testCode += `    const zeroResult = ${func.name}(${func.params.map(() => '0').join(', ')});\n`;
+          testCode += testOptions.framework === 'jest'
+            ? `    ${expect}(zeroResult).toBeDefined();\n`
+            : `    ${expect(`zeroResult !== undefined`)};\n`;
           testCode += `  });\n`;
         }
 
@@ -87,7 +121,7 @@ const UnitTestGenerator = () => {
     } catch (err) {
       setError('Error generating tests: ' + err.message);
     }
-  };
+  }, [testOptions]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -102,21 +136,40 @@ const UnitTestGenerator = () => {
     }
   };
 
+  const handleDownload = () => {
+    if (generatedTests) {
+      const blob = new Blob([generatedTests], { type: 'text/javascript' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `tests-${Date.now()}.js`;
+      link.click();
+      URL.revokeObjectURL(url);
+    }
+  };
+
+  const handleReset = () => {
+    setInputCode('');
+    setGeneratedTests('');
+    setError(null);
+    setCopied(false);
+  };
+
   return (
-    <div className="w-full max-w-5xl mx-auto my-8">
-      <div className="bg-white rounded-lg shadow-lg p-6">
-        <h2 className="text-2xl font-bold mb-4 text-gray-800">Unit Test Generator</h2>
+    <div className="min-h-screen  flex items-center justify-center ">
+      <div className="w-full  bg-white rounded-xl shadow-lg p-6 sm:p-8">
+        <h1 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-6">Unit Test Generator</h1>
 
         {/* Code Input */}
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-6">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
               JavaScript Code
             </label>
             <textarea
               value={inputCode}
               onChange={(e) => setInputCode(e.target.value)}
-              className="w-full h-48 p-2 border border-gray-300 rounded-md font-mono text-sm resize-y focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full h-48 sm:h-64 p-4 border border-gray-300 rounded-lg font-mono text-sm resize-y focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               placeholder={`function add(a, b) {
   return a + b;
 }
@@ -124,19 +177,68 @@ const UnitTestGenerator = () => {
 const multiply = (x, y) => {
   return x * y;
 }`}
+              aria-label="JavaScript Code Input"
             />
           </div>
-          <button
-            type="submit"
-            className="w-full py-2 px-4 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
-          >
-            Generate Tests
-          </button>
+
+          {/* Test Options */}
+          <div className="p-4 bg-gray-50 rounded-lg">
+            <h3 className="text-lg font-semibold text-gray-700 mb-3">Test Generation Options</h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-600 mb-2">Framework</label>
+                <select
+                  value={testOptions.framework}
+                  onChange={(e) => setTestOptions(prev => ({ ...prev, framework: e.target.value }))}
+                  className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="jest">Jest</option>
+                  <option value="mocha">Mocha</option>
+                </select>
+              </div>
+              {['includeEdgeCases', 'includeTypeChecks', 'includeComments'].map(option => (
+                <label key={option} className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    checked={testOptions[option]}
+                    onChange={(e) => setTestOptions(prev => ({ ...prev, [option]: e.target.checked }))}
+                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                  />
+                  <span className="text-sm text-gray-600">
+                    {option.replace('include', '').replace(/([A-Z])/g, ' $1').trim()}
+                  </span>
+                </label>
+              ))}
+            </div>
+          </div>
+
+          {/* Buttons */}
+          <div className="flex flex-col sm:flex-row gap-3">
+            <button
+              type="submit"
+              className="flex-1 py-2 px-4 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center"
+            >
+              Generate Tests
+            </button>
+            <button
+              onClick={handleReset}
+              className="flex-1 py-2 px-4 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors flex items-center justify-center"
+            >
+              <FaSync className="mr-2" /> Reset
+            </button>
+            <button
+              onClick={handleDownload}
+              disabled={!generatedTests}
+              className="flex-1 py-2 px-4 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors flex items-center justify-center"
+            >
+              <FaDownload className="mr-2" /> Download
+            </button>
+          </div>
         </form>
 
         {/* Error Message */}
         {error && (
-          <div className="mt-4 p-3 bg-red-100 text-red-700 rounded-md">
+          <div className="mt-6 p-4 bg-red-50 text-red-700 rounded-lg border border-red-200">
             {error}
           </div>
         )}
@@ -144,36 +246,37 @@ const multiply = (x, y) => {
         {/* Generated Tests */}
         {generatedTests && (
           <div className="mt-6">
-            <div className="flex justify-between items-center mb-2">
-              <h3 className="font-semibold text-gray-700">Generated Jest Tests</h3>
+            <div className="flex justify-between items-center mb-3">
+              <h3 className="text-lg font-semibold text-gray-700">
+                Generated {testOptions.framework.toUpperCase()} Tests
+              </h3>
               <button
                 onClick={handleCopy}
-                className={`px-3 py-1 text-sm rounded transition-colors ${
+                className={`py-1 px-3 text-sm rounded-lg flex items-center gap-2 transition-colors ${
                   copied ? 'bg-green-500 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
                 }`}
               >
-                {copied ? 'Copied!' : 'Copy'}
+                <FaCopy /> {copied ? 'Copied!' : 'Copy'}
               </button>
             </div>
-            <pre className="p-4 bg-gray-50 rounded-md text-sm font-mono text-gray-800 whitespace-pre-wrap break-all">
+            <pre className="p-4 bg-gray-50 rounded-lg text-sm font-mono text-gray-800 whitespace-pre-wrap break-all border border-gray-200 max-h-96 overflow-auto">
               {generatedTests}
             </pre>
           </div>
         )}
 
-        {/* Notes */}
-        {!generatedTests && !error && (
-          <div className="mt-4 text-sm text-gray-600">
-            <p>Enter JavaScript functions to generate basic Jest unit tests.</p>
-            <p className="mt-1">Features:</p>
-            <ul className="list-disc pl-5">
-              <li>Detects function declarations and arrow functions</li>
-              <li>Generates tests for existence and basic functionality</li>
-              <li>Handles parameter validation</li>
-            </ul>
-            <p className="mt-2">Note: Tests are basic skeletons; customize them for specific use cases.</p>
-          </div>
-        )}
+        {/* Features */}
+        <div className="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
+          <h3 className="font-semibold text-blue-700 mb-2">Features</h3>
+          <ul className="list-disc list-inside text-blue-600 text-sm space-y-1">
+            <li>Supports Jest and Mocha frameworks</li>
+            <li>Detects regular and arrow functions</li>
+            <li>Generates existence, functionality, and type tests</li>
+            <li>Optional edge case testing</li>
+            <li>Customizable with comments and type checks</li>
+            <li>Copy and download generated tests</li>
+          </ul>
+        </div>
       </div>
     </div>
   );

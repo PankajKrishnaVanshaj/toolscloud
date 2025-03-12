@@ -1,47 +1,53 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useCallback, useRef } from "react";
+import { FaCopy, FaDownload, FaSync, FaCheck, FaTimes } from "react-icons/fa";
 
 const FileHashChecker = () => {
   const [file, setFile] = useState(null);
-  const [hashType, setHashType] = useState('SHA-256');
-  const [expectedHash, setExpectedHash] = useState('');
-  const [calculatedHash, setCalculatedHash] = useState('');
+  const [hashType, setHashType] = useState("SHA-256");
+  const [expectedHash, setExpectedHash] = useState("");
+  const [calculatedHash, setCalculatedHash] = useState("");
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [history, setHistory] = useState([]);
+  const fileInputRef = useRef(null);
 
-  const hashAlgorithms = ['MD5', 'SHA-1', 'SHA-256'];
+  const hashAlgorithms = ["MD5", "SHA-1", "SHA-256", "SHA-384", "SHA-512"];
 
-  const calculateHash = async (fileData, algorithm) => {
+  const calculateHash = useCallback(async (fileData, algorithm) => {
     try {
       setLoading(true);
       setError(null);
-      setCalculatedHash('');
+      setCalculatedHash("");
       setCopied(false);
 
-      // Read file as ArrayBuffer
       const arrayBuffer = await fileData.arrayBuffer();
 
-      // Use Web Crypto API to calculate hash
-      let cryptoAlgorithm = algorithm;
-      if (algorithm === 'MD5') {
-        // Web Crypto doesn't support MD5 natively, use a fallback (simplified)
-        const md5Hash = await import('md5').then(module => module.default(arrayBuffer));
-        return md5Hash;
+      let hash;
+      if (algorithm === "MD5") {
+        const md5Module = await import("md5");
+        hash = md5Module.default(arrayBuffer);
       } else {
-        cryptoAlgorithm = algorithm.replace('SHA-', 'SHA-'); // Adjust for Web Crypto naming
-        const hashBuffer = await crypto.subtle.digest(cryptoAlgorithm, arrayBuffer);
+        const hashBuffer = await crypto.subtle.digest(algorithm, arrayBuffer);
         const hashArray = Array.from(new Uint8Array(hashBuffer));
-        return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+        hash = hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
       }
+
+      setHistory((prev) => [
+        ...prev,
+        { fileName: fileData.name, hashType: algorithm, hash, timestamp: new Date() },
+      ].slice(-5)); // Keep last 5 entries
+
+      return hash;
     } catch (err) {
-      setError('Error calculating hash: ' + err.message);
+      setError(`Error calculating hash: ${err.message}`);
       return null;
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   const handleFileUpload = async (event) => {
     const selectedFile = event.target.files[0];
@@ -49,18 +55,14 @@ const FileHashChecker = () => {
 
     setFile(selectedFile);
     const hash = await calculateHash(selectedFile, hashType);
-    if (hash) {
-      setCalculatedHash(hash);
-    }
+    if (hash) setCalculatedHash(hash);
   };
 
   const handleHashTypeChange = async (newHashType) => {
     setHashType(newHashType);
     if (file) {
       const hash = await calculateHash(file, newHashType);
-      if (hash) {
-        setCalculatedHash(hash);
-      }
+      if (hash) setCalculatedHash(hash);
     }
   };
 
@@ -72,60 +74,73 @@ const FileHashChecker = () => {
     }
   };
 
+  const handleDownload = () => {
+    if (calculatedHash) {
+      const content = `File: ${file?.name}\nAlgorithm: ${hashType}\nHash: ${calculatedHash}\nTimestamp: ${new Date().toLocaleString()}`;
+      const blob = new Blob([content], { type: "text/plain" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `hash-${file?.name}-${Date.now()}.txt`;
+      link.click();
+      URL.revokeObjectURL(url);
+    }
+  };
+
+  const handleReset = () => {
+    setFile(null);
+    setCalculatedHash("");
+    setExpectedHash("");
+    setError(null);
+    setCopied(false);
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  };
+
   const verifyHash = () => {
     if (!calculatedHash || !expectedHash) return null;
-    return calculatedHash.toLowerCase() === expectedHash.toLowerCase();
+    return calculatedHash.toLowerCase() === expectedHash.trim().toLowerCase();
   };
 
   return (
-    <div className="w-full max-w-4xl mx-auto my-8">
-      <div className="bg-white rounded-lg shadow-lg p-6">
-        <h2 className="text-2xl font-bold mb-4 text-gray-800">File Hash Checker</h2>
+    <div className="min-h-screen  flex items-center justify-center">
+      <div className="w-full  bg-white rounded-xl shadow-lg p-6 sm:p-8">
+        <h2 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-6">File Hash Checker</h2>
 
         {/* File Upload and Options */}
-        <div className="space-y-4">
+        <div className="space-y-6">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Upload File
-            </label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Upload File</label>
             <input
+              ref={fileInputRef}
               type="file"
               onChange={handleFileUpload}
-              className="block w-full text-sm text-gray-500
-                file:mr-4 file:py-2 file:px-4
-                file:rounded-md file:border-0
-                file:text-sm file:font-semibold
-                file:bg-blue-50 file:text-blue-700
-                hover:file:bg-blue-100"
+              className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+              disabled={loading}
             />
-            {file && <p className="mt-2 text-sm text-gray-600">Selected: {file.name}</p>}
+            {file && <p className="mt-2 text-sm text-gray-600">Selected: {file.name} ({(file.size / 1024).toFixed(2)} KB)</p>}
           </div>
 
-          <div className="flex gap-4">
-            <div className="flex-1">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Hash Algorithm
-              </label>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Hash Algorithm</label>
               <select
                 value={hashType}
                 onChange={(e) => handleHashTypeChange(e.target.value)}
-                className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100"
                 disabled={loading}
               >
-                {hashAlgorithms.map(alg => (
+                {hashAlgorithms.map((alg) => (
                   <option key={alg} value={alg}>{alg}</option>
                 ))}
               </select>
             </div>
-            <div className="flex-1">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Expected Hash (optional)
-              </label>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Expected Hash (Optional)</label>
               <input
                 type="text"
                 value={expectedHash}
                 onChange={(e) => setExpectedHash(e.target.value)}
-                className="w-full p-2 border border-gray-300 rounded-md font-mono text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full p-2 border border-gray-300 rounded-md font-mono text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100"
                 placeholder="Enter hash to verify"
                 disabled={loading}
               />
@@ -133,9 +148,27 @@ const FileHashChecker = () => {
           </div>
         </div>
 
+        {/* Controls */}
+        <div className="flex flex-col sm:flex-row gap-3 mt-6">
+          <button
+            onClick={handleReset}
+            className="flex-1 py-2 px-4 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors flex items-center justify-center disabled:bg-gray-400"
+            disabled={loading}
+          >
+            <FaSync className="mr-2" /> Reset
+          </button>
+          <button
+            onClick={handleDownload}
+            className="flex-1 py-2 px-4 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors flex items-center justify-center disabled:bg-gray-400"
+            disabled={!calculatedHash || loading}
+          >
+            <FaDownload className="mr-2" /> Download Hash
+          </button>
+        </div>
+
         {/* Error Message */}
         {error && (
-          <div className="mt-4 p-3 bg-red-100 text-red-700 rounded-md">
+          <div className="mt-6 p-4 bg-red-50 text-red-700 rounded-md border border-red-200">
             {error}
           </div>
         )}
@@ -143,42 +176,62 @@ const FileHashChecker = () => {
         {/* Hash Result */}
         {calculatedHash && (
           <div className="mt-6 space-y-4">
-            <div className="p-4 bg-gray-50 rounded-md">
-              <div className="flex justify-between items-center mb-2">
+            <div className="p-4 bg-gray-50 rounded-md border border-gray-200">
+              <div className="flex justify-between items-center mb-3">
                 <h3 className="font-semibold text-gray-700">Calculated Hash</h3>
                 <button
                   onClick={handleCopy}
-                  className={`px-3 py-1 text-sm rounded transition-colors ${
-                    copied ? 'bg-green-500 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                  className={`py-1 px-3 text-sm rounded transition-colors flex items-center ${
+                    copied ? "bg-green-500 text-white" : "bg-gray-200 text-gray-700 hover:bg-gray-300"
                   }`}
                   disabled={loading}
                 >
-                  {copied ? 'Copied!' : 'Copy'}
+                  <FaCopy className="mr-2" /> {copied ? "Copied!" : "Copy"}
                 </button>
               </div>
               <pre className="text-sm font-mono text-gray-800 whitespace-pre-wrap break-all">
-                {loading ? 'Calculating...' : calculatedHash}
+                {loading ? "Calculating..." : calculatedHash}
               </pre>
             </div>
 
             {expectedHash && (
-              <div className={`p-4 rounded-md ${verifyHash() ? 'bg-green-50' : 'bg-red-50'}`}>
-                <h3 className="font-semibold text-gray-700">Verification</h3>
-                <p className={`text-lg ${verifyHash() ? 'text-green-700' : 'text-red-700'}`}>
-                  {verifyHash() ? 'Hash matches!' : 'Hash does not match'}
+              <div className={`p-4 rounded-md border ${verifyHash() ? "bg-green-50 border-green-200" : "bg-red-50 border-red-200"}`}>
+                <h3 className="font-semibold text-gray-700 mb-2">Verification</h3>
+                <p className={`text-lg flex items-center ${verifyHash() ? "text-green-700" : "text-red-700"}`}>
+                  {verifyHash() ? <FaCheck className="mr-2" /> : <FaTimes className="mr-2" />}
+                  {verifyHash() ? "Hash matches!" : "Hash does not match"}
                 </p>
               </div>
             )}
           </div>
         )}
 
+        {/* History */}
+        {history.length > 0 && (
+          <div className="mt-6 p-4 bg-gray-100 rounded-md border border-gray-200">
+            <h3 className="font-semibold text-gray-700 mb-3">Recent Hashes (Last 5)</h3>
+            <ul className="space-y-2 text-sm text-gray-600">
+              {history.slice().reverse().map((entry, index) => (
+                <li key={index} className="flex flex-col sm:flex-row justify-between">
+                  <span>{entry.fileName} ({entry.hashType})</span>
+                  <span className="font-mono truncate max-w-xs">{entry.hash.slice(0, 20)}...</span>
+                  <span>{entry.timestamp.toLocaleTimeString()}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+
         {/* Notes */}
-        <div className="mt-4 text-sm text-gray-600">
-          <p>Notes:</p>
-          <ul className="list-disc pl-5">
-            <li>MD5 is implemented via a fallback (not native Web Crypto)</li>
-            <li>SHA-1 and SHA-256 use the Web Crypto API</li>
-            <li>Hash verification is case-insensitive</li>
+        <div className="mt-6 p-4 bg-blue-50 rounded-md border border-blue-200">
+          <h3 className="font-semibold text-blue-700 mb-2">Features & Notes</h3>
+          <ul className="list-disc pl-5 text-sm text-blue-600 space-y-1">
+            <li>Supports MD5, SHA-1, SHA-256, SHA-384, SHA-512</li>
+            <li>MD5 uses fallback; others use Web Crypto API</li>
+            <li>Copy hash to clipboard</li>
+            <li>Download hash with file details</li>
+            <li>Track recent hash calculations</li>
+            <li>Case-insensitive hash verification</li>
           </ul>
         </div>
       </div>

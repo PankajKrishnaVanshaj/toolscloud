@@ -63,6 +63,7 @@
     "react-live": "^4.1.8",
     "react-pdf": "^9.2.1",
     "react-syntax-highlighter": "^15.6.1",
+    "reactflow": "^11.11.4",
     "uuid": "^11.1.0",
     "xlsx": "^0.18.5",
     "xml2js": "^0.6.2",

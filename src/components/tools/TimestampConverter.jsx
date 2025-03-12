@@ -1,14 +1,21 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
+import { FaCopy, FaDownload, FaSync, FaClock } from 'react-icons/fa';
 
 const TimestampConverter = () => {
   const [inputValue, setInputValue] = useState('');
-  const [mode, setMode] = useState('timestampToDate'); // 'timestampToDate' or 'dateToTimestamp'
+  const [mode, setMode] = useState('timestampToDate');
   const [timezone, setTimezone] = useState('UTC');
-  const [output, setOutput] = useState('');
+  const [output, setOutput] = useState({ formatted: '', raw: '' });
   const [error, setError] = useState(null);
   const [copied, setCopied] = useState(false);
+  const [formatOptions, setFormatOptions] = useState({
+    includeSeconds: true,
+    use24Hour: false,
+    showTimezone: true,
+    unit: 'seconds', // 'seconds' or 'milliseconds'
+  });
 
   const timezones = [
     'UTC',
@@ -16,17 +23,19 @@ const TimestampConverter = () => {
     'America/Los_Angeles',
     'Europe/London',
     'Asia/Tokyo',
-    'Australia/Sydney'
+    'Australia/Sydney',
+    'Asia/Dubai',
+    'Europe/Paris',
   ];
 
-  const convertTimestampToDate = (timestamp) => {
+  const convertTimestampToDate = useCallback((timestamp) => {
     const num = Number(timestamp);
-    if (isNaN(num)) {
-      throw new Error('Invalid timestamp: Must be a number');
-    }
+    if (isNaN(num)) throw new Error('Invalid timestamp: Must be a number');
 
-    // Detect if timestamp is in seconds or milliseconds
-    const date = new Date(num < 1e12 ? num * 1000 : num); // Assume seconds if < 1 trillion, else milliseconds
+    const adjustedTimestamp = formatOptions.unit === 'seconds' ? num * 1000 : num;
+    const date = new Date(adjustedTimestamp);
+    if (isNaN(date.getTime())) throw new Error('Invalid timestamp value');
+
     const options = {
       timeZone: timezone,
       year: 'numeric',
@@ -34,27 +43,28 @@ const TimestampConverter = () => {
       day: 'numeric',
       hour: '2-digit',
       minute: '2-digit',
-      second: '2-digit',
-      hour12: true
+      second: formatOptions.includeSeconds ? '2-digit' : undefined,
+      hour12: !formatOptions.use24Hour,
     };
 
-    return date.toLocaleString('en-US', options) + ` (${timezone})`;
-  };
+    const formatted = date.toLocaleString('en-US', options) + 
+      (formatOptions.showTimezone ? ` (${timezone})` : '');
+    return { formatted, raw: date.getTime() };
+  }, [timezone, formatOptions]);
 
-  const convertDateToTimestamp = (dateString) => {
+  const convertDateToTimestamp = useCallback((dateString) => {
     const date = new Date(dateString);
-    if (isNaN(date.getTime())) {
-      throw new Error('Invalid date format');
-    }
+    if (isNaN(date.getTime())) throw new Error('Invalid date format');
 
-    // Adjust for timezone
     const utcDate = new Date(date.toLocaleString('en-US', { timeZone: timezone }));
-    return Math.floor(utcDate.getTime() / 1000); // Return in seconds
-  };
+    const timestamp = utcDate.getTime();
+    const raw = formatOptions.unit === 'seconds' ? Math.floor(timestamp / 1000) : timestamp;
+    return { formatted: raw.toString(), raw };
+  }, [timezone, formatOptions]);
 
   const processInput = () => {
     setError(null);
-    setOutput('');
+    setOutput({ formatted: '', raw: '' });
     setCopied(false);
 
     if (!inputValue.trim()) {
@@ -66,7 +76,7 @@ const TimestampConverter = () => {
       const result = mode === 'timestampToDate'
         ? convertTimestampToDate(inputValue)
         : convertDateToTimestamp(inputValue);
-      setOutput(result.toString());
+      setOutput(result);
     } catch (err) {
       setError(err.message);
     }
@@ -78,61 +88,76 @@ const TimestampConverter = () => {
   };
 
   const handleCopy = () => {
-    if (output) {
-      navigator.clipboard.writeText(output);
+    if (output.formatted) {
+      navigator.clipboard.writeText(output.formatted);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     }
   };
 
+  const handleDownload = () => {
+    if (output.formatted) {
+      const blob = new Blob([output.formatted], { type: 'text/plain' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `timestamp-${Date.now()}.txt`;
+      link.click();
+      URL.revokeObjectURL(url);
+    }
+  };
+
+  const handleReset = () => {
+    setInputValue('');
+    setOutput({ formatted: '', raw: '' });
+    setError(null);
+    setCopied(false);
+  };
+
   return (
-    <div className="w-full max-w-4xl mx-auto my-8">
-      <div className="bg-white rounded-lg shadow-lg p-6">
-        <h2 className="text-2xl font-bold mb-4 text-gray-800">Timestamp Converter</h2>
+    <div className="min-h-screen  flex items-center justify-center ">
+      <div className="w-full  bg-white rounded-xl shadow-lg p-6 sm:p-8">
+        <h2 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-6 flex items-center">
+          <FaClock className="mr-2" /> Timestamp Converter
+        </h2>
 
         {/* Input Form */}
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-6">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
               {mode === 'timestampToDate' ? 'UNIX Timestamp' : 'Date/Time'}
             </label>
             <input
               type={mode === 'timestampToDate' ? 'number' : 'datetime-local'}
               value={inputValue}
               onChange={(e) => setInputValue(e.target.value)}
-              className="w-full p-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder={mode === 'timestampToDate' ? 'e.g., 1638316800' : ''}
-              step={mode === 'timestampToDate' ? '1' : '1'}
+              className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+              placeholder={mode === 'timestampToDate' ? `e.g., ${formatOptions.unit === 'seconds' ? '1638316800' : '1638316800000'}` : ''}
+              step="1"
             />
           </div>
 
-          <div className="flex gap-4">
-            <div className="flex-1">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Mode
-              </label>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Mode</label>
               <select
                 value={mode}
                 onChange={(e) => {
                   setMode(e.target.value);
-                  setInputValue('');
-                  setOutput('');
-                  setError(null);
+                  handleReset();
                 }}
-                className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               >
                 <option value="timestampToDate">Timestamp to Date</option>
                 <option value="dateToTimestamp">Date to Timestamp</option>
               </select>
             </div>
-            <div className="flex-1">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Timezone
-              </label>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Timezone</label>
               <select
                 value={timezone}
                 onChange={(e) => setTimezone(e.target.value)}
-                className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               >
                 {timezones.map(tz => (
                   <option key={tz} value={tz}>{tz}</option>
@@ -141,52 +166,115 @@ const TimestampConverter = () => {
             </div>
           </div>
 
-          <button
-            type="submit"
-            className="w-full py-2 px-4 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
-          >
-            Convert
-          </button>
+          {/* Format Options */}
+          <div className="p-4 bg-gray-50 rounded-lg">
+            <h3 className="text-lg font-semibold text-gray-700 mb-3">Format Options</h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <label className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  checked={formatOptions.includeSeconds}
+                  onChange={(e) => setFormatOptions(prev => ({ ...prev, includeSeconds: e.target.checked }))}
+                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                />
+                <span className="text-sm text-gray-600">Include Seconds</span>
+              </label>
+              <label className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  checked={formatOptions.use24Hour}
+                  onChange={(e) => setFormatOptions(prev => ({ ...prev, use24Hour: e.target.checked }))}
+                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                />
+                <span className="text-sm text-gray-600">24-Hour Format</span>
+              </label>
+              <label className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  checked={formatOptions.showTimezone}
+                  onChange={(e) => setFormatOptions(prev => ({ ...prev, showTimezone: e.target.checked }))}
+                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                />
+                <span className="text-sm text-gray-600">Show Timezone</span>
+              </label>
+              <div>
+                <select
+                  value={formatOptions.unit}
+                  onChange={(e) => setFormatOptions(prev => ({ ...prev, unit: e.target.value }))}
+                  className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                >
+                  <option value="seconds">Seconds</option>
+                  <option value="milliseconds">Milliseconds</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex flex-col sm:flex-row gap-3">
+            <button
+              type="submit"
+              className="flex-1 py-3 px-4 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
+              disabled={!inputValue.trim()}
+            >
+              Convert
+            </button>
+            <button
+              type="button"
+              onClick={handleReset}
+              className="flex-1 py-3 px-4 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors flex items-center justify-center"
+            >
+              <FaSync className="mr-2" /> Reset
+            </button>
+          </div>
         </form>
 
         {/* Error Message */}
         {error && (
-          <div className="mt-4 p-3 bg-red-100 text-red-700 rounded-md">
+          <div className="mt-6 p-4 bg-red-50 text-red-700 rounded-lg border border-red-200">
             {error}
           </div>
         )}
 
         {/* Output */}
-        {output && (
-          <div className="mt-6">
-            <div className="flex justify-between items-center mb-2">
+        {output.formatted && (
+          <div className="mt-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
+            <div className="flex justify-between items-center mb-3">
               <h3 className="font-semibold text-gray-700">
-                {mode === 'timestampToDate' ? 'Converted Date' : 'UNIX Timestamp (seconds)'}
+                {mode === 'timestampToDate' ? 'Converted Date' : `UNIX Timestamp (${formatOptions.unit})`}
               </h3>
-              <button
-                onClick={handleCopy}
-                className={`px-3 py-1 text-sm rounded transition-colors ${
-                  copied ? 'bg-green-500 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                }`}
-              >
-                {copied ? 'Copied!' : 'Copy'}
-              </button>
+              <div className="flex gap-2">
+                <button
+                  onClick={handleCopy}
+                  className={`py-2 px-4 rounded-lg transition-colors flex items-center ${
+                    copied ? 'bg-green-500 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                  }`}
+                >
+                  <FaCopy className="mr-2" /> {copied ? 'Copied!' : 'Copy'}
+                </button>
+                <button
+                  onClick={handleDownload}
+                  className="py-2 px-4 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center"
+                >
+                  <FaDownload className="mr-2" /> Download
+                </button>
+              </div>
             </div>
-            <pre className="p-4 bg-gray-50 rounded-md text-sm font-mono text-gray-800 whitespace-pre-wrap break-all">
-              {output}
+            <pre className="p-4 bg-white rounded-md text-sm font-mono text-gray-800 whitespace-pre-wrap break-all border border-gray-200">
+              {output.formatted}
             </pre>
           </div>
         )}
 
-        {/* Notes */}
-        <div className="mt-4 text-sm text-gray-600">
-          <p>
-            Convert between UNIX timestamps and human-readable dates.
-          </p>
-          <ul className="list-disc pl-5 mt-1">
-            <li>Timestamp to Date: Enter seconds or milliseconds</li>
-            <li>Date to Timestamp: Returns seconds since Unix epoch (1970-01-01)</li>
-            <li>Supports multiple timezones</li>
+        {/* Features List */}
+        <div className="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
+          <h3 className="font-semibold text-blue-700 mb-2">Features</h3>
+          <ul className="list-disc list-inside text-blue-600 text-sm space-y-1">
+            <li>Convert timestamps to dates and vice versa</li>
+            <li>Support for seconds and milliseconds</li>
+            <li>Multiple timezone options</li>
+            <li>Customizable date format (seconds, 24-hour, timezone)</li>
+            <li>Copy and download results</li>
+            <li>Responsive design</li>
           </ul>
         </div>
       </div>
