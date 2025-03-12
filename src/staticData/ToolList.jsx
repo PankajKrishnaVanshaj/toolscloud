@@ -1802,7 +1802,6 @@ const ToolList = [
         desc: "Fine-tune colors, brightness, and contrast for perfect images.",
         code: "ImageColorAdjuster",
        },
-      // New 50 Image Tools
       {
         name: "Image Rotator",
         slug: "image-rotator",

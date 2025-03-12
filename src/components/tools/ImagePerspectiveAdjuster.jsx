@@ -1,6 +1,7 @@
 // components/ImagePerspectiveAdjuster.jsx
 "use client";
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useCallback } from "react";
+import { FaDownload, FaSync, FaUpload } from "react-icons/fa";
 
 const ImagePerspectiveAdjuster = () => {
   const [image, setImage] = useState(null);
@@ -12,31 +13,49 @@ const ImagePerspectiveAdjuster = () => {
     { x: 0, y: 300 },  // Bottom-left
   ]);
   const [draggingPoint, setDraggingPoint] = useState(null);
+  const [canvasSize, setCanvasSize] = useState({ width: 600, height: 600 });
+  const [gridVisible, setGridVisible] = useState(false);
   const canvasRef = useRef(null);
   const containerRef = useRef(null);
+  const fileInputRef = useRef(null);
 
   // Handle image upload
-  const handleImageUpload = (e) => {
+  const handleImageUpload = useCallback((e) => {
     const file = e.target.files[0];
     if (file) {
       const url = URL.createObjectURL(file);
       setImage(file);
       setPreviewUrl(url);
+      // Reset points to fit new image size after load
+      const img = new Image();
+      img.onload = () => {
+        const aspectRatio = img.width / img.height;
+        const newWidth = Math.min(600, img.width);
+        const newHeight = newWidth / aspectRatio;
+        setCanvasSize({ width: newWidth, height: newHeight });
+        setPoints([
+          { x: 0, y: 0 },
+          { x: newWidth, y: 0 },
+          { x: newWidth, y: newHeight },
+          { x: 0, y: newHeight },
+        ]);
+      };
+      img.src = url;
     }
-  };
+  }, []);
 
   // Update canvas with perspective transformation
-  const updatePerspective = () => {
+  const updatePerspective = useCallback(() => {
     if (!image || !canvasRef.current) return;
-    
+
     const canvas = canvasRef.current;
     const ctx = canvas.getContext("2d");
     const img = new Image();
-    
+
     img.onload = () => {
-      canvas.width = 600;
-      canvas.height = 600;
-      
+      canvas.width = canvasSize.width;
+      canvas.height = canvasSize.height;
+
       // Clear canvas
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
@@ -47,28 +66,40 @@ const ImagePerspectiveAdjuster = () => {
         [img.width, img.height],
         [0, img.height],
       ];
-      
-      const destPoints = points.map(p => [p.x, p.y]);
-      
-      // Calculate perspective transform matrix
+
+      const destPoints = points.map((p) => [p.x, p.y]);
       const matrix = getPerspectiveTransform(srcPoints, destPoints);
-      
+
       // Apply transform
-      ctx.setTransform(
-        matrix[0], matrix[3], matrix[1],
-        matrix[4], matrix[2], matrix[5]
-      );
-      
+      ctx.setTransform(matrix[0], matrix[3], matrix[1], matrix[4], matrix[2], matrix[5]);
       ctx.drawImage(img, 0, 0);
-      
-      // Reset transform for controls
+
+      // Reset transform for grid and controls
       ctx.setTransform(1, 0, 0, 1, 0, 0);
-      
-      setPreviewUrl(canvas.toDataURL());
+
+      // Draw grid if enabled
+      if (gridVisible) {
+        ctx.strokeStyle = "rgba(0, 0, 0, 0.2)";
+        ctx.lineWidth = 1;
+        for (let x = 0; x <= canvas.width; x += 50) {
+          ctx.beginPath();
+          ctx.moveTo(x, 0);
+          ctx.lineTo(x, canvas.height);
+          ctx.stroke();
+        }
+        for (let y = 0; y <= canvas.height; y += 50) {
+          ctx.beginPath();
+          ctx.moveTo(0, y);
+          ctx.lineTo(canvas.width, y);
+          ctx.stroke();
+        }
+      }
+
+      setPreviewUrl(canvas.toDataURL("image/png"));
     };
-    
+
     img.src = URL.createObjectURL(image);
-  };
+  }, [image, points, canvasSize, gridVisible]);
 
   // Handle mouse events for dragging points
   const handleMouseDown = (index) => (e) => {
@@ -77,11 +108,11 @@ const ImagePerspectiveAdjuster = () => {
 
   const handleMouseMove = (e) => {
     if (draggingPoint === null || !containerRef.current) return;
-    
+
     const rect = containerRef.current.getBoundingClientRect();
-    const x = Math.max(0, Math.min(e.clientX - rect.left, rect.width));
-    const y = Math.max(0, Math.min(e.clientY - rect.top, rect.height));
-    
+    const x = Math.max(0, Math.min(e.clientX - rect.left, canvasSize.width));
+    const y = Math.max(0, Math.min(e.clientY - rect.top, canvasSize.height));
+
     const newPoints = [...points];
     newPoints[draggingPoint] = { x, y };
     setPoints(newPoints);
@@ -96,7 +127,7 @@ const ImagePerspectiveAdjuster = () => {
   const downloadImage = () => {
     if (!canvasRef.current) return;
     const link = document.createElement("a");
-    link.download = "perspective-adjusted.png";
+    link.download = `perspective-adjusted-${Date.now()}.png`;
     link.href = canvasRef.current.toDataURL("image/png");
     link.click();
   };
@@ -105,84 +136,136 @@ const ImagePerspectiveAdjuster = () => {
   const resetPoints = () => {
     setPoints([
       { x: 0, y: 0 },
-      { x: 300, y: 0 },
-      { x: 300, y: 300 },
-      { x: 0, y: 300 },
+      { x: canvasSize.width, y: 0 },
+      { x: canvasSize.width, y: canvasSize.height },
+      { x: 0, y: canvasSize.height },
     ]);
     updatePerspective();
   };
 
+  // Reset everything
+  const resetAll = () => {
+    setImage(null);
+    setPreviewUrl(null);
+    setPoints([
+      { x: 0, y: 0 },
+      { x: 300, y: 0 },
+      { x: 300, y: 300 },
+      { x: 0, y: 300 },
+    ]);
+    setCanvasSize({ width: 600, height: 600 });
+    setGridVisible(false);
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  };
+
   useEffect(() => {
     if (image) updatePerspective();
-  }, [image]);
+  }, [image, points, gridVisible, updatePerspective]);
 
   return (
-    <div className="min-h-screen bg-gray-100 py-8 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-5xl mx-auto">
-        <h1 className="text-3xl font-bold text-center mb-8 text-gray-800">
-          Perspective Adjuster
+    <div className="min-h-screen  flex items-center justify-center ">
+      <div className="w-full  bg-white rounded-xl shadow-lg p-6 sm:p-8">
+        <h1 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-6 text-center">
+          Image Perspective Adjuster
         </h1>
 
-        <div className="bg-white rounded-xl shadow-lg p-6">
-          {/* Upload Section */}
-          <div className="mb-6">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Upload Image
-            </label>
-            <input
-              type="file"
-              accept="image/*"
-              onChange={handleImageUpload}
-              className="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
+        {/* Upload Section */}
+        <div className="mb-6">
+          <input
+            type="file"
+            accept="image/*"
+            ref={fileInputRef}
+            onChange={handleImageUpload}
+            className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+          />
+        </div>
 
-          {/* Preview and Controls */}
-          {previewUrl && (
-            <div className="space-y-6">
-              <div
-                ref={containerRef}
-                className="relative w-[600px] h-[600px] mx-auto"
-                onMouseMove={handleMouseMove}
-                onMouseUp={handleMouseUp}
-                onMouseLeave={handleMouseUp}
-              >
-                <img
-                  src={previewUrl}
-                  alt="Preview"
-                  className="w-full h-full object-contain"
+        {/* Preview and Controls */}
+        {previewUrl && (
+          <div className="space-y-6">
+            <div
+              ref={containerRef}
+              className="relative mx-auto"
+              style={{ width: canvasSize.width, height: canvasSize.height }}
+              onMouseMove={handleMouseMove}
+              onMouseUp={handleMouseUp}
+              onMouseLeave={handleMouseUp}
+            >
+              <img
+                src={previewUrl}
+                alt="Preview"
+                className="w-full h-full object-contain rounded-lg shadow-md"
+              />
+              {points.map((point, index) => (
+                <div
+                  key={index}
+                  className="absolute w-4 h-4 bg-blue-500 rounded-full cursor-move transform -translate-x-1/2 -translate-y-1/2 hover:bg-blue-700 transition-colors"
+                  style={{ left: point.x, top: point.y }}
+                  onMouseDown={handleMouseDown(index)}
                 />
-                {points.map((point, index) => (
-                  <div
-                    key={index}
-                    className="absolute w-4 h-4 bg-blue-500 rounded-full cursor-move transform -translate-x-1/2 -translate-y-1/2"
-                    style={{ left: point.x, top: point.y }}
-                    onMouseDown={handleMouseDown(index)}
-                  />
-                ))}
-                <canvas ref={canvasRef} className="hidden" />
-              </div>
-
-              <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <button
-                  onClick={resetPoints}
-                  className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-md transition-colors"
-                >
-                  Reset
-                </button>
-                <button
-                  onClick={downloadImage}
-                  className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-md transition-colors"
-                >
-                  Download
-                </button>
-              </div>
-
-              <p className="text-sm text-gray-500 text-center">
-                Drag the blue points to adjust perspective
-              </p>
+              ))}
+              <canvas ref={canvasRef} className="hidden" />
             </div>
-          )}
+
+            {/* Controls */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="flex items-center justify-between">
+                <label className="text-sm font-medium text-gray-700">Show Grid</label>
+                <input
+                  type="checkbox"
+                  checked={gridVisible}
+                  onChange={(e) => setGridVisible(e.target.checked)}
+                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                />
+              </div>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <button
+                onClick={resetPoints}
+                className="flex-1 py-2 px-4 bg-gray-600 text-white rounded-md hover:bg-gray-700 transition-colors flex items-center justify-center"
+              >
+                <FaSync className="mr-2" /> Reset Points
+              </button>
+              <button
+                onClick={resetAll}
+                className="flex-1 py-2 px-4 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors flex items-center justify-center"
+              >
+                <FaSync className="mr-2" /> Reset All
+              </button>
+              <button
+                onClick={downloadImage}
+                className="flex-1 py-2 px-4 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors flex items-center justify-center"
+              >
+                <FaDownload className="mr-2" /> Download
+              </button>
+            </div>
+
+            <p className="text-sm text-gray-500 text-center">
+              Drag the blue points to adjust the perspective
+            </p>
+          </div>
+        )}
+
+        {!previewUrl && (
+          <div className="text-center p-6 bg-gray-50 rounded-lg">
+            <FaUpload className="mx-auto text-gray-400 text-3xl mb-2" />
+            <p className="text-gray-500 italic">Upload an image to start adjusting</p>
+          </div>
+        )}
+
+        {/* Features */}
+        <div className="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
+          <h3 className="font-semibold text-blue-700 mb-2">Features</h3>
+          <ul className="list-disc list-inside text-blue-600 text-sm space-y-1">
+            <li>Adjust perspective with draggable points</li>
+            <li>Dynamic canvas size based on image aspect ratio</li>
+            <li>Optional grid overlay for precision</li>
+            <li>Download adjusted image as PNG</li>
+            <li>Responsive design with Tailwind CSS</li>
+            <li>Real-time preview</li>
+          </ul>
         </div>
       </div>
     </div>
@@ -217,7 +300,7 @@ function getPerspectiveTransform(src, dst) {
 function solveLinearSystem(a, b) {
   const n = 8;
   const x = new Array(n).fill(0);
-  
+
   for (let i = 0; i < n; i++) {
     let maxEl = Math.abs(a[i][i]);
     let maxRow = i;
@@ -248,7 +331,7 @@ function solveLinearSystem(a, b) {
       b[k] -= a[k][i] * x[i];
     }
   }
-  
+
   return x;
 }
 

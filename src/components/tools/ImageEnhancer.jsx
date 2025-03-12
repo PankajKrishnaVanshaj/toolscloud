@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useCallback } from "react";
+import { FaDownload, FaSync, FaUpload, FaUndo, FaRedo } from "react-icons/fa";
 
 const ImageEnhancer = () => {
   const [image, setImage] = useState(null);
@@ -19,37 +20,45 @@ const ImageEnhancer = () => {
     dropShadowColor: "#000000",
     vignette: 0,
     pixelate: 0,
+    noise: 0,
   });
-
+  const [history, setHistory] = useState([]);
+  const [historyIndex, setHistoryIndex] = useState(-1);
   const canvasRef = useRef(null);
   const imgRef = useRef(null);
+  const fileInputRef = useRef(null);
   const [originalSize, setOriginalSize] = useState({ width: 0, height: 0 });
 
-  const handleImageUpload = (e) => {
+  // Handle image upload
+  const handleImageUpload = useCallback((e) => {
     const file = e.target.files[0];
     if (file) {
       const reader = new FileReader();
       reader.onload = (event) => setImage(event.target.result);
       reader.readAsDataURL(file);
     }
-  };
+  }, []);
 
+  // Load image dimensions
   useEffect(() => {
     if (image) {
       const img = new Image();
       img.src = image;
       img.onload = () => {
         setOriginalSize({ width: img.width, height: img.height });
+        setHistory([]);
+        setHistoryIndex(-1);
         applyEnhancements();
       };
     }
   }, [image]);
 
+  // Apply enhancements when filters change
   useEffect(() => {
     applyEnhancements();
   }, [filters]);
 
-  const applyEnhancements = () => {
+  const applyEnhancements = useCallback(() => {
     if (!canvasRef.current || !imgRef.current) return;
 
     const canvas = canvasRef.current;
@@ -58,11 +67,9 @@ const ImageEnhancer = () => {
 
     canvas.width = originalSize.width;
     canvas.height = originalSize.height;
-
-    // Reset the canvas
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    // Apply core filters
+    // Apply CSS filters
     ctx.filter = `
       brightness(${filters.brightness}%)
       contrast(${filters.contrast}%)
@@ -72,13 +79,12 @@ const ImageEnhancer = () => {
       invert(${filters.invert}%)
       blur(${filters.blur}px)
       sepia(${filters.sepia}%)
-      opacity(${filters.opacity}%)
+      opacity(${filters.opacity / 100})
       drop-shadow(${filters.dropShadowSize}px ${filters.dropShadowSize}px ${filters.dropShadowSize}px ${filters.dropShadowColor})
     `;
-
     ctx.drawImage(img, 0, 0, originalSize.width, originalSize.height);
 
-    // Apply vignette effect
+    // Apply vignette
     if (filters.vignette > 0) {
       const gradient = ctx.createRadialGradient(
         originalSize.width / 2,
@@ -94,47 +100,80 @@ const ImageEnhancer = () => {
       ctx.fillRect(0, 0, canvas.width, canvas.height);
     }
 
-    // Apply pixelation effect
+    // Apply pixelation
     if (filters.pixelate > 0) {
-      const pixelSize = filters.pixelate;
-      for (let y = 0; y < originalSize.height; y += pixelSize) {
-        for (let x = 0; x < originalSize.width; x += pixelSize) {
-          const pixel = ctx.getImageData(x, y, pixelSize, pixelSize);
-          const avgColor = averageColor(pixel.data); // Calculate average pixel color
-          ctx.fillStyle = `rgb(${avgColor.r}, ${avgColor.g}, ${avgColor.b})`;
-          ctx.fillRect(x, y, pixelSize, pixelSize);
-        }
+      const pixelSize = Math.max(1, Math.round(filters.pixelate));
+      const tempCanvas = document.createElement("canvas");
+      const tempCtx = tempCanvas.getContext("2d");
+      tempCanvas.width = canvas.width;
+      tempCanvas.height = canvas.height;
+      tempCtx.drawImage(canvas, 0, 0);
+      ctx.imageSmoothingEnabled = false;
+      ctx.drawImage(
+        tempCanvas,
+        0,
+        0,
+        canvas.width / pixelSize,
+        canvas.height / pixelSize
+      );
+      ctx.drawImage(
+        canvas,
+        0,
+        0,
+        canvas.width / pixelSize,
+        canvas.height / pixelSize,
+        0,
+        0,
+        canvas.width,
+        canvas.height
+      );
+    }
+
+    // Apply noise
+    if (filters.noise > 0) {
+      const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      const data = imageData.data;
+      const noiseLevel = filters.noise / 100;
+      for (let i = 0; i < data.length; i += 4) {
+        const noise = (Math.random() - 0.5) * noiseLevel * 255;
+        data[i] = Math.min(255, Math.max(0, data[i] + noise));
+        data[i + 1] = Math.min(255, Math.max(0, data[i + 1] + noise));
+        data[i + 2] = Math.min(255, Math.max(0, data[i + 2] + noise));
       }
+      ctx.putImageData(imageData, 0, 0);
+    }
+  }, [filters, originalSize]);
+
+  // History management
+  const saveToHistory = useCallback(() => {
+    const newHistory = history.slice(0, historyIndex + 1);
+    newHistory.push({ ...filters });
+    setHistory(newHistory.slice(-10)); // Keep last 10 states
+    setHistoryIndex(newHistory.length - 1);
+  }, [filters, history, historyIndex]);
+
+  const handleFilterChange = (filter, value) => {
+    saveToHistory();
+    setFilters((prev) => ({ ...prev, [filter]: value }));
+  };
+
+  const handleUndo = () => {
+    if (historyIndex > 0) {
+      setFilters(history[historyIndex - 1]);
+      setHistoryIndex((prev) => prev - 1);
     }
   };
 
-  const averageColor = (data) => {
-    let r = 0,
-      g = 0,
-      b = 0;
-    const length = data.length / 4;
-    for (let i = 0; i < data.length; i += 4) {
-      r += data[i];
-      g += data[i + 1];
-      b += data[i + 2];
+  const handleRedo = () => {
+    if (historyIndex < history.length - 1) {
+      setFilters(history[historyIndex + 1]);
+      setHistoryIndex((prev) => prev + 1);
     }
-    return {
-      r: Math.round(r / length),
-      g: Math.round(g / length),
-      b: Math.round(b / length),
-    };
   };
 
-  const handleDownload = () => {
-    if (!image) return;
-
-    const link = document.createElement("a");
-    link.href = canvasRef.current.toDataURL("image/png");
-    link.download = "enhanced-image.png";
-    link.click();
-  };
-
+  // Reset filters
   const resetFilters = () => {
+    saveToHistory();
     setFilters({
       brightness: 100,
       contrast: 100,
@@ -150,85 +189,173 @@ const ImageEnhancer = () => {
       dropShadowColor: "#000000",
       vignette: 0,
       pixelate: 0,
+      noise: 0,
     });
   };
 
+  // Download enhanced image
+  const handleDownload = () => {
+    if (!canvasRef.current) return;
+    const link = document.createElement("a");
+    link.href = canvasRef.current.toDataURL("image/png");
+    link.download = `enhanced-image-${Date.now()}.png`;
+    link.click();
+  };
+
   return (
-    <div className="mx-auto p-5 bg-white shadow-lg rounded-2xl">
-      <input
-        type="file"
-        accept="image/*"
-        className="mb-3 w-full p-2 border rounded-lg"
-        onChange={handleImageUpload}
-      />
+    <div className="min-h-screen  flex items-center justify-center ">
+      <div className="w-full  bg-white rounded-xl shadow-lg p-6 sm:p-8">
+        <h2 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-6">Image Enhancer</h2>
 
-      {image && (
-        <div className="grid grid-cols-2 gap-4 mb-4">
-          <div>
-            <h3 className="font-bold mb-2">Original Image</h3>
-            <img
-              ref={imgRef}
-              src={image}
-              alt="Uploaded"
-              className="w-full max-h-60 object-contain rounded-lg border"
-            />
-            <p className="text-sm mt-2">
-              Size: {originalSize.width} x {originalSize.height}px
-            </p>
-          </div>
-          <div>
-            <h3 className="font-bold mb-2">Enhanced Image</h3>
-            <canvas
-              ref={canvasRef}
-              className="w-full max-h-60 object-contain rounded-lg border"
-            ></canvas>
-          </div>
+        {/* File Upload */}
+        <div className="mb-6">
+          <input
+            type="file"
+            accept="image/*"
+            ref={fileInputRef}
+            onChange={handleImageUpload}
+            className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+          />
         </div>
-      )}
 
-      <div className="flex flex-wrap gap-4 justify-center">
-        {Object.keys(filters).map((filter) => (
-          <div key={filter} className="flex flex-row items-center gap-4">
-            <label className="block font-medium capitalize text-gray-700">
-              {filter.replace(/([A-Z])/g, " $1")}:
-            </label>
-            <input
-              type="range"
-              min="0"
-              max={filter === "hueRotate" ? "360" : "200"}
-              value={filters[filter]}
-              onChange={(e) =>
-                setFilters({ ...filters, [filter]: e.target.value })
-              }
-              className="flex-1 h-2 bg-gray-300 rounded-lg appearance-none cursor-pointer accent-primary"
-            />
-            {filter === "dropShadowColor" && (
-              <input
-                type="color"
-                value={filters.dropShadowColor}
-                onChange={(e) =>
-                  setFilters({ ...filters, dropShadowColor: e.target.value })
-                }
-                className="w-10 h-10 p-0 border rounded-md"
-              />
+        {image && (
+          <div className="space-y-6">
+            {/* Image Previews */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+              <div>
+                <h3 className="text-lg font-semibold text-gray-700 mb-2">Original Image</h3>
+                <img
+                  ref={imgRef}
+                  src={image}
+                  alt="Uploaded"
+                  className="w-full max-h-80 object-contain rounded-lg shadow-md"
+                />
+                <p className="text-sm text-gray-600 mt-2">
+                  Size: {originalSize.width} x {originalSize.height}px
+                </p>
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold text-gray-700 mb-2">Enhanced Image</h3>
+                <canvas
+                  ref={canvasRef}
+                  className="w-full max-h-80 object-contain rounded-lg shadow-md"
+                />
+              </div>
+            </div>
+
+            {/* Filter Controls */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {[
+                { name: "brightness", min: 0, max: 200, unit: "%" },
+                { name: "contrast", min: 0, max: 200, unit: "%" },
+                { name: "saturation", min: 0, max: 200, unit: "%" },
+                { name: "hueRotate", min: -180, max: 180, unit: "deg" },
+                { name: "grayscale", min: 0, max: 100, unit: "%" },
+                { name: "invert", min: 0, max: 100, unit: "%" },
+                { name: "blur", min: 0, max: 10, step: 0.1, unit: "px" },
+                { name: "sepia", min: 0, max: 100, unit: "%" },
+                { name: "opacity", min: 0, max: 100, unit: "%" },
+                { name: "dropShadowSize", min: 0, max: 20, unit: "px" },
+                { name: "vignette", min: 0, max: 100, unit: "%" },
+                { name: "pixelate", min: 0, max: 20, unit: "px" },
+                { name: "noise", min: 0, max: 100, unit: "%" },
+              ].map(({ name, min, max, step = 1, unit }) => (
+                <div key={name}>
+                  <label className="block text-sm font-medium text-gray-700 mb-1 capitalize">
+                    {name.replace(/([A-Z])/g, " $1")} ({filters[name]}
+                    {unit})
+                  </label>
+                  <input
+                    type="range"
+                    min={min}
+                    max={max}
+                    step={step}
+                    value={filters[name]}
+                    onChange={(e) => handleFilterChange(name, parseFloat(e.target.value))}
+                    className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-500"
+                  />
+                  {name === "dropShadowColor" && (
+                    <input
+                      type="color"
+                      value={filters.dropShadowColor}
+                      onChange={(e) => handleFilterChange("dropShadowColor", e.target.value)}
+                      className="w-full h-8 mt-2 rounded-md cursor-pointer"
+                    />
+                  )}
+                </div>
+              ))}
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex flex-col sm:flex-row gap-4">
+              <button
+                onClick={handleUndo}
+                disabled={historyIndex <= 0}
+                className="flex-1 py-2 px-4 bg-gray-600 text-white rounded-md hover:bg-gray-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors flex items-center justify-center"
+              >
+                <FaUndo className="mr-2" /> Undo
+              </button>
+              <button
+                onClick={handleRedo}
+                disabled={historyIndex >= history.length - 1}
+                className="flex-1 py-2 px-4 bg-gray-600 text-white rounded-md hover:bg-gray-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors flex items-center justify-center"
+              >
+                <FaRedo className="mr-2" /> Redo
+              </button>
+              <button
+                onClick={resetFilters}
+                className="flex-1 py-2 px-4 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors flex items-center justify-center"
+              >
+                <FaSync className="mr-2" /> Reset
+              </button>
+              <button
+                onClick={handleDownload}
+                className="flex-1 py-2 px-4 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors flex items-center justify-center"
+              >
+                <FaDownload className="mr-2" /> Download
+              </button>
+            </div>
+
+            {/* History */}
+            {history.length > 0 && (
+              <div className="p-4 bg-gray-50 rounded-lg">
+                <h3 className="font-semibold text-gray-700 mb-2">Adjustment History</h3>
+                <ul className="text-sm text-gray-600 space-y-1 max-h-32 overflow-y-auto">
+                  {history.slice().reverse().map((state, index) => (
+                    <li
+                      key={index}
+                      className={index === history.length - 1 - historyIndex ? "font-bold" : ""}
+                    >
+                      {Object.entries(state)
+                        .map(([key, value]) => `${key}: ${value}`)
+                        .join(", ")}
+                    </li>
+                  ))}
+                </ul>
+              </div>
             )}
           </div>
-        ))}
-      </div>
+        )}
 
-      <div className="flex flex-row gap-4 mt-2">
-        <button
-          className="flex-1 bg-gradient-to-r from-primary to-secondary text-transparent bg-clip-text border hover:border-secondary p-2 rounded-lg"
-          onClick={resetFilters}
-        >
-          Reset Filters
-        </button>
-        <button
-          className="flex-1 bg-gradient-to-r from-primary to-secondary text-transparent bg-clip-text border hover:border-secondary p-2 rounded-lg"
-          onClick={handleDownload}
-        >
-          Download Image
-        </button>
+        {!image && (
+          <div className="text-center p-6 bg-gray-50 rounded-lg">
+            <FaUpload className="mx-auto text-gray-400 text-3xl mb-2" />
+            <p className="text-gray-500 italic">Upload an image to start enhancing</p>
+          </div>
+        )}
+
+        {/* Features */}
+        <div className="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
+          <h3 className="font-semibold text-blue-700 mb-2">Features</h3>
+          <ul className="list-disc list-inside text-blue-600 text-sm space-y-1">
+            <li>Multiple enhancement filters (brightness, contrast, etc.)</li>
+            <li>Special effects: vignette, pixelate, noise</li>
+            <li>Undo/redo functionality with history</li>
+            <li>Real-time preview with original comparison</li>
+            <li>Download as PNG</li>
+            <li>Responsive design with Tailwind CSS</li>
+          </ul>
+        </div>
       </div>
     </div>
   );

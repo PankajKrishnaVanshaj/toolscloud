@@ -1,6 +1,6 @@
 "use client";
-
-import { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useCallback } from "react";
+import { FaDownload, FaSync, FaUpload } from "react-icons/fa";
 
 const ImageCompressor = () => {
   const [image, setImage] = useState(null);
@@ -11,13 +11,17 @@ const ImageCompressor = () => {
   const [width, setWidth] = useState(0);
   const [height, setHeight] = useState(0);
   const [outputFormat, setOutputFormat] = useState("image/jpeg");
-  const [aspectRatio, setAspectRatio] = useState(false);
+  const [aspectRatio, setAspectRatio] = useState(true);
   const [originalAspectRatio, setOriginalAspectRatio] = useState(1);
   const [applyGrayscale, setApplyGrayscale] = useState(false);
   const [applyInvert, setApplyInvert] = useState(false);
+  const [compressionMode, setCompressionMode] = useState("balanced"); // New: fast, balanced, quality
+  const [isProcessing, setIsProcessing] = useState(false);
   const canvasRef = useRef(null);
+  const fileInputRef = useRef(null);
 
-  const handleImageUpload = (e) => {
+  // Handle image upload
+  const handleImageUpload = useCallback((e) => {
     const file = e.target.files[0];
     if (file) {
       setOriginalSize(file.size);
@@ -35,9 +39,13 @@ const ImageCompressor = () => {
       };
       reader.readAsDataURL(file);
     }
-  };
+  }, [quality]);
 
-  const compressImage = (img, newWidth, newHeight, newQuality) => {
+  // Compress image with options
+  const compressImage = useCallback((img, newWidth, newHeight, newQuality) => {
+    if (!canvasRef.current) return;
+    setIsProcessing(true);
+
     const canvas = canvasRef.current;
     const ctx = canvas.getContext("2d");
 
@@ -46,103 +54,94 @@ const ImageCompressor = () => {
 
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.drawImage(img, 0, 0, newWidth, newHeight);
-    const compressedBase64 = canvas.toDataURL(outputFormat, newQuality);
-    setCompressedImage(compressedBase64);
 
-    // Calculate compressed size in bytes (base64 size * 3/4)
-    const base64Length =
-      compressedBase64.length - "data:image/jpeg;base64,".length;
-    setCompressedSize(Math.floor((base64Length * 3) / 4));
-
-    // Apply grayscale filter
+    // Apply filters based on options
     if (applyGrayscale) {
       const imageData = ctx.getImageData(0, 0, newWidth, newHeight);
       for (let i = 0; i < imageData.data.length; i += 4) {
-        const avg =
-          (imageData.data[i] + imageData.data[i + 1] + imageData.data[i + 2]) /
-          3;
-        imageData.data[i] = avg; // Red
-        imageData.data[i + 1] = avg; // Green
-        imageData.data[i + 2] = avg; // Blue
+        const avg = (imageData.data[i] + imageData.data[i + 1] + imageData.data[i + 2]) / 3;
+        imageData.data[i] = avg;
+        imageData.data[i + 1] = avg;
+        imageData.data[i + 2] = avg;
       }
       ctx.putImageData(imageData, 0, 0);
     }
 
-    // Apply invert filter
     if (applyInvert) {
       const imageData = ctx.getImageData(0, 0, newWidth, newHeight);
       for (let i = 0; i < imageData.data.length; i += 4) {
-        imageData.data[i] = 255 - imageData.data[i]; // Red
-        imageData.data[i + 1] = 255 - imageData.data[i + 1]; // Green
-        imageData.data[i + 2] = 255 - imageData.data[i + 2]; // Blue
+        imageData.data[i] = 255 - imageData.data[i];
+        imageData.data[i + 1] = 255 - imageData.data[i + 1];
+        imageData.data[i + 2] = 255 - imageData.data[i + 2];
       }
       ctx.putImageData(imageData, 0, 0);
     }
 
-    setCompressedImage(canvas.toDataURL(outputFormat, newQuality));
-  };
+    // Adjust quality based on compression mode
+    let adjustedQuality = newQuality;
+    if (compressionMode === "fast") adjustedQuality = Math.max(0.3, newQuality - 0.2);
+    if (compressionMode === "quality") adjustedQuality = Math.min(1.0, newQuality + 0.2);
 
+    const compressedBase64 = canvas.toDataURL(outputFormat, adjustedQuality);
+    setCompressedImage(compressedBase64);
+
+    const base64Length = compressedBase64.length - `data:${outputFormat};base64,`.length;
+    setCompressedSize(Math.floor((base64Length * 3) / 4));
+    setIsProcessing(false);
+  }, [outputFormat, applyGrayscale, applyInvert, compressionMode]);
+
+  // Update compression on changes
   useEffect(() => {
     if (!image) return;
     const img = new Image();
     img.src = image;
-    img.onload = () => {
-      compressImage(img, width, height, quality);
-    };
-  }, [
-    width,
-    height,
-    quality,
-    outputFormat,
-    applyGrayscale,
-    applyInvert,
-    image,
-  ]);
+    img.onload = () => compressImage(img, width, height, quality);
+  }, [image, width, height, quality, outputFormat, applyGrayscale, applyInvert, compressionMode, compressImage]);
 
+  // Handle width and height changes with aspect ratio
   const handleWidthChange = (e) => {
-    const newWidth = parseInt(e.target.value, 10);
-    if (isNaN(newWidth)) return;
-
-    if (aspectRatio) {
+    const newWidth = parseInt(e.target.value, 10) || 0;
+    if (aspectRatio && newWidth > 0) {
       setHeight(Math.round(newWidth / originalAspectRatio));
     }
     setWidth(newWidth);
   };
 
   const handleHeightChange = (e) => {
-    const newHeight = parseInt(e.target.value, 10);
-    if (isNaN(newHeight)) return;
-
-    if (aspectRatio) {
+    const newHeight = parseInt(e.target.value, 10) || 0;
+    if (aspectRatio && newHeight > 0) {
       setWidth(Math.round(newHeight * originalAspectRatio));
     }
     setHeight(newHeight);
   };
 
+  // Download compressed image
   const handleDownload = () => {
     if (!compressedImage) return;
-
     const link = document.createElement("a");
     link.href = compressedImage;
-    link.download = `compressed-image.${outputFormat.split("/")[1]}`;
+    link.download = `compressed-image-${Date.now()}.${outputFormat.split("/")[1]}`;
     link.click();
   };
 
+  // Reset to defaults
   const handleReset = () => {
-    if (!image) return;
-    const img = new Image();
-    img.src = image;
-    img.onload = () => {
-      setWidth(img.width);
-      setHeight(img.height);
-      setQuality(0.7);
-      setOutputFormat("image/jpeg");
-      setApplyGrayscale(false);
-      setApplyInvert(false);
-      compressImage(img, img.width, img.height, 0.7);
-    };
+    setImage(null);
+    setCompressedImage(null);
+    setOriginalSize(0);
+    setCompressedSize(0);
+    setQuality(0.7);
+    setWidth(0);
+    setHeight(0);
+    setOutputFormat("image/jpeg");
+    setAspectRatio(true);
+    setApplyGrayscale(false);
+    setApplyInvert(false);
+    setCompressionMode("balanced");
+    if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
+  // Format file size
   const formatSize = (sizeInBytes) => {
     if (sizeInBytes < 1024) return `${sizeInBytes} B`;
     if (sizeInBytes < 1048576) return `${(sizeInBytes / 1024).toFixed(2)} KB`;
@@ -150,147 +149,189 @@ const ImageCompressor = () => {
   };
 
   return (
-    <div className="mx-auto p-5 bg-white shadow-lg rounded-2xl">
-      <input
-        type="file"
-        accept="image/*"
-        className="mb-3 w-full p-2 border rounded-lg"
-        onChange={handleImageUpload}
-      />
+    <div className="min-h-screen  flex items-center justify-center ">
+      <div className="w-full  bg-white rounded-xl shadow-lg p-6 sm:p-8">
+        <h2 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-6">Image Compressor</h2>
 
-      {/* Preview Original and Compressed */}
-      <div className="flex gap-4 mb-3">
+        {/* File Upload */}
+        <div className="mb-6">
+          <input
+            type="file"
+            accept="image/*"
+            ref={fileInputRef}
+            onChange={handleImageUpload}
+            className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+          />
+        </div>
+
         {image && (
-          <img
-            src={image}
-            alt="Original"
-            className="w-1/2 max-h-60 object-contain rounded-lg border"
-          />
+          <div className="space-y-6">
+            {/* Image Previews */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 relative">
+              <div>
+                <p className="text-sm text-gray-600 mb-2">Original ({formatSize(originalSize)})</p>
+                <img
+                  src={image}
+                  alt="Original"
+                  className="w-full h-auto max-h-64 object-contain rounded-lg shadow-md"
+                />
+              </div>
+              <div>
+                <p className="text-sm text-gray-600 mb-2">Compressed ({formatSize(compressedSize)})</p>
+                <img
+                  src={compressedImage}
+                  alt="Compressed"
+                  className="w-full h-auto max-h-64 object-contain rounded-lg shadow-md"
+                />
+              </div>
+              {isProcessing && (
+                <div className="absolute inset-0 flex items-center justify-center bg-gray-200 bg-opacity-75 rounded-lg">
+                  <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+                </div>
+              )}
+            </div>
+            <canvas ref={canvasRef} className="hidden" />
+
+            {/* Controls */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Quality ({quality})</label>
+                <input
+                  type="range"
+                  min="0.1"
+                  max="1.0"
+                  step="0.1"
+                  value={quality}
+                  onChange={(e) => setQuality(parseFloat(e.target.value))}
+                  className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-500"
+                  disabled={isProcessing}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Width (px)</label>
+                <input
+                  type="number"
+                  min="1"
+                  value={width}
+                  onChange={handleWidthChange}
+                  className="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500"
+                  disabled={isProcessing}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Height (px)</label>
+                <input
+                  type="number"
+                  min="1"
+                  value={height}
+                  onChange={handleHeightChange}
+                  className="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500"
+                  disabled={isProcessing || aspectRatio}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Output Format</label>
+                <select
+                  value={outputFormat}
+                  onChange={(e) => setOutputFormat(e.target.value)}
+                  className="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500"
+                  disabled={isProcessing}
+                >
+                  <option value="image/jpeg">JPEG</option>
+                  <option value="image/png">PNG</option>
+                  <option value="image/webp">WEBP</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Compression Mode</label>
+                <select
+                  value={compressionMode}
+                  onChange={(e) => setCompressionMode(e.target.value)}
+                  className="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500"
+                  disabled={isProcessing}
+                >
+                  <option value="fast">Fast (Lower Quality)</option>
+                  <option value="balanced">Balanced</option>
+                  <option value="quality">High Quality</option>
+                </select>
+              </div>
+            </div>
+
+            {/* Checkboxes */}
+            <div className="flex flex-col sm:flex-row gap-4">
+              <label className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  checked={aspectRatio}
+                  onChange={() => setAspectRatio(!aspectRatio)}
+                  className="accent-blue-500"
+                  disabled={isProcessing}
+                />
+                <span className="text-sm text-gray-700">Maintain Aspect Ratio</span>
+              </label>
+              <label className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  checked={applyGrayscale}
+                  onChange={() => setApplyGrayscale(!applyGrayscale)}
+                  className="accent-blue-500"
+                  disabled={isProcessing}
+                />
+                <span className="text-sm text-gray-700">Grayscale</span>
+              </label>
+              <label className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  checked={applyInvert}
+                  onChange={() => setApplyInvert(!applyInvert)}
+                  className="accent-blue-500"
+                  disabled={isProcessing}
+                />
+                <span className="text-sm text-gray-700">Invert Colors</span>
+              </label>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex flex-col sm:flex-row gap-4">
+              <button
+                onClick={handleReset}
+                disabled={isProcessing}
+                className="flex-1 py-2 px-4 bg-red-600 text-white rounded-md hover:bg-red-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors flex items-center justify-center"
+              >
+                <FaSync className="mr-2" /> Reset
+              </button>
+              <button
+                onClick={handleDownload}
+                disabled={!compressedImage || isProcessing}
+                className="flex-1 py-2 px-4 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors flex items-center justify-center"
+              >
+                <FaDownload className="mr-2" /> Download
+              </button>
+            </div>
+          </div>
         )}
-        {compressedImage && (
-          <img
-            src={compressedImage}
-            alt="Compressed Preview"
-            className="w-1/2 max-h-60 object-contain rounded-lg border"
-          />
+
+        {!image && (
+          <div className="text-center p-6 bg-gray-50 rounded-lg">
+            <FaUpload className="mx-auto text-gray-400 text-3xl mb-2" />
+            <p className="text-gray-500 italic">Upload an image to start compressing</p>
+          </div>
         )}
-      </div>
 
-      <label className="block mb-2 font-medium">Compression Quality</label>
-      <input
-        type="range"
-        min="0.1"
-        max="1.0"
-        step="0.1"
-        value={quality}
-        onChange={(e) => setQuality(parseFloat(e.target.value))}
-        className="w-full mb-3 accent-primary"
-      />
-      <p className="text-center text-sm mb-3">Quality: {quality}</p>
-
-      <div className="flex flex-col sm:flex-row gap-4">
-        {/* Width Input */}
-        <div className="flex-1">
-          <label className="block font-medium mb-1">Width</label>
-          <input
-            type="number"
-            value={width || ""}
-            onChange={handleWidthChange}
-            className="w-full p-2 border rounded-lg"
-          />
-        </div>
-
-        {/* Height Input */}
-        <div className="flex-1">
-          <label className="block font-medium mb-1">Height</label>
-          <input
-            type="number"
-            value={height || ""}
-            onChange={handleHeightChange}
-            disabled={aspectRatio}
-            className="w-full p-2 border rounded-lg"
-          />
-        </div>
-
-        {/* Output Format Dropdown */}
-        <div className="flex-1">
-          <label className="block font-medium mb-1">Output Format</label>
-          <select
-            value={outputFormat}
-            onChange={(e) => setOutputFormat(e.target.value)}
-            className="w-full p-2 border rounded-lg"
-          >
-            <option value="image/jpeg">JPEG</option>
-            <option value="image/png">PNG</option>
-            <option value="image/webp">WEBP</option>
-          </select>
+        {/* Features */}
+        <div className="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
+          <h3 className="font-semibold text-blue-700 mb-2">Features</h3>
+          <ul className="list-disc list-inside text-blue-600 text-sm space-y-1">
+            <li>Adjustable compression quality and dimensions</li>
+            <li>Multiple output formats (JPEG, PNG, WEBP)</li>
+            <li>Aspect ratio preservation option</li>
+            <li>Grayscale and invert filters</li>
+            <li>Compression mode selection (Fast, Balanced, Quality)</li>
+            <li>Real-time size comparison</li>
+            <li>Responsive design with Tailwind CSS</li>
+          </ul>
         </div>
       </div>
-      <div className="flex flex-col sm:flex-row gap-4">
-        <div className="flex-1 flex items-center gap-2">
-          <input
-            type="checkbox"
-            checked={aspectRatio}
-            onChange={() => setAspectRatio(!aspectRatio)}
-            className="accent-primary"
-          />
-          <label className="text-sm">Maintain Aspect Ratio</label>
-        </div>
-
-        <div className="flex-1 flex items-center gap-2">
-          <input
-            type="checkbox"
-            checked={applyGrayscale}
-            onChange={() => setApplyGrayscale(!applyGrayscale)}
-            className="accent-primary "
-          />
-          <label className="text-sm">Apply Grayscale</label>
-        </div>
-
-        <div className="flex-1 flex items-center gap-2">
-          <input
-            type="checkbox"
-            checked={applyInvert}
-            onChange={() => setApplyInvert(!applyInvert)}
-            className="accent-primary"
-          />
-          <label className="text-sm">Apply Invert Colors</label>
-        </div>
-
-        <div className="flex-1 flex items-center gap-2">
-          {/* Display Original and Compressed Image Sizes */}
-          {originalSize > 0 && (
-            <p className="text-sm mb-2">
-              Original Size: {formatSize(originalSize)}
-            </p>
-          )}
-        </div>
-        <div className="flex-1 flex items-center gap-2">
-          {compressedSize > 0 && (
-            <p className="text-sm mb-4">
-              Compressed Size: {formatSize(compressedSize)}
-            </p>
-          )}
-        </div>
-      </div>
-      <div className="flex gap-3">
-        <button
-          className="flex-1 bg-gradient-to-r from-primary to-secondary text-transparent bg-clip-text border hover:border-secondary p-2 rounded-lg"
-          onClick={handleReset}
-        >
-          Reset
-        </button>
-        {compressedImage && (
-          <button
-            className="flex-1 bg-gradient-to-r from-primary to-secondary text-transparent bg-clip-text border hover:border-secondary p-2 rounded-lg"
-            onClick={handleDownload}
-          >
-            Download Compressed Image
-          </button>
-        )}
-      </div>
-
-      <canvas ref={canvasRef} style={{ display: "none" }} />
     </div>
   );
 };
