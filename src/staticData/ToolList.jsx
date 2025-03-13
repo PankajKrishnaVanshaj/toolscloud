@@ -2616,7 +2616,6 @@ const ToolList = [
         desc: "Convert speed units like kilometers per hour, miles per hour, and meters per second.",
         code: "SpeedConverter",
        },
-      // New 50 Unit Converter Tools
       {
         name: "Area Converter",
         slug: "area-converter",
