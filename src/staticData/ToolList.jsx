@@ -2223,7 +2223,6 @@ const ToolList = [
         desc: "Secure your PDF documents with passwords.",
         code: "PDFPasswordProtector",
        },
-      // New 50 PDF Tools
       {
         name: "PDF to Excel",
         slug: "pdf-to-excel",

@@ -1,6 +1,6 @@
 // app/components/PDFFormCreator.jsx
-'use client'
-import React, { useState } from 'react'
+"use client";
+import React, { useState, useCallback } from "react";
 import {
   DndContext,
   closestCenter,
@@ -8,27 +8,30 @@ import {
   useSensors,
   PointerSensor,
   KeyboardSensor,
-} from '@dnd-kit/core'
+} from "@dnd-kit/core";
 import {
   SortableContext,
   useSortable,
   verticalListSortingStrategy,
-} from '@dnd-kit/sortable'
-import { CSS } from '@dnd-kit/utilities'
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
+import { PDFDocument, rgb } from "pdf-lib"; // For PDF generation
+import { FaDownload, FaTrash, FaPlus, FaFilePdf } from "react-icons/fa";
 
 // Sortable Item Component
-const SortableItem = ({ id, field, isSelected, onSelect, children }) => {
-  const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id })
+const SortableItem = ({ id, field, isSelected, onSelect, onDelete }) => {
+  const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id });
 
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
-    position: 'absolute',
+    position: "absolute",
     left: `${field.x}px`,
     top: `${field.y}px`,
     width: `${field.width}px`,
     height: `${field.height}px`,
-  }
+    fontSize: `${field.fontSize || 12}px`,
+  };
 
   return (
     <div
@@ -37,45 +40,67 @@ const SortableItem = ({ id, field, isSelected, onSelect, children }) => {
       {...attributes}
       {...listeners}
       onClick={(e) => {
-        e.stopPropagation()
-        onSelect(field.id)
+        e.stopPropagation();
+        onSelect(field.id);
       }}
-      className={`border-2 p-2 rounded cursor-move ${
-        isSelected ? 'border-blue-500 bg-blue-50' : 'border-gray-300 hover:border-gray-400'
+      className={`border-2 p-2 rounded cursor-move flex justify-between items-center ${
+        isSelected ? "border-blue-500 bg-blue-50" : "border-gray-300 hover:border-gray-400"
       }`}
     >
-      {children}
+      <span>
+        {field.label}
+        {field.required && <span className="text-red-500 ml-1">*</span>}
+        {field.type === "checkbox" && " ☑"}
+        {field.type === "radio" && " ◯"}
+        {field.type === "dropdown" && " ▼"}
+        {field.type === "signature" && " ✍"}
+      </span>
+      {isSelected && (
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            onDelete(field.id);
+          }}
+          className="text-red-500 hover:text-red-700"
+        >
+          <FaTrash />
+        </button>
+      )}
     </div>
-  )
-}
+  );
+};
 
 const PDFFormCreator = () => {
-  const [formFields, setFormFields] = useState([])
-  const [selectedField, setSelectedField] = useState(null)
+  const [formFields, setFormFields] = useState([]);
+  const [selectedField, setSelectedField] = useState(null);
   const [formSettings, setFormSettings] = useState({
-    title: 'Untitled Form',
-    pageSize: 'A4',
-    orientation: 'portrait',
+    title: "Untitled Form",
+    pageSize: "A4",
+    orientation: "portrait",
     fontSize: 12,
-  })
+    backgroundColor: "#ffffff",
+  });
 
   const fieldTypes = [
-    { id: 'text', label: 'Text Field', icon: 'T' },
-    { id: 'checkbox', label: 'Checkbox', icon: '☑' },
-    { id: 'radio', label: 'Radio Button', icon: '◯' },
-    { id: 'dropdown', label: 'Dropdown', icon: '▼' },
-    { id: 'signature', label: 'Signature', icon: '✍' },
-  ]
+    { id: "text", label: "Text Field", icon: "T" },
+    { id: "checkbox", label: "Checkbox", icon: "☑" },
+    { id: "radio", label: "Radio Button", icon: "◯" },
+    { id: "dropdown", label: "Dropdown", icon: "▼" },
+    { id: "signature", label: "Signature", icon: "✍" },
+    { id: "date", label: "Date Picker", icon: "📅" },
+  ];
 
-  const sensors = useSensors(
-    useSensor(PointerSensor),
-    useSensor(KeyboardSensor)
-  )
+  const pageSizes = {
+    A4: { width: 595, height: 842 },
+    Letter: { width: 612, height: 792 },
+    Legal: { width: 612, height: 1008 },
+  };
 
-  const handleDragEnd = (event) => {
-    const { active, over } = event
+  const sensors = useSensors(useSensor(PointerSensor), useSensor(KeyboardSensor));
 
-    if (!over) return
+  const handleDragEnd = useCallback((event) => {
+    const { active, over } = event;
+    if (!over) return;
 
     if (active.data.current?.fromToolbox) {
       const newField = {
@@ -87,67 +112,109 @@ const PDFFormCreator = () => {
         height: 40,
         label: `${active.id} Field`,
         required: false,
-      }
-      setFormFields((prev) => [...prev, newField])
-    } else if (active.id !== over.id) {
-      const oldIndex = formFields.findIndex((f) => f.id === active.id)
-      const newIndex = formFields.findIndex((f) => f.id === over.id)
-      const newFields = Array.from(formFields)
-      const [movedField] = newFields.splice(oldIndex, 1)
-      newFields.splice(newIndex, 0, movedField)
-      setFormFields(newFields)
+        fontSize: formSettings.fontSize,
+      };
+      setFormFields((prev) => [...prev, newField]);
     }
-  }
+  }, [formFields, formSettings.fontSize]);
 
   const handleFieldUpdate = (id, updates) => {
     setFormFields((prev) =>
       prev.map((field) => (field.id === id ? { ...field, ...updates } : field))
-    )
-  }
+    );
+  };
 
   const handleCanvasClick = (e) => {
     if (selectedField) {
-      const rect = e.currentTarget.getBoundingClientRect()
-      const x = Math.max(0, Math.min(e.clientX - rect.left, rect.width - 200))
-      const y = Math.max(0, Math.min(e.clientY - rect.top, rect.height - 40))
-      handleFieldUpdate(selectedField, { x, y })
-      setSelectedField(null)
+      const rect = e.currentTarget.getBoundingClientRect();
+      const x = Math.max(0, Math.min(e.clientX - rect.left, rect.width - 200));
+      const y = Math.max(0, Math.min(e.clientY - rect.top, rect.height - 40));
+      handleFieldUpdate(selectedField, { x, y });
+      setSelectedField(null);
     }
-  }
+  };
 
-  const downloadPDF = () => {
-    console.log('Generating PDF with fields:', formFields)
-    alert('PDF generation preview - check console for field data')
-    // Add pdf-lib implementation here if desired
-  }
+  const deleteField = (id) => {
+    setFormFields((prev) => prev.filter((field) => field.id !== id));
+    if (selectedField === id) setSelectedField(null);
+  };
+
+  const downloadPDF = async () => {
+    const pdfDoc = await PDFDocument.create();
+    const page = pdfDoc.addPage([
+      pageSizes[formSettings.pageSize][formSettings.orientation === "portrait" ? "width" : "height"],
+      pageSizes[formSettings.pageSize][formSettings.orientation === "portrait" ? "height" : "width"],
+    ]);
+
+    const font = await pdfDoc.embedFont("Helvetica");
+    page.setFont(font);
+    page.setFontSize(formSettings.fontSize);
+
+    // Draw background
+    page.drawRectangle({
+      x: 0,
+      y: 0,
+      width: page.getWidth(),
+      height: page.getHeight(),
+      color: rgb(
+        parseInt(formSettings.backgroundColor.slice(1, 3), 16) / 255,
+        parseInt(formSettings.backgroundColor.slice(3, 5), 16) / 255,
+        parseInt(formSettings.backgroundColor.slice(5, 7), 16) / 255
+      ),
+    });
+
+    // Draw title
+    page.drawText(formSettings.title, { x: 50, y: page.getHeight() - 50 });
+
+    // Draw fields
+    formFields.forEach((field) => {
+      page.drawText(field.label, {
+        x: field.x,
+        y: page.getHeight() - field.y - field.height,
+        size: field.fontSize,
+        color: rgb(0, 0, 0),
+      });
+      if (field.required) {
+        page.drawText("*", {
+          x: field.x + field.width - 10,
+          y: page.getHeight() - field.y - field.height,
+          size: field.fontSize,
+          color: rgb(1, 0, 0),
+        });
+      }
+    });
+
+    const pdfBytes = await pdfDoc.save();
+    const blob = new Blob([pdfBytes], { type: "application/pdf" });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = `${formSettings.title}.pdf`;
+    link.click();
+  };
 
   return (
-    <div className="min-h-screen bg-gray-100 py-8">
-      <div className="max-w-7xl mx-auto px-4">
-        <h1 className="text-2xl font-bold mb-6 text-gray-800">PDF Form Creator</h1>
+    <div className="min-h-screen  flex items-center justify-center ">
+      <div className="w-full  bg-white rounded-xl shadow-lg p-6 sm:p-8">
+        <h1 className="text-2xl sm:text-3xl font-bold mb-6 text-gray-800">PDF Form Creator</h1>
 
-        <DndContext
-          sensors={sensors}
-          collisionDetection={closestCenter}
-          onDragEnd={handleDragEnd}
-        >
+        <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
             {/* Toolbox */}
             <div className="bg-white p-4 rounded-lg shadow">
-              <h2 className="text-lg font-semibold mb-4">Form Elements</h2>
+              <h2 className="text-lg font-semibold mb-4 text-gray-800">Form Elements</h2>
               <div className="space-y-2">
                 {fieldTypes.map((field) => (
                   <div
                     key={field.id}
                     draggable
                     onDragStart={(e) => {
-                      e.dataTransfer.setData('text/plain', field.id)
-                      e.dataTransfer.setData('fromToolbox', 'true')
+                      e.dataTransfer.setData("text/plain", field.id);
+                      e.dataTransfer.setData("fromToolbox", "true");
                     }}
-                    className="p-2 bg-white rounded cursor-move hover:bg-gray-100"
+                    className="p-2 bg-gray-50 rounded cursor-move hover:bg-gray-100 flex items-center"
                   >
-                    <span className="mr-2">{field.icon}</span>
-                    {field.label}
+                    <span className="mr-2 text-lg">{field.icon}</span>
+                    <span className="text-sm">{field.label}</span>
                   </div>
                 ))}
               </div>
@@ -155,17 +222,17 @@ const PDFFormCreator = () => {
 
             {/* Canvas */}
             <div className="md:col-span-2 bg-white p-4 rounded-lg shadow relative">
-              <h2 className="text-lg font-semibold mb-4">{formSettings.title}</h2>
+              <h2 className="text-lg font-semibold mb-4 text-gray-800">{formSettings.title}</h2>
               <div
                 onClick={handleCanvasClick}
                 onDrop={(e) => {
-                  e.preventDefault()
-                  const fieldType = e.dataTransfer.getData('text/plain')
-                  const fromToolbox = e.dataTransfer.getData('fromToolbox')
+                  e.preventDefault();
+                  const fieldType = e.dataTransfer.getData("text/plain");
+                  const fromToolbox = e.dataTransfer.getData("fromToolbox");
                   if (fromToolbox) {
-                    const rect = e.currentTarget.getBoundingClientRect()
-                    const x = Math.max(0, Math.min(e.clientX - rect.left, rect.width - 200))
-                    const y = Math.max(0, Math.min(e.clientY - rect.top, rect.height - 40))
+                    const rect = e.currentTarget.getBoundingClientRect();
+                    const x = Math.max(0, Math.min(e.clientX - rect.left, rect.width - 200));
+                    const y = Math.max(0, Math.min(e.clientY - rect.top, rect.height - 40));
                     const newField = {
                       id: `field_${Date.now()}`,
                       type: fieldType,
@@ -175,21 +242,23 @@ const PDFFormCreator = () => {
                       height: 40,
                       label: `${fieldType} Field`,
                       required: false,
-                    }
-                    setFormFields((prev) => [...prev, newField])
+                      fontSize: formSettings.fontSize,
+                    };
+                    setFormFields((prev) => [...prev, newField]);
                   }
                 }}
                 onDragOver={(e) => e.preventDefault()}
-                className="h-[842px] w-[595px] bg-white border border-gray-200 relative overflow-hidden"
+                className="relative border border-gray-200 overflow-hidden"
                 style={{
-                  transform: formSettings.orientation === 'landscape' ? 'rotate(90deg)' : 'none',
-                  transformOrigin: 'center center',
+                  width: `${pageSizes[formSettings.pageSize].width}px`,
+                  height: `${pageSizes[formSettings.pageSize].height}px`,
+                  backgroundColor: formSettings.backgroundColor,
+                  transform: formSettings.orientation === "landscape" ? "rotate(90deg)" : "none",
+                  transformOrigin: "center center",
+                  maxHeight: "80vh",
                 }}
               >
-                <SortableContext
-                  items={formFields.map((f) => f.id)}
-                  strategy={verticalListSortingStrategy}
-                >
+                <SortableContext items={formFields.map((f) => f.id)} strategy={verticalListSortingStrategy}>
                   {formFields.map((field) => (
                     <SortableItem
                       key={field.id}
@@ -197,14 +266,8 @@ const PDFFormCreator = () => {
                       field={field}
                       isSelected={selectedField === field.id}
                       onSelect={setSelectedField}
-                    >
-                      {field.label}
-                      {field.required && <span className="text-red-500 ml-1">*</span>}
-                      {field.type === 'checkbox' && ' ☑'}
-                      {field.type === 'radio' && ' ◯'}
-                      {field.type === 'dropdown' && ' ▼'}
-                      {field.type === 'signature' && ' ✍'}
-                    </SortableItem>
+                      onDelete={deleteField}
+                    />
                   ))}
                 </SortableContext>
               </div>
@@ -212,7 +275,7 @@ const PDFFormCreator = () => {
 
             {/* Properties Panel */}
             <div className="bg-white p-4 rounded-lg shadow">
-              <h2 className="text-lg font-semibold mb-4">Properties</h2>
+              <h2 className="text-lg font-semibold mb-4 text-gray-800">Properties</h2>
               <div className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Form Title</label>
@@ -220,7 +283,7 @@ const PDFFormCreator = () => {
                     type="text"
                     value={formSettings.title}
                     onChange={(e) => setFormSettings((prev) => ({ ...prev, title: e.target.value }))}
-                    className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
                 <div>
@@ -228,11 +291,11 @@ const PDFFormCreator = () => {
                   <select
                     value={formSettings.pageSize}
                     onChange={(e) => setFormSettings((prev) => ({ ...prev, pageSize: e.target.value }))}
-                    className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
                   >
-                    <option value="A4">A4</option>
-                    <option value="Letter">Letter</option>
-                    <option value="Legal">Legal</option>
+                    <option value="A4">A4 (595 x 842)</option>
+                    <option value="Letter">Letter (612 x 792)</option>
+                    <option value="Legal">Legal (612 x 1008)</option>
                   </select>
                 </div>
                 <div>
@@ -240,18 +303,41 @@ const PDFFormCreator = () => {
                   <select
                     value={formSettings.orientation}
                     onChange={(e) => setFormSettings((prev) => ({ ...prev, orientation: e.target.value }))}
-                    className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
                   >
                     <option value="portrait">Portrait</option>
                     <option value="landscape">Landscape</option>
                   </select>
                 </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Default Font Size</label>
+                  <input
+                    type="number"
+                    min="8"
+                    max="24"
+                    value={formSettings.fontSize}
+                    onChange={(e) =>
+                      setFormSettings((prev) => ({ ...prev, fontSize: Math.max(8, Math.min(24, e.target.value)) }))
+                    }
+                    className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Background Color</label>
+                  <input
+                    type="color"
+                    value={formSettings.backgroundColor}
+                    onChange={(e) => setFormSettings((prev) => ({ ...prev, backgroundColor: e.target.value }))}
+                    className="w-full h-10 p-1 border border-gray-300 rounded-md cursor-pointer"
+                  />
+                </div>
               </div>
+
               {selectedField && (
                 <div className="mt-6">
                   <h3 className="text-md font-medium mb-2 text-gray-800">Field Properties</h3>
                   {(() => {
-                    const field = formFields.find((f) => f.id === selectedField)
+                    const field = formFields.find((f) => f.id === selectedField);
                     return (
                       <div className="space-y-4">
                         <div>
@@ -260,7 +346,7 @@ const PDFFormCreator = () => {
                             type="text"
                             value={field.label}
                             onChange={(e) => handleFieldUpdate(field.id, { label: e.target.value })}
-                            className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
                           />
                         </div>
                         <div>
@@ -271,7 +357,7 @@ const PDFFormCreator = () => {
                             onChange={(e) =>
                               handleFieldUpdate(field.id, { width: Math.max(50, parseInt(e.target.value) || 200) })
                             }
-                            className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
                           />
                         </div>
                         <div>
@@ -282,7 +368,22 @@ const PDFFormCreator = () => {
                             onChange={(e) =>
                               handleFieldUpdate(field.id, { height: Math.max(20, parseInt(e.target.value) || 40) })
                             }
-                            className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">Font Size (px)</label>
+                          <input
+                            type="number"
+                            min="8"
+                            max="24"
+                            value={field.fontSize}
+                            onChange={(e) =>
+                              handleFieldUpdate(field.id, {
+                                fontSize: Math.max(8, Math.min(24, parseInt(e.target.value) || 12)),
+                              })
+                            }
+                            className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
                           />
                         </div>
                         <label className="flex items-center">
@@ -295,7 +396,7 @@ const PDFFormCreator = () => {
                           <span className="text-sm text-gray-700">Required</span>
                         </label>
                       </div>
-                    )
+                    );
                   })()}
                 </div>
               )}
@@ -303,26 +404,40 @@ const PDFFormCreator = () => {
           </div>
         </DndContext>
 
-        <div className="mt-6 flex justify-end space-x-4">
+        {/* Action Buttons */}
+        <div className="mt-6 flex flex-col sm:flex-row justify-end gap-4">
           <button
             onClick={() => {
-              setFormFields([])
-              setSelectedField(null)
+              setFormFields([]);
+              setSelectedField(null);
             }}
-            className="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
+            className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 flex items-center justify-center"
           >
-            Clear Form
+            <FaTrash className="mr-2" /> Clear Form
           </button>
           <button
             onClick={downloadPDF}
-            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 flex items-center justify-center"
           >
-            Download PDF
+            <FaDownload className="mr-2" /> Download PDF
           </button>
+        </div>
+
+        {/* Features */}
+        <div className="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
+          <h3 className="font-semibold text-blue-700 mb-2">Features</h3>
+          <ul className="list-disc list-inside text-blue-600 text-sm space-y-1">
+            <li>Drag-and-drop form field placement</li>
+            <li>Multiple field types including date picker</li>
+            <li>Customizable page size, orientation, and background</li>
+            <li>Per-field customization (size, font, required)</li>
+            <li>PDF generation with pdf-lib</li>
+            <li>Responsive design with Tailwind CSS</li>
+          </ul>
         </div>
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default PDFFormCreator
+export default PDFFormCreator;
