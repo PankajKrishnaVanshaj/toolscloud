@@ -1,51 +1,73 @@
-'use client';
-
-import React, { useState } from 'react';
+"use client";
+import React, { useState, useCallback } from "react";
+import { FaDownload, FaSync, FaFileUpload } from "react-icons/fa";
 
 const XmlToCsv = () => {
-  const [xmlInput, setXmlInput] = useState('');
-  const [csvOutput, setCsvOutput] = useState('');
-  const [delimiter, setDelimiter] = useState(',');
+  const [xmlInput, setXmlInput] = useState("");
+  const [csvOutput, setCsvOutput] = useState("");
+  const [delimiter, setDelimiter] = useState(",");
   const [includeHeaders, setIncludeHeaders] = useState(true);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
+  const [recordTag, setRecordTag] = useState(""); // Custom record tag
+  const [flattenNested, setFlattenNested] = useState(false); // Flatten nested XML
+  const [isProcessing, setIsProcessing] = useState(false);
 
-  const parseXML = (xmlString) => {
+  // Parse XML with error handling
+  const parseXML = useCallback((xmlString) => {
     try {
       const parser = new DOMParser();
-      const xmlDoc = parser.parseFromString(xmlString, 'text/xml');
-      const parserError = xmlDoc.querySelector('parsererror');
+      const xmlDoc = parser.parseFromString(xmlString, "text/xml");
+      const parserError = xmlDoc.querySelector("parsererror");
       if (parserError) {
-        throw new Error('Invalid XML: ' + parserError.textContent);
+        throw new Error("Invalid XML: " + parserError.textContent);
       }
       return xmlDoc;
     } catch (err) {
       setError(`XML Parsing Error: ${err.message}`);
       return null;
     }
-  };
+  }, []);
 
-  const xmlToCsv = () => {
-    setError('');
-    setCsvOutput('');
+  // Convert XML to CSV
+  const xmlToCsv = useCallback(() => {
+    setError("");
+    setCsvOutput("");
+    setIsProcessing(true);
 
     if (!xmlInput.trim()) {
-      setError('Please enter XML content');
+      setError("Please enter XML content");
+      setIsProcessing(false);
       return;
     }
 
     const xmlDoc = parseXML(xmlInput);
-    if (!xmlDoc) return;
-
-    // Find all elements that could represent records
-    const records = xmlDoc.documentElement.children;
-    if (records.length === 0) {
-      setError('No records found in XML');
+    if (!xmlDoc) {
+      setIsProcessing(false);
       return;
     }
 
-    // Extract headers from the first record
+    // Determine records
+    const records = recordTag
+      ? xmlDoc.getElementsByTagName(recordTag)
+      : xmlDoc.documentElement.children;
+    if (records.length === 0) {
+      setError(`No records found in XML${recordTag ? ` with tag "${recordTag}"` : ""}`);
+      setIsProcessing(false);
+      return;
+    }
+
+    // Extract headers
     const headers = new Set();
-    Array.from(records[0].children).forEach(child => headers.add(child.tagName));
+    const processNode = (node, prefix = "") => {
+      Array.from(node.children).forEach((child) => {
+        const header = prefix + child.tagName;
+        headers.add(header);
+        if (flattenNested && child.children.length > 0) {
+          processNode(child, header + ".");
+        }
+      });
+    };
+    processNode(records[0]);
 
     // Convert to CSV
     let csvLines = [];
@@ -53,60 +75,95 @@ const XmlToCsv = () => {
       csvLines.push(Array.from(headers).join(delimiter));
     }
 
-    Array.from(records).forEach(record => {
-      const row = Array.from(headers).map(header => {
-        const node = record.querySelector(header);
-        return node ? `"${node.textContent.replace(/"/g, '""')}"` : '';
+    Array.from(records).forEach((record) => {
+      const row = Array.from(headers).map((header) => {
+        const parts = header.split(".");
+        let node = record;
+        for (const part of parts) {
+          node = node?.querySelector(part) || null;
+          if (!node) break;
+        }
+        return node ? `"${node.textContent.replace(/"/g, '""')}"` : "";
       });
       csvLines.push(row.join(delimiter));
     });
 
-    setCsvOutput(csvLines.join('\n'));
+    setCsvOutput(csvLines.join("\n"));
+    setIsProcessing(false);
+  }, [xmlInput, delimiter, includeHeaders, recordTag, flattenNested, parseXML]);
+
+  // Handle file upload
+  const handleFileUpload = (e) => {
+    const file = e.target.files[0];
+    if (file && file.type === "text/xml") {
+      const reader = new FileReader();
+      reader.onload = (event) => setXmlInput(event.target.result);
+      reader.readAsText(file);
+      setError("");
+      setCsvOutput("");
+    } else {
+      setError("Please upload a valid XML file");
+    }
   };
 
-  const handleConvert = (e) => {
-    e.preventDefault();
-    xmlToCsv();
-  };
-
+  // Download CSV
   const downloadCsv = () => {
     if (!csvOutput) return;
-    const blob = new Blob([csvOutput], { type: 'text/csv;charset=utf-8;' });
+    const blob = new Blob([csvOutput], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.setAttribute('href', url);
-    link.setAttribute('download', 'converted.csv');
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `converted-${Date.now()}.csv`;
     link.click();
     URL.revokeObjectURL(url);
   };
 
+  // Reset form
+  const reset = () => {
+    setXmlInput("");
+    setCsvOutput("");
+    setDelimiter(",");
+    setIncludeHeaders(true);
+    setRecordTag("");
+    setFlattenNested(false);
+    setError("");
+  };
+
+  // Sample XML
   const sampleXML = `<data>
   <record>
     <name>John Doe</name>
     <age>30</age>
-    <city>New York</city>
+    <address>
+      <city>New York</city>
+      <zip>10001</zip>
+    </address>
   </record>
   <record>
     <name>Jane Smith</name>
     <age>25</age>
-    <city>Los Angeles</city>
+    <address>
+      <city>Los Angeles</city>
+      <zip>90001</zip>
+    </address>
   </record>
 </data>`;
 
   const handleSample = () => {
     setXmlInput(sampleXML);
-    setError('');
-    setCsvOutput('');
+    setError("");
+    setCsvOutput("");
+    setRecordTag("record");
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4">
-      <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-4xl">
-        <h1 className="text-3xl font-bold text-center mb-6 text-gray-800">
+    <div className="min-h-screen  flex items-center justify-center ">
+      <div className="w-full  bg-white rounded-xl shadow-lg p-6 sm:p-8">
+        <h1 className="text-2xl sm:text-3xl font-bold text-center mb-6 text-gray-800">
           XML to CSV Converter
         </h1>
 
-        <form onSubmit={handleConvert} className="grid gap-6">
+        <form onSubmit={(e) => { e.preventDefault(); xmlToCsv(); }} className="space-y-6">
           {/* XML Input */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -115,20 +172,31 @@ const XmlToCsv = () => {
             <textarea
               value={xmlInput}
               onChange={(e) => setXmlInput(e.target.value)}
-              placeholder="Paste your XML here..."
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 h-40 font-mono text-sm"
+              placeholder="Paste your XML here or upload a file..."
+              className="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 h-48 font-mono text-sm resize-y"
+              disabled={isProcessing}
             />
-            <button
-              type="button"
-              onClick={handleSample}
-              className="mt-2 px-4 py-1 bg-gray-500 text-white rounded-md hover:bg-gray-600"
-            >
-              Load Sample XML
-            </button>
+            <div className="flex gap-2 mt-2">
+              <input
+                type="file"
+                accept=".xml"
+                onChange={handleFileUpload}
+                className="text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                disabled={isProcessing}
+              />
+              <button
+                type="button"
+                onClick={handleSample}
+                className="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+                disabled={isProcessing}
+              >
+                Load Sample
+              </button>
+            </div>
           </div>
 
           {/* Options */}
-          <div className="grid gap-4 md:grid-cols-2">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Delimiter
@@ -137,47 +205,91 @@ const XmlToCsv = () => {
                 value={delimiter}
                 onChange={(e) => setDelimiter(e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                disabled={isProcessing}
               >
                 <option value=",">Comma (,)</option>
                 <option value=";">Semicolon (;)</option>
-                <option value="\t">Tab</option>
+                <option value="\t">Tab (\t)</option>
                 <option value="|">Pipe (|)</option>
               </select>
             </div>
-            <div className="flex items-center gap-2">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Record Tag (optional)
+              </label>
               <input
-                type="checkbox"
-                checked={includeHeaders}
-                onChange={(e) => setIncludeHeaders(e.target.checked)}
-                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                type="text"
+                value={recordTag}
+                onChange={(e) => setRecordTag(e.target.value)}
+                placeholder="e.g., record"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                disabled={isProcessing}
               />
-              <label className="text-sm font-medium text-gray-700">
-                Include Headers
+            </div>
+            <div className="flex flex-col gap-2">
+              <label className="flex items-center">
+                <input
+                  type="checkbox"
+                  checked={includeHeaders}
+                  onChange={(e) => setIncludeHeaders(e.target.checked)}
+                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                  disabled={isProcessing}
+                />
+                <span className="ml-2 text-sm font-medium text-gray-700">
+                  Include Headers
+                </span>
+              </label>
+              <label className="flex items-center">
+                <input
+                  type="checkbox"
+                  checked={flattenNested}
+                  onChange={(e) => setFlattenNested(e.target.checked)}
+                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                  disabled={isProcessing}
+                />
+                <span className="ml-2 text-sm font-medium text-gray-700">
+                  Flatten Nested Tags
+                </span>
               </label>
             </div>
           </div>
 
-          <button
-            type="submit"
-            className="w-full px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"
-          >
-            Convert to CSV
-          </button>
+          {/* Action Buttons */}
+          <div className="flex flex-col sm:flex-row gap-4">
+            <button
+              type="submit"
+              disabled={isProcessing}
+              className="flex-1 py-2 px-4 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors flex items-center justify-center"
+            >
+              {isProcessing ? (
+                <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-white mr-2"></div>
+              ) : (
+                <FaFileUpload className="mr-2" />
+              )}
+              {isProcessing ? "Converting..." : "Convert to CSV"}
+            </button>
+            <button
+              onClick={downloadCsv}
+              disabled={!csvOutput || isProcessing}
+              className="flex-1 py-2 px-4 bg-green-600 text-white rounded-md hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors flex items-center justify-center"
+            >
+              <FaDownload className="mr-2" /> Download CSV
+            </button>
+            <button
+              onClick={reset}
+              disabled={isProcessing}
+              className="flex-1 py-2 px-4 bg-red-600 text-white rounded-md hover:bg-red-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors flex items-center justify-center"
+            >
+              <FaSync className="mr-2" /> Reset
+            </button>
+          </div>
         </form>
 
         {/* CSV Output */}
         {csvOutput && (
-          <div className="mt-4 p-4 bg-gray-50 rounded-md">
-            <div className="flex justify-between items-center mb-2">
-              <h2 className="text-lg font-semibold">CSV Output:</h2>
-              <button
-                onClick={downloadCsv}
-                className="px-4 py-1 bg-green-500 text-white rounded-md hover:bg-green-600"
-              >
-                Download CSV
-              </button>
-            </div>
-            <pre className="text-sm font-mono bg-white p-2 rounded border border-gray-200 overflow-auto max-h-40">
+          <div className="mt-6 p-4 bg-gray-50 rounded-lg">
+            <h2 className="text-lg font-semibold text-gray-700 mb-2">CSV Output:</h2>
+            <pre className="text-sm font-mono bg-white p-4 rounded border border-gray-200 overflow-auto max-h-60">
               {csvOutput}
             </pre>
           </div>
@@ -185,24 +297,23 @@ const XmlToCsv = () => {
 
         {/* Error Section */}
         {error && (
-          <div className="mt-4 p-4 bg-red-50 rounded-md text-red-700">
+          <div className="mt-6 p-4 bg-red-50 rounded-lg text-red-700">
             <p>{error}</p>
           </div>
         )}
 
-        {/* Info Section */}
-        <div className="mt-6 text-sm text-gray-600">
-          <details>
-            <summary className="cursor-pointer font-medium">Features & Usage</summary>
-            <ul className="list-disc list-inside mt-2">
-              <li>Converts XML to CSV format</li>
-              <li>Supports custom delimiters (comma, semicolon, tab, pipe)</li>
-              <li>Optional headers in output</li>
-              <li>Download result as CSV file</li>
-              <li>Load sample XML for testing</li>
-              <li>Handles nested elements at the record level</li>
-            </ul>
-          </details>
+        {/* Features */}
+        <div className="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
+          <h3 className="font-semibold text-blue-700 mb-2">Features</h3>
+          <ul className="list-disc list-inside text-blue-600 text-sm space-y-1">
+            <li>Converts XML to CSV with custom delimiters</li>
+            <li>File upload support for XML</li>
+            <li>Custom record tag specification</li>
+            <li>Option to flatten nested XML elements</li>
+            <li>Include/exclude headers</li>
+            <li>Download result as CSV</li>
+            <li>Sample XML for testing</li>
+          </ul>
         </div>
       </div>
     </div>

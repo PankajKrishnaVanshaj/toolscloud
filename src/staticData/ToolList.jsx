@@ -3437,7 +3437,6 @@ const ToolList = [
         desc: "Convert HTML content to Markdown format.",
         code: "HtmlToMarkdown",
        },
-      // New 50 Data Converter Tools
       {
         name: "Markdown to HTML",
         slug: "markdown-to-html",
