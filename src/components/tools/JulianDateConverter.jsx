@@ -1,27 +1,25 @@
-'use client';
-
-import React, { useState, useEffect } from 'react';
+"use client";
+import React, { useState, useEffect, useCallback } from "react";
+import { FaSync, FaCopy, FaCalendarAlt } from "react-icons/fa";
 
 const JulianDateConverter = () => {
   const [gregorianDate, setGregorianDate] = useState(new Date().toISOString().slice(0, 16));
-  const [julianDate, setJulianDate] = useState('');
-  const [modifiedJulianDate, setModifiedJulianDate] = useState('');
+  const [julianDate, setJulianDate] = useState("");
+  const [modifiedJulianDate, setModifiedJulianDate] = useState("");
   const [timeZone, setTimeZone] = useState(Intl.DateTimeFormat().resolvedOptions().timeZone);
-  const [precision, setPrecision] = useState(6); // Decimal places
-  const [error, setError] = useState('');
+  const [precision, setPrecision] = useState(6);
+  const [error, setError] = useState("");
   const [updateInterval, setUpdateInterval] = useState(true);
+  const [dateFormat, setDateFormat] = useState("iso"); // ISO or Custom
+  const [customFormat, setCustomFormat] = useState("YYYY-MM-DD HH:mm");
 
-  // Time zones
-  const timeZones = Intl.supportedValuesOf('timeZone');
+  const timeZones = Intl.supportedValuesOf("timeZone");
 
   // Julian Date conversion functions
-  const gregorianToJulian = (date) => {
+  const gregorianToJulian = useCallback((date) => {
     const d = new Date(date);
-    if (isNaN(d.getTime())) {
-      throw new Error('Invalid Gregorian date');
-    }
+    if (isNaN(d.getTime())) throw new Error("Invalid Gregorian date");
 
-    // Convert to UTC
     const utcDate = new Date(Date.UTC(
       d.getUTCFullYear(),
       d.getUTCMonth(),
@@ -32,7 +30,6 @@ const JulianDateConverter = () => {
       d.getUTCMilliseconds()
     ));
 
-    // Algorithm from "Astronomical Algorithms" by Jean Meeus
     let year = utcDate.getUTCFullYear();
     let month = utcDate.getUTCMonth() + 1;
     let day = utcDate.getUTCDate();
@@ -51,14 +48,11 @@ const JulianDateConverter = () => {
                day + hour / 24 + B - 1524.5;
 
     return JD;
-  };
+  }, []);
 
-  const julianToGregorian = (jd) => {
-    if (isNaN(jd) || jd < 0) {
-      throw new Error('Invalid Julian Date');
-    }
+  const julianToGregorian = useCallback((jd) => {
+    if (isNaN(jd) || jd < 0) throw new Error("Invalid Julian Date");
 
-    // Algorithm from "Astronomical Algorithms" by Jean Meeus
     const Z = Math.floor(jd + 0.5);
     const F = jd + 0.5 - Z;
     let A = Z;
@@ -84,47 +78,63 @@ const JulianDateConverter = () => {
     const milliseconds = Math.round((totalSeconds - seconds) * 1000);
 
     return new Date(Date.UTC(year, month - 1, Math.floor(day), hours, minutes, seconds, milliseconds));
-  };
+  }, []);
 
-  const updateFromGregorian = () => {
+  const updateFromGregorian = useCallback(() => {
     try {
       const date = new Date(gregorianDate);
       const jd = gregorianToJulian(date);
       setJulianDate(jd.toFixed(precision));
       setModifiedJulianDate((jd - 2400000.5).toFixed(precision));
-      setError('');
+      setError("");
     } catch (err) {
-      setJulianDate('');
-      setModifiedJulianDate('');
+      setJulianDate("");
+      setModifiedJulianDate("");
       setError(err.message);
     }
-  };
+  }, [gregorianDate, precision]);
 
-  const updateFromJulian = (jd) => {
+  const updateFromJulian = useCallback((jd) => {
     try {
       const date = julianToGregorian(parseFloat(jd));
-      setGregorianDate(date.toISOString().slice(0, 16));
+      setGregorianDate(dateFormat === "iso" ? date.toISOString().slice(0, 16) : formatCustomDate(date));
       setModifiedJulianDate((parseFloat(jd) - 2400000.5).toFixed(precision));
-      setError('');
+      setError("");
     } catch (err) {
-      setGregorianDate('');
-      setModifiedJulianDate('');
+      setGregorianDate("");
+      setModifiedJulianDate("");
       setError(err.message);
     }
-  };
+  }, [precision, dateFormat, customFormat]);
 
-  const updateFromModifiedJulian = (mjd) => {
+  const updateFromModifiedJulian = useCallback((mjd) => {
     try {
       const jd = parseFloat(mjd) + 2400000.5;
       const date = julianToGregorian(jd);
-      setGregorianDate(date.toISOString().slice(0, 16));
+      setGregorianDate(dateFormat === "iso" ? date.toISOString().slice(0, 16) : formatCustomDate(date));
       setJulianDate(jd.toFixed(precision));
-      setError('');
+      setError("");
     } catch (err) {
-      setGregorianDate('');
-      setJulianDate('');
+      setGregorianDate("");
+      setJulianDate("");
       setError(err.message);
     }
+  }, [precision, dateFormat, customFormat]);
+
+  // Custom date formatting
+  const formatCustomDate = (date) => {
+    const replacements = {
+      "YYYY": date.getUTCFullYear(),
+      "MM": String(date.getUTCMonth() + 1).padStart(2, "0"),
+      "DD": String(date.getUTCDate()).padStart(2, "0"),
+      "HH": String(date.getUTCHours()).padStart(2, "0"),
+      "mm": String(date.getUTCMinutes()).padStart(2, "0"),
+    };
+    let formatted = customFormat;
+    for (const [key, value] of Object.entries(replacements)) {
+      formatted = formatted.replace(key, value);
+    }
+    return formatted;
   };
 
   useEffect(() => {
@@ -133,138 +143,218 @@ const JulianDateConverter = () => {
       const interval = setInterval(updateFromGregorian, 1000);
       return () => clearInterval(interval);
     }
-  }, [gregorianDate, timeZone, precision, updateInterval]);
+  }, [updateFromGregorian, updateInterval]);
 
   const handleNow = () => {
+    const now = new Date();
+    setGregorianDate(dateFormat === "iso" ? now.toISOString().slice(0, 16) : formatCustomDate(now));
+  };
+
+  const copyToClipboard = (text) => {
+    navigator.clipboard.writeText(text);
+    alert("Copied to clipboard!");
+  };
+
+  const reset = () => {
     setGregorianDate(new Date().toISOString().slice(0, 16));
+    setJulianDate("");
+    setModifiedJulianDate("");
+    setTimeZone(Intl.DateTimeFormat().resolvedOptions().timeZone);
+    setPrecision(6);
+    setError("");
+    setUpdateInterval(true);
+    setDateFormat("iso");
+    setCustomFormat("YYYY-MM-DD HH:mm");
+    updateFromGregorian();
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4">
-      <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-2xl">
-        <h1 className="text-3xl font-bold text-center mb-6 text-gray-800">
+    <div className="min-h-screen  flex items-center justify-center ">
+      <div className="bg-white rounded-xl shadow-lg p-6 sm:p-8 w-full ">
+        <h1 className="text-2xl sm:text-3xl font-bold text-center mb-6 text-gray-800">
           Julian Date Converter
         </h1>
 
-        <div className="grid gap-6">
+        <div className="space-y-6">
           {/* Input Section */}
-          <div className="grid gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-gray-700">
                 Gregorian Date/Time
               </label>
               <div className="flex gap-2">
-                <input
-                  type="datetime-local"
-                  value={gregorianDate}
-                  onChange={(e) => setGregorianDate(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
+                {dateFormat === "iso" ? (
+                  <input
+                    type="datetime-local"
+                    value={gregorianDate}
+                    onChange={(e) => setGregorianDate(e.target.value)}
+                    className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                ) : (
+                  <input
+                    type="text"
+                    value={gregorianDate}
+                    onChange={(e) => setGregorianDate(e.target.value)}
+                    className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder={customFormat}
+                  />
+                )}
                 <button
                   onClick={handleNow}
-                  className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"
+                  className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
                 >
-                  Now
+                  <FaCalendarAlt />
+                </button>
+                <button
+                  onClick={() => copyToClipboard(gregorianDate)}
+                  className="px-4 py-2 bg-gray-200 rounded-md hover:bg-gray-300 transition-colors"
+                >
+                  <FaCopy />
                 </button>
               </div>
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-gray-700">
                 Julian Date (JD)
               </label>
-              <input
-                type="number"
-                value={julianDate}
-                onChange={(e) => {
-                  setJulianDate(e.target.value);
-                  updateFromJulian(e.target.value);
-                }}
-                step="any"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Modified Julian Date (MJD)
-              </label>
-              <input
-                type="number"
-                value={modifiedJulianDate}
-                onChange={(e) => {
-                  setModifiedJulianDate(e.target.value);
-                  updateFromModifiedJulian(e.target.value);
-                }}
-                step="any"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
-
-            <div className="grid gap-2 md:grid-cols-2">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Time Zone
-                </label>
-                <select
-                  value={timeZone}
-                  onChange={(e) => setTimeZone(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                  {timeZones.map((tz) => (
-                    <option key={tz} value={tz}>{tz}</option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Precision (decimal places)
-                </label>
+              <div className="flex gap-2">
                 <input
                   type="number"
-                  value={precision}
-                  onChange={(e) => setPrecision(Math.max(0, Math.min(15, parseInt(e.target.value) || 0)))}
-                  min="0"
-                  max="15"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  value={julianDate}
+                  onChange={(e) => {
+                    setJulianDate(e.target.value);
+                    updateFromJulian(e.target.value);
+                  }}
+                  step="any"
+                  className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
+                <button
+                  onClick={() => copyToClipboard(julianDate)}
+                  className="px-4 py-2 bg-gray-200 rounded-md hover:bg-gray-300 transition-colors"
+                >
+                  <FaCopy />
+                </button>
               </div>
             </div>
 
-            <div className="flex items-center gap-2">
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-gray-700">
+                Modified Julian Date (MJD)
+              </label>
+              <div className="flex gap-2">
+                <input
+                  type="number"
+                  value={modifiedJulianDate}
+                  onChange={(e) => {
+                    setModifiedJulianDate(e.target.value);
+                    updateFromModifiedJulian(e.target.value);
+                  }}
+                  step="any"
+                  className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+                <button
+                  onClick={() => copyToClipboard(modifiedJulianDate)}
+                  className="px-4 py-2 bg-gray-200 rounded-md hover:bg-gray-300 transition-colors"
+                >
+                  <FaCopy />
+                </button>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-gray-700">
+                Time Zone
+              </label>
+              <select
+                value={timeZone}
+                onChange={(e) => setTimeZone(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                {timeZones.map((tz) => (
+                  <option key={tz} value={tz}>{tz}</option>
+                ))}
+              </select>
+            </div>
+
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-gray-700">
+                Precision ({precision} decimal places)
+              </label>
+              <input
+                type="range"
+                min="0"
+                max="15"
+                value={precision}
+                onChange={(e) => setPrecision(parseInt(e.target.value))}
+                className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-500"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-gray-700">
+                Date Format
+              </label>
+              <select
+                value={dateFormat}
+                onChange={(e) => setDateFormat(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="iso">ISO (YYYY-MM-DDTHH:mm)</option>
+                <option value="custom">Custom</option>
+              </select>
+              {dateFormat === "custom" && (
+                <input
+                  type="text"
+                  value={customFormat}
+                  onChange={(e) => setCustomFormat(e.target.value)}
+                  className="mt-2 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="e.g., YYYY-MM-DD HH:mm"
+                />
+              )}
+            </div>
+          </div>
+
+          {/* Controls */}
+          <div className="flex items-center gap-4">
+            <label className="flex items-center gap-2">
               <input
                 type="checkbox"
                 checked={updateInterval}
                 onChange={(e) => setUpdateInterval(e.target.checked)}
                 className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
               />
-              <label className="text-sm font-medium text-gray-700">
-                Update every second
-              </label>
-            </div>
+              <span className="text-sm font-medium text-gray-700">Update every second</span>
+            </label>
+            <button
+              onClick={reset}
+              className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors"
+            >
+              <FaSync /> Reset
+            </button>
           </div>
 
           {/* Error Section */}
           {error && (
-            <div className="p-4 bg-red-50 rounded-md text-red-700">
+            <div className="p-4 bg-red-50 rounded-lg border border-red-200 text-red-700">
               <p>{error}</p>
             </div>
           )}
-        </div>
 
-        {/* Info Section */}
-        <div className="mt-6 text-sm text-gray-600">
-          <details>
-            <summary className="cursor-pointer font-medium">Features & Notes</summary>
-            <ul className="list-disc list-inside mt-2">
-              <li>Converts between Gregorian and Julian Dates</li>
-              <li>Supports Modified Julian Date (MJD = JD - 2400000.5)</li>
+          {/* Features & Notes */}
+          <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
+            <h3 className="font-semibold text-blue-700 mb-2">Features & Notes</h3>
+            <ul className="list-disc list-inside text-blue-600 text-sm space-y-1">
+              <li>Converts between Gregorian, Julian, and Modified Julian Dates</li>
               <li>Real-time updates (toggleable)</li>
               <li>Adjustable precision (0-15 decimal places)</li>
+              <li>Customizable date format (e.g., YYYY-MM-DD HH:mm)</li>
+              <li>Copy values to clipboard</li>
               <li>Time zone support</li>
               <li>JD starts at noon UTC, January 1, 4713 BC</li>
+              <li>MJD = JD - 2400000.5</li>
             </ul>
-          </details>
+          </div>
         </div>
       </div>
     </div>

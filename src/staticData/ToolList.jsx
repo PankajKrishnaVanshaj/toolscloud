@@ -3002,7 +3002,6 @@ const ToolList = [
         desc: "Set a countdown timer for any duration with alerts.",
         code: "CountdownTimer",
        },
-      // New 50 Time Converter Tools
       {
         name: "Time Duration Calculator",
         slug: "time-duration-calculator",
