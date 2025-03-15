@@ -1,131 +1,223 @@
-'use client';
-
-import React, { useState } from 'react';
+"use client";
+import React, { useState, useCallback } from "react";
+import { FaCopy, FaDownload, FaSync } from "react-icons/fa";
 
 const RunLengthEncodingToBinary = () => {
-  const [input, setInput] = useState('');
-  const [mode, setMode] = useState('encode'); // 'encode' or 'decode'
-  const [binaryOutput, setBinaryOutput] = useState('');
-  const [rleOutput, setRleOutput] = useState('');
-  const [error, setError] = useState('');
-  const [separator, setSeparator] = useState(','); // Separator for RLE output
-  const [maxRun, setMaxRun] = useState(255); // Maximum run length
+  const [input, setInput] = useState("");
+  const [mode, setMode] = useState("encode"); // 'encode' or 'decode'
+  const [binaryOutput, setBinaryOutput] = useState("");
+  const [rleOutput, setRleOutput] = useState("");
+  const [error, setError] = useState("");
+  const [separator, setSeparator] = useState(",");
+  const [maxRun, setMaxRun] = useState(255);
+  const [caseSensitive, setCaseSensitive] = useState(false); // For text encoding
+  const [format, setFormat] = useState("binary"); // 'binary' or 'text'
 
-  const encodeToRLE = (text) => {
-    if (!text.match(/^[01]+$/)) {
-      setError('Input must be a binary string (0s and 1s only)');
-      return null;
-    }
-
-    let result = [];
-    let count = 1;
-    let current = text[0];
-
-    for (let i = 1; i < text.length; i++) {
-      if (text[i] === current && count < maxRun) {
-        count++;
-      } else {
-        result.push(`${count}${current}`);
-        current = text[i];
-        count = 1;
-      }
-    }
-    result.push(`${count}${current}`);
-
-    return result.join(separator);
-  };
-
-  const decodeFromRLE = (rle) => {
-    const pairs = rle.split(separator);
-    let binary = '';
-
-    for (const pair of pairs) {
-      const match = pair.match(/^(\d+)([01])$/);
-      if (!match) {
-        setError(`Invalid RLE format at: ${pair}`);
+  // Encode binary or text to RLE
+  const encodeToRLE = useCallback(
+    (data) => {
+      if (format === "binary" && !data.match(/^[01]+$/)) {
+        setError("Input must be a binary string (0s and 1s only)");
         return null;
       }
-      const count = parseInt(match[1]);
-      const bit = match[2];
-      if (count > maxRun) {
-        setError(`Run length ${count} exceeds maximum of ${maxRun}`);
-        return null;
+
+      let result = [];
+      let count = 1;
+      let current = data[0];
+
+      for (let i = 1; i < data.length; i++) {
+        if (
+          data[i] === current &&
+          count < maxRun &&
+          (format === "binary" || (caseSensitive ? true : data[i].toLowerCase() === current.toLowerCase()))
+        ) {
+          count++;
+        } else {
+          result.push(format === "binary" ? `${count}${current}` : `${count}${current}`);
+          current = data[i];
+          count = 1;
+        }
       }
-      binary += bit.repeat(count);
-    }
+      result.push(format === "binary" ? `${count}${current}` : `${count}${current}`);
 
-    return binary;
-  };
+      return result.join(separator);
+    },
+    [format, maxRun, separator, caseSensitive]
+  );
 
-  const handleConvert = () => {
-    setError('');
-    setBinaryOutput('');
-    setRleOutput('');
+  // Decode RLE to binary or text
+  const decodeFromRLE = useCallback(
+    (rle) => {
+      const pairs = rle.split(separator);
+      let output = "";
+
+      for (const pair of pairs) {
+        const match = pair.match(/^(\d+)(.)$/);
+        if (!match) {
+          setError(`Invalid RLE format at: ${pair}`);
+          return null;
+        }
+        const count = parseInt(match[1]);
+        const char = match[2];
+        if (count > maxRun) {
+          setError(`Run length ${count} exceeds maximum of ${maxRun}`);
+          return null;
+        }
+        if (format === "binary" && !char.match(/[01]/)) {
+          setError(`Invalid binary character: ${char}`);
+          return null;
+        }
+        output += char.repeat(count);
+      }
+
+      return output;
+    },
+    [format, maxRun, separator]
+  );
+
+  // Handle conversion
+  const handleConvert = useCallback(() => {
+    setError("");
+    setBinaryOutput("");
+    setRleOutput("");
 
     if (!input.trim()) {
-      setError('Please enter a value');
+      setError("Please enter a value");
       return;
     }
 
-    if (mode === 'encode') {
+    if (mode === "encode") {
       const rle = encodeToRLE(input);
       if (rle) {
         setRleOutput(rle);
         setBinaryOutput(input);
       }
     } else {
-      const binary = decodeFromRLE(input);
-      if (binary) {
-        setBinaryOutput(binary);
+      const decoded = decodeFromRLE(input);
+      if (decoded) {
+        setBinaryOutput(decoded);
         setRleOutput(input);
       }
     }
+  }, [input, mode, encodeToRLE, decodeFromRLE]);
+
+  // Copy to clipboard
+  const copyToClipboard = (text) => {
+    navigator.clipboard.writeText(text);
   };
 
+  // Download as text file
+  const downloadResult = () => {
+    const content = `Input: ${input}\nMode: ${mode}\nBinary: ${binaryOutput}\nRLE: ${rleOutput}`;
+    const blob = new Blob([content], { type: "text/plain" });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = `rle-conversion-${Date.now()}.txt`;
+    link.click();
+  };
+
+  // Sample inputs
   const handleSample = () => {
-    setInput(mode === 'encode' ? '0000111100001111' : '40,41,40,41');
-    setError('');
+    setInput(
+      format === "binary"
+        ? mode === "encode"
+          ? "0000111100001111"
+          : `40${separator}41${separator}40${separator}41`
+        : mode === "encode"
+        ? "aaabbbcc"
+        : `3a${separator}3b${separator}2c`
+    );
+    setError("");
+  };
+
+  // Reset
+  const reset = () => {
+    setInput("");
+    setMode("encode");
+    setBinaryOutput("");
+    setRleOutput("");
+    setError("");
+    setSeparator(",");
+    setMaxRun(255);
+    setCaseSensitive(false);
+    setFormat("binary");
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4">
-      <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-3xl">
-        <h1 className="text-3xl font-bold text-center mb-6 text-gray-800">
-          Run-Length Encoding to Binary Converter
+    <div className="min-h-screen  flex items-center justify-center ">
+      <div className="bg-white rounded-xl shadow-xl p-6 w-full ">
+        <h1 className="text-2xl sm:text-3xl font-bold text-center mb-6 text-gray-800">
+          Run-Length Encoding Converter
         </h1>
 
         <div className="grid gap-6">
-          {/* Mode Selection */}
-          <div className="flex justify-center gap-4">
-            <button
-              onClick={() => setMode('encode')}
-              className={`px-4 py-2 rounded-md ${mode === 'encode' ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-700'} hover:bg-blue-600 hover:text-white transition-colors`}
-            >
-              Encode (Binary → RLE)
-            </button>
-            <button
-              onClick={() => setMode('decode')}
-              className={`px-4 py-2 rounded-md ${mode === 'decode' ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-700'} hover:bg-blue-600 hover:text-white transition-colors`}
-            >
-              Decode (RLE → Binary)
-            </button>
+          {/* Mode and Format Selection */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Mode</label>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setMode("encode")}
+                  className={`flex-1 py-2 px-4 rounded-md ${
+                    mode === "encode"
+                      ? "bg-blue-600 text-white"
+                      : "bg-gray-200 text-gray-700 hover:bg-blue-100"
+                  } transition-colors`}
+                >
+                  Encode
+                </button>
+                <button
+                  onClick={() => setMode("decode")}
+                  className={`flex-1 py-2 px-4 rounded-md ${
+                    mode === "decode"
+                      ? "bg-blue-600 text-white"
+                      : "bg-gray-200 text-gray-700 hover:bg-blue-100"
+                  } transition-colors`}
+                >
+                  Decode
+                </button>
+              </div>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Format</label>
+              <select
+                value={format}
+                onChange={(e) => setFormat(e.target.value)}
+                className="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="binary">Binary (0s and 1s)</option>
+                <option value="text">Text (Any characters)</option>
+              </select>
+            </div>
           </div>
 
-          {/* Input Section */}
+          {/* Input and Settings */}
           <div className="grid gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                {mode === 'encode' ? 'Binary Input' : 'RLE Input'}
+                {mode === "encode"
+                  ? format === "binary"
+                    ? "Binary Input"
+                    : "Text Input"
+                  : "RLE Input"}
               </label>
               <textarea
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
-                placeholder={mode === 'encode' ? 'e.g., 0000111100001111' : `e.g., 40${separator}41${separator}40${separator}41`}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 h-24 font-mono"
+                placeholder={
+                  format === "binary"
+                    ? mode === "encode"
+                      ? "e.g., 0000111100001111"
+                      : `e.g., 40${separator}41${separator}40${separator}41`
+                    : mode === "encode"
+                    ? "e.g., aaabbbcc"
+                    : `e.g., 3a${separator}3b${separator}2c`
+                }
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 h-32 font-mono resize-y"
               />
             </div>
 
-            <div className="grid gap-4 md:grid-cols-2">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Separator
@@ -133,7 +225,7 @@ const RunLengthEncodingToBinary = () => {
                 <input
                   type="text"
                   value={separator}
-                  onChange={(e) => setSeparator(e.target.value)}
+                  onChange={(e) => setSeparator(e.target.value.slice(0, 1))}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   maxLength={1}
                 />
@@ -145,26 +237,47 @@ const RunLengthEncodingToBinary = () => {
                 <input
                   type="number"
                   value={maxRun}
-                  onChange={(e) => setMaxRun(Math.min(999, Math.max(1, parseInt(e.target.value) || 255)))}
+                  onChange={(e) =>
+                    setMaxRun(Math.min(999, Math.max(1, parseInt(e.target.value) || 255)))
+                  }
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   min={1}
                   max={999}
                 />
               </div>
+              {format === "text" && (
+                <div className="flex items-center">
+                  <label className="flex items-center">
+                    <input
+                      type="checkbox"
+                      checked={caseSensitive}
+                      onChange={(e) => setCaseSensitive(e.target.checked)}
+                      className="mr-2 accent-blue-500"
+                    />
+                    <span className="text-sm text-gray-700">Case Sensitive</span>
+                  </label>
+                </div>
+              )}
             </div>
 
-            <div className="flex gap-4">
+            <div className="flex flex-col sm:flex-row gap-4">
               <button
                 onClick={handleConvert}
-                className="flex-1 px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"
+                className="flex-1 py-2 px-4 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
               >
                 Convert
               </button>
               <button
                 onClick={handleSample}
-                className="px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600"
+                className="py-2 px-4 bg-gray-600 text-white rounded-md hover:bg-gray-700 transition-colors"
               >
                 Sample
+              </button>
+              <button
+                onClick={reset}
+                className="py-2 px-4 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors flex items-center justify-center"
+              >
+                <FaSync className="mr-2" /> Reset
               </button>
             </div>
           </div>
@@ -179,47 +292,73 @@ const RunLengthEncodingToBinary = () => {
           {/* Results Section */}
           {(binaryOutput || rleOutput) && (
             <div className="p-4 bg-gray-50 rounded-md">
-              <h2 className="text-lg font-semibold mb-2">Results:</h2>
-              <div className="space-y-4 text-sm font-mono">
+              <h2 className="text-lg font-semibold mb-4">Results</h2>
+              <div className="grid gap-4 text-sm font-mono">
                 {binaryOutput && (
                   <div>
-                    <p className="font-medium">Binary:</p>
+                    <p className="font-medium">{format === "binary" ? "Binary" : "Text"}:</p>
                     <p className="break-all">{binaryOutput}</p>
-                    <p className="text-gray-500">Length: {binaryOutput.length} bits</p>
-                    <p className="text-gray-500">Decimal: {parseInt(binaryOutput, 2)}</p>
+                    <p className="text-gray-500">
+                      Length: {binaryOutput.length}{" "}
+                      {format === "binary" ? "bits" : "characters"}
+                    </p>
+                    {format === "binary" && (
+                      <p className="text-gray-500">Decimal: {parseInt(binaryOutput, 2)}</p>
+                    )}
+                    <button
+                      onClick={() => copyToClipboard(binaryOutput)}
+                      className="mt-2 px-3 py-1 bg-blue-100 text-blue-700 rounded-md hover:bg-blue-200 flex items-center"
+                    >
+                      <FaCopy className="mr-2" /> Copy
+                    </button>
                   </div>
                 )}
                 {rleOutput && (
                   <div>
                     <p className="font-medium">RLE:</p>
                     <p className="break-all">{rleOutput}</p>
-                    <p className="text-gray-500">Pairs: {rleOutput.split(separator).length}</p>
+                    <p className="text-gray-500">
+                      Pairs: {rleOutput.split(separator).length}
+                    </p>
+                    <button
+                      onClick={() => copyToClipboard(rleOutput)}
+                      className="mt-2 px-3 py-1 bg-blue-100 text-blue-700 rounded-md hover:bg-blue-200 flex items-center"
+                    >
+                      <FaCopy className="mr-2" /> Copy
+                    </button>
                   </div>
                 )}
-                {mode === 'encode' && binaryOutput && rleOutput && (
+                {mode === "encode" && binaryOutput && rleOutput && (
                   <div>
                     <p className="font-medium">Compression Ratio:</p>
-                    <p>{((rleOutput.length / binaryOutput.length) * 100).toFixed(2)}% ({rleOutput.length} / {binaryOutput.length} chars)</p>
+                    <p>
+                      {((rleOutput.length / binaryOutput.length) * 100).toFixed(2)}% (
+                      {rleOutput.length} / {binaryOutput.length} chars)
+                    </p>
                   </div>
                 )}
+                <button
+                  onClick={downloadResult}
+                  className="py-2 px-4 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors flex items-center justify-center"
+                >
+                  <FaDownload className="mr-2" /> Download Results
+                </button>
               </div>
             </div>
           )}
-        </div>
 
-        {/* Info Section */}
-        <div className="mt-6 text-sm text-gray-600">
-          <details>
-            <summary className="cursor-pointer font-medium">Features & Usage</summary>
-            <ul className="list-disc list-inside mt-2">
-              <li>Encode binary to RLE or decode RLE to binary</li>
-              <li>Customizable separator and max run length</li>
-              <li>Shows binary length, decimal value, and compression ratio</li>
-              <li>Sample: 00001111 → 40,41</li>
-              <li>RLE format: [count][bit], e.g., 40 = four 0s</li>
-              <li>Use "Sample" button for example input</li>
+          {/* Features & Usage */}
+          <div className="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
+            <h3 className="font-semibold text-blue-700 mb-2">Features & Usage</h3>
+            <ul className="list-disc list-inside text-blue-600 text-sm space-y-1">
+              <li>Encode/decode binary or text to/from RLE</li>
+              <li>Custom separator and max run length</li>
+              <li>Case sensitivity option for text</li>
+              <li>Copy results to clipboard</li>
+              <li>Download results as text file</li>
+              <li>Shows length, decimal (binary), and compression ratio</li>
             </ul>
-          </details>
+          </div>
         </div>
       </div>
     </div>

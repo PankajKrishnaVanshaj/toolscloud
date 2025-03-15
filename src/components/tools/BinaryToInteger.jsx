@@ -1,77 +1,98 @@
-'use client';
-
-import React, { useState, useCallback } from 'react';
+"use client";
+import React, { useState, useCallback, useRef } from "react";
+import { FaCopy, FaDownload, FaSync, FaFileUpload } from "react-icons/fa";
 
 const BinaryToInteger = () => {
-  const [binaryInput, setBinaryInput] = useState('');
-  const [integerOutput, setIntegerOutput] = useState('');
-  const [delimiter, setDelimiter] = useState('space'); // space, comma, none
-  const [error, setError] = useState('');
+  const [binaryInput, setBinaryInput] = useState("");
+  const [integerOutput, setIntegerOutput] = useState("");
+  const [delimiter, setDelimiter] = useState("space");
+  const [error, setError] = useState("");
   const [isDragging, setIsDragging] = useState(false);
   const [showCopyAlert, setShowCopyAlert] = useState(false);
-  const [bitLength, setBitLength] = useState('auto'); // auto, 4, 8, 16, 32
-  const [signedMode, setSignedMode] = useState('unsigned'); // unsigned, signed
+  const [bitLength, setBitLength] = useState("auto");
+  const [signedMode, setSignedMode] = useState("unsigned");
+  const [inputBase, setInputBase] = useState("binary"); // New: binary, hex, octal
+  const [outputFormat, setOutputFormat] = useState("decimal"); // New: decimal, hex, octal
+  const fileInputRef = useRef(null);
 
-  const binaryToInteger = useCallback((binary) => {
-    try {
-      if (!binary) {
-        setIntegerOutput('');
-        setError('');
-        return;
-      }
-
-      let binaryArray;
-      switch (delimiter) {
-        case 'space':
-          binaryArray = binary.trim().split(/\s+/);
-          break;
-        case 'comma':
-          binaryArray = binary.split(',').map(str => str.trim());
-          break;
-        case 'none':
-          binaryArray = [binary.trim()];
-          break;
-        default:
-          binaryArray = binary.trim().split(/\s+/);
-      }
-
-      const integers = binaryArray.map((bin) => {
-        if (!/^[01]+$/.test(bin)) throw new Error('Invalid binary format');
-        if (bitLength !== 'auto' && bin.length !== parseInt(bitLength)) {
-          throw new Error(`Binary must be ${bitLength} bits when not in auto mode`);
+  const binaryToInteger = useCallback(
+    (input) => {
+      try {
+        if (!input) {
+          setIntegerOutput("");
+          setError("");
+          return;
         }
 
-        let decimal = parseInt(bin, 2);
-        const actualBitLength = bitLength === 'auto' ? bin.length : parseInt(bitLength);
-
-        if (signedMode === 'signed' && bin[0] === '1' && bin.length === actualBitLength) {
-          // Two's complement for signed numbers
-          const maxValue = 2 ** actualBitLength;
-          decimal = decimal - maxValue;
+        let inputArray;
+        switch (delimiter) {
+          case "space":
+            inputArray = input.trim().split(/\s+/);
+            break;
+          case "comma":
+            inputArray = input.split(",").map((str) => str.trim());
+            break;
+          case "none":
+            inputArray = [input.trim()];
+            break;
+          default:
+            inputArray = input.trim().split(/\s+/);
         }
 
-        if (bitLength !== 'auto') {
-          const maxUnsigned = 2 ** actualBitLength - 1;
-          const minSigned = -(2 ** (actualBitLength - 1));
-          const maxSigned = 2 ** (actualBitLength - 1) - 1;
-
-          if (signedMode === 'unsigned' && decimal > maxUnsigned) {
-            throw new Error(`Value exceeds ${actualBitLength}-bit unsigned limit (${maxUnsigned})`);
-          } else if (signedMode === 'signed' && (decimal < minSigned || decimal > maxSigned)) {
-            throw new Error(`Value out of ${actualBitLength}-bit signed range (${minSigned} to ${maxSigned})`);
+        const integers = inputArray.map((value) => {
+          let num;
+          if (inputBase === "binary" && !/^[01]+$/.test(value)) {
+            throw new Error("Invalid binary format");
+          } else if (inputBase === "hex" && !/^[0-9A-Fa-f]+$/.test(value.replace(/^0x/i, ""))) {
+            throw new Error("Invalid hexadecimal format");
+          } else if (inputBase === "octal" && !/^[0-7]+$/.test(value)) {
+            throw new Error("Invalid octal format");
           }
-        }
 
-        return decimal.toString();
-      });
+          const parseBase = inputBase === "binary" ? 2 : inputBase === "hex" ? 16 : 8;
+          num = parseInt(inputBase === "hex" ? value.replace(/^0x/i, "") : value, parseBase);
+          if (isNaN(num)) throw new Error(`Invalid ${inputBase} input`);
 
-      setIntegerOutput(integers.join(delimiter === 'none' ? '' : delimiter === 'space' ? ' ' : ', '));
-      setError('');
-    } catch (err) {
-      setError('Error converting binary to integer: ' + err.message);
-      setIntegerOutput('');
-    }
-  }, [delimiter, bitLength, signedMode]);
+          const actualBitLength =
+            bitLength === "auto" ? Math.max(4, Math.ceil(Math.log2(Math.abs(num) + 1))) : parseInt(bitLength);
+
+          if (bitLength !== "auto" && value.length > actualBitLength / (inputBase === "hex" ? 4 : inputBase === "octal" ? 3 : 1)) {
+            throw new Error(`${inputBase.charAt(0).toUpperCase() + inputBase.slice(1)} input exceeds ${bitLength}-bit length`);
+          }
+
+          if (signedMode === "signed" && value[0] === "1" && inputBase === "binary") {
+            const maxValue = 2 ** actualBitLength;
+            num = num - maxValue;
+          }
+
+          if (bitLength !== "auto") {
+            const maxUnsigned = 2 ** actualBitLength - 1;
+            const minSigned = -(2 ** (actualBitLength - 1));
+            const maxSigned = 2 ** (actualBitLength - 1) - 1;
+
+            if (signedMode === "unsigned" && num > maxUnsigned) {
+              throw new Error(`Value exceeds ${actualBitLength}-bit unsigned limit (${maxUnsigned})`);
+            } else if (signedMode === "signed" && (num < minSigned || num > maxSigned)) {
+              throw new Error(`Value out of ${actualBitLength}-bit signed range (${minSigned} to ${maxSigned})`);
+            }
+          }
+
+          return outputFormat === "decimal"
+            ? num.toString()
+            : outputFormat === "hex"
+            ? "0x" + num.toString(16).toUpperCase()
+            : num.toString(8);
+        });
+
+        setIntegerOutput(integers.join(delimiter === "none" ? "" : delimiter === "space" ? " " : ", "));
+        setError("");
+      } catch (err) {
+        setError("Error converting to integer: " + err.message);
+        setIntegerOutput("");
+      }
+    },
+    [delimiter, bitLength, signedMode, inputBase, outputFormat]
+  );
 
   const handleInputChange = (e) => {
     const value = e.target.value;
@@ -86,7 +107,7 @@ const BinaryToInteger = () => {
       setBinaryInput(text);
       binaryToInteger(text);
     };
-    reader.onerror = () => setError('Error reading file');
+    reader.onerror = () => setError("Error reading file");
     reader.readAsText(file);
   };
 
@@ -94,10 +115,10 @@ const BinaryToInteger = () => {
     e.preventDefault();
     setIsDragging(false);
     const file = e.dataTransfer.files[0];
-    if (file && file.type === 'text/plain') {
+    if (file && file.type === "text/plain") {
       handleFileUpload(file);
     } else {
-      setError('Please drop a valid text file');
+      setError("Please drop a valid text file");
     }
   };
 
@@ -107,31 +128,37 @@ const BinaryToInteger = () => {
       setShowCopyAlert(true);
       setTimeout(() => setShowCopyAlert(false), 2000);
     } catch (err) {
-      setError('Failed to copy to clipboard');
+      setError("Failed to copy to clipboard");
     }
   };
 
   const downloadOutput = () => {
-    const blob = new Blob([integerOutput], { type: 'text/plain' });
+    const blob = new Blob([integerOutput], { type: "text/plain" });
     const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
+    const a = document.createElement("a");
     a.href = url;
-    a.download = 'integer_output.txt';
+    a.download = `${outputFormat}_output_${Date.now()}.txt`;
     a.click();
     window.URL.revokeObjectURL(url);
   };
 
   const clearAll = () => {
-    setBinaryInput('');
-    setIntegerOutput('');
-    setError('');
+    setBinaryInput("");
+    setIntegerOutput("");
+    setError("");
+    setDelimiter("space");
+    setBitLength("auto");
+    setSignedMode("unsigned");
+    setInputBase("binary");
+    setOutputFormat("decimal");
+    if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-100 to-orange-100 flex items-center justify-center p-4">
-      <div className="bg-white p-6 rounded-xl shadow-2xl w-full max-w-2xl relative">
-        <h1 className="text-3xl font-bold mb-6 text-gray-800 text-center">
-          Advanced Binary to Integer Converter
+    <div className="min-h-screen  flex items-center justify-center">
+      <div className="w-full  bg-white rounded-xl shadow-lg p-6 sm:p-8 relative">
+        <h1 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-6 text-center">
+          Number to Integer Converter
         </h1>
 
         {/* Copy Alert */}
@@ -142,16 +169,16 @@ const BinaryToInteger = () => {
         )}
 
         {/* Controls */}
-        <div className="flex flex-wrap gap-4 mb-6 justify-center">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
           <div>
-            <label className="text-sm text-gray-600 mr-2">Delimiter:</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Delimiter</label>
             <select
               value={delimiter}
               onChange={(e) => {
                 setDelimiter(e.target.value);
                 binaryToInteger(binaryInput);
               }}
-              className="px-3 py-1 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500"
             >
               <option value="space">Space</option>
               <option value="comma">Comma</option>
@@ -159,14 +186,14 @@ const BinaryToInteger = () => {
             </select>
           </div>
           <div>
-            <label className="text-sm text-gray-600 mr-2">Bit Length:</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Bit Length</label>
             <select
               value={bitLength}
               onChange={(e) => {
                 setBitLength(e.target.value);
                 binaryToInteger(binaryInput);
               }}
-              className="px-3 py-1 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500"
             >
               <option value="auto">Auto</option>
               <option value="4">4-bit</option>
@@ -176,31 +203,55 @@ const BinaryToInteger = () => {
             </select>
           </div>
           <div>
-            <label className="text-sm text-gray-600 mr-2">Mode:</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Mode</label>
             <select
               value={signedMode}
               onChange={(e) => {
                 setSignedMode(e.target.value);
                 binaryToInteger(binaryInput);
               }}
-              className="px-3 py-1 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500"
             >
               <option value="unsigned">Unsigned</option>
               <option value="signed">Signed (2's Complement)</option>
             </select>
           </div>
-          <button
-            onClick={clearAll}
-            className="px-3 py-1 bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors"
-          >
-            Clear
-          </button>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Input Base</label>
+            <select
+              value={inputBase}
+              onChange={(e) => {
+                setInputBase(e.target.value);
+                binaryToInteger(binaryInput);
+              }}
+              className="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="binary">Binary (Base 2)</option>
+              <option value="octal">Octal (Base 8)</option>
+              <option value="hex">Hexadecimal (Base 16)</option>
+            </select>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Output Format</label>
+            <select
+              value={outputFormat}
+              onChange={(e) => {
+                setOutputFormat(e.target.value);
+                binaryToInteger(binaryInput);
+              }}
+              className="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="decimal">Decimal</option>
+              <option value="hex">Hexadecimal</option>
+              <option value="octal">Octal</option>
+            </select>
+          </div>
         </div>
 
         {/* Input Section */}
         <div
-          className={`mb-6 p-4 border-2 rounded-md ${
-            isDragging ? 'border-blue-500 bg-blue-50' : 'border-gray-300'
+          className={`mb-6 p-4 border-2 rounded-lg ${
+            isDragging ? "border-blue-500 bg-blue-50" : "border-gray-300"
           }`}
           onDragOver={(e) => {
             e.preventDefault();
@@ -209,42 +260,55 @@ const BinaryToInteger = () => {
           onDragLeave={() => setIsDragging(false)}
           onDrop={handleDrop}
         >
-          <label className="block text-gray-700 mb-2">Enter Binary:</label>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Enter {inputBase.charAt(0).toUpperCase() + inputBase.slice(1)} Numbers
+          </label>
           <textarea
             value={binaryInput}
             onChange={handleInputChange}
-            className="w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 resize-y font-mono"
+            className="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500 resize-y font-mono"
             rows="6"
-            placeholder="Enter binary (e.g., 0100 1010)"
+            placeholder={`Enter ${inputBase} numbers (e.g., ${
+              inputBase === "binary" ? "0100 1010" : inputBase === "hex" ? "0xA 0xF" : "12 17"
+            })`}
           />
-          <p className="text-sm text-gray-500 mt-1">
-            Drag and drop a text file with binary data
-          </p>
+          <div className="flex justify-between items-center mt-2">
+            <p className="text-sm text-gray-500">Drag and drop a text file or upload below</p>
+            <input
+              type="file"
+              accept="text/plain"
+              ref={fileInputRef}
+              onChange={(e) => handleFileUpload(e.target.files[0])}
+              className="text-sm text-gray-500 file:mr-2 file:py-1 file:px-2 file:rounded-md file:border-0 file:text-sm file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+            />
+          </div>
         </div>
 
         {/* Output Section */}
         <div className="mb-6">
-          <label className="block text-gray-700 mb-2">Integer Output:</label>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            {outputFormat.charAt(0).toUpperCase() + outputFormat.slice(1)} Output
+          </label>
           <div className="relative">
             <textarea
               value={integerOutput}
               readOnly
-              className="w-full p-2 border rounded-md bg-gray-50 text-gray-600 min-h-[150px] resize-y"
-              placeholder="Integer output will appear here..."
+              className="w-full p-2 border rounded-md bg-gray-50 text-gray-600 min-h-[150px] resize-y font-mono"
+              placeholder={`${outputFormat} output will appear here...`}
             />
             {integerOutput && (
-              <div className="absolute right-2 top-2 space-x-2">
+              <div className="absolute right-2 top-2 flex gap-2">
                 <button
                   onClick={copyToClipboard}
-                  className="bg-blue-500 text-white px-3 py-1 rounded-md hover:bg-blue-600 transition-colors"
+                  className="bg-blue-500 text-white px-3 Summit.py-1 rounded-md hover:bg-blue-600 transition-colors flex items-center"
                 >
-                  Copy
+                  <FaCopy className="mr-1" /> Copy
                 </button>
                 <button
                   onClick={downloadOutput}
-                  className="bg-orange-500 text-white px-3 py-1 rounded-md hover:bg-orange-600 transition-colors"
+                  className="bg-green-500 text-white px-3 py-1 rounded-md hover:bg-green-600 transition-colors flex items-center"
                 >
-                  Download
+                  <FaDownload className="mr-1" /> Download
                 </button>
               </div>
             )}
@@ -253,13 +317,30 @@ const BinaryToInteger = () => {
 
         {/* Error Message */}
         {error && (
-          <div className="text-red-500 text-sm text-center mb-4">{error}</div>
+          <div className="text-red-500 text-sm text-center mb-4 p-2 bg-red-50 rounded-md">{error}</div>
         )}
 
-        {/* Info */}
-        <div className="text-gray-600 text-sm text-center">
-          <p>Converts binary to integer with signed/unsigned support</p>
-          <p>Supports file drag-and-drop and variable bit lengths</p>
+        {/* Action Buttons */}
+        <div className="flex justify-center">
+          <button
+            onClick={clearAll}
+            className="py-2 px-4 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors flex items-center"
+          >
+            <FaSync className="mr-2" /> Clear All
+          </button>
+        </div>
+
+        {/* Features */}
+        <div className="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
+          <h3 className="font-semibold text-blue-700 mb-2">Features</h3>
+          <ul className="list-disc list-inside text-blue-600 text-sm space-y-1">
+            <li>Convert Binary, Octal, or Hex to Decimal, Hex, or Octal</li>
+            <li>Supports signed (2's complement) and unsigned numbers</li>
+            <li>Custom bit length (auto, 4, 8, 16, 32)</li>
+            <li>Flexible delimiters</li>
+            <li>File upload and drag-and-drop support</li>
+            <li>Copy to clipboard and download output</li>
+          </ul>
         </div>
       </div>
     </div>

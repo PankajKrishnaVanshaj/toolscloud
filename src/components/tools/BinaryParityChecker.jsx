@@ -1,43 +1,39 @@
-'use client';
-
-import React, { useState } from 'react';
+"use client";
+import React, { useState, useCallback } from "react";
+import { FaPlus, FaTrash, FaDownload, FaSync } from "react-icons/fa";
 
 const BinaryParityChecker = () => {
-  const [inputs, setInputs] = useState(['']); // Array for multiple binary inputs
-  const [parityType, setParityType] = useState('even'); // Even or odd parity
-  const [bitLength, setBitLength] = useState(8); // Default to 8-bit
+  const [inputs, setInputs] = useState([""]);
+  const [parityType, setParityType] = useState("even");
+  const [bitLength, setBitLength] = useState(8);
   const [results, setResults] = useState([]);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
+  const [showBinaryWithParity, setShowBinaryWithParity] = useState(true);
+  const [exportFormat, setExportFormat] = useState("text");
 
-  const validateBinary = (binary) => {
-    return /^[01]+$/.test(binary);
-  };
-
-  const padBinary = (binary, length) => {
-    return binary.padStart(length, '0');
-  };
-
-  const countOnes = (binary) => {
-    return binary.split('').reduce((sum, bit) => sum + parseInt(bit), 0);
-  };
-
+  // Validation and utility functions
+  const validateBinary = (binary) => /^[01]+$/.test(binary);
+  const padBinary = (binary, length) => binary.padStart(length, "0");
+  const countOnes = (binary) =>
+    binary.split("").reduce((sum, bit) => sum + parseInt(bit), 0);
   const checkParity = (binary) => {
     const ones = countOnes(binary);
     const isEven = ones % 2 === 0;
     return {
       ones,
       isEven,
-      parityBit: parityType === 'even' ? (isEven ? '0' : '1') : (isEven ? '1' : '0'),
+      parityBit: parityType === "even" ? (isEven ? "0" : "1") : (isEven ? "1" : "0"),
     };
   };
 
-  const calculateParity = () => {
-    setError('');
+  // Calculate parity
+  const calculateParity = useCallback(() => {
+    setError("");
     setResults([]);
 
-    const validInputs = inputs.filter(input => input.trim() !== '');
+    const validInputs = inputs.filter((input) => input.trim() !== "");
     if (validInputs.length === 0) {
-      setError('Please enter at least one binary number');
+      setError("Please enter at least one binary number");
       return;
     }
 
@@ -58,23 +54,68 @@ const BinaryParityChecker = () => {
       });
     }
     setResults(newResults);
-  };
+  }, [inputs, parityType, bitLength]);
 
+  // Handle input changes
   const handleInputChange = (index, value) => {
     const newInputs = [...inputs];
     newInputs[index] = value;
     setInputs(newInputs);
   };
 
-  const addInput = () => {
-    setInputs([...inputs, '']);
-  };
-
+  const addInput = () => setInputs([...inputs, ""]);
   const removeInput = (index) => {
     if (inputs.length > 1) {
-      const newInputs = inputs.filter((_, i) => i !== index);
-      setInputs(newInputs);
+      setInputs(inputs.filter((_, i) => i !== index));
     }
+  };
+
+  // Reset form
+  const resetForm = () => {
+    setInputs([""]);
+    setParityType("even");
+    setBitLength(8);
+    setResults([]);
+    setError("");
+    setShowBinaryWithParity(true);
+    setExportFormat("text");
+  };
+
+  // Export results
+  const exportResults = () => {
+    if (!results.length) return;
+
+    let content;
+    if (exportFormat === "json") {
+      content = JSON.stringify(results, null, 2);
+    } else {
+      content = results
+        .map((r, i) => {
+          const lines = [
+            `Input ${i + 1}: ${r.original}`,
+            `Padded Binary: ${r.padded}`,
+            `Decimal: ${r.decimal}`,
+            `Number of 1s: ${r.ones}`,
+            `Parity: ${r.isEven ? "Even" : "Odd"}`,
+            `${parityType === "even" ? "Even" : "Odd"} Parity Bit: ${r.parityBit}`,
+          ];
+          if (showBinaryWithParity) {
+            lines.push(`With Parity: ${r.padded + r.parityBit}`);
+          }
+          return lines.join("\n");
+        })
+        .join("\n\n");
+    }
+
+    const blob = new Blob([content], {
+      type: exportFormat === "json" ? "application/json" : "text/plain",
+    });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `parity-results-${Date.now()}.${exportFormat === "json" ? "json" : "txt"}`;
+    link.click();
+    URL.revokeObjectURL(url);
   };
 
   const handleSubmit = (e) => {
@@ -83,17 +124,17 @@ const BinaryParityChecker = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4">
-      <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-3xl">
-        <h1 className="text-3xl font-bold text-center mb-6 text-gray-800">
+    <div className="min-h-screen  flex items-center justify-center ">
+      <div className="bg-white rounded-xl shadow-xl p-6 sm:p-8 w-full ">
+        <h1 className="text-2xl sm:text-3xl font-bold text-center mb-6 text-gray-800">
           Binary Parity Checker
         </h1>
 
-        <form onSubmit={handleSubmit} className="grid gap-6">
+        <form onSubmit={handleSubmit} className="space-y-6">
           {/* Input Section */}
-          <div className="grid gap-4">
+          <div className="space-y-4">
             {inputs.map((input, index) => (
-              <div key={index} className="flex items-center gap-2">
+              <div key={index} className="flex flex-col sm:flex-row items-center gap-2">
                 <input
                   type="text"
                   value={input}
@@ -105,9 +146,9 @@ const BinaryParityChecker = () => {
                   <button
                     type="button"
                     onClick={() => removeInput(index)}
-                    className="px-2 py-1 bg-red-500 text-white rounded-md hover:bg-red-600"
+                    className="px-3 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors"
                   >
-                    Remove
+                    <FaTrash />
                   </button>
                 )}
               </div>
@@ -115,14 +156,14 @@ const BinaryParityChecker = () => {
             <button
               type="button"
               onClick={addInput}
-              className="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 w-32"
+              className="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 transition-colors flex items-center gap-2"
             >
-              Add Input
+              <FaPlus /> Add Input
             </button>
           </div>
 
           {/* Options */}
-          <div className="grid gap-4 md:grid-cols-2">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Parity Type
@@ -151,38 +192,101 @@ const BinaryParityChecker = () => {
                 <option value={32}>32-bit</option>
               </select>
             </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Export Format
+              </label>
+              <select
+                value={exportFormat}
+                onChange={(e) => setExportFormat(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="text">Text (.txt)</option>
+                <option value="json">JSON (.json)</option>
+              </select>
+            </div>
+            <div className="flex items-center">
+              <label className="flex items-center">
+                <input
+                  type="checkbox"
+                  checked={showBinaryWithParity}
+                  onChange={(e) => setShowBinaryWithParity(e.target.checked)}
+                  className="mr-2 accent-blue-500"
+                />
+                <span className="text-sm text-gray-700">Show Binary with Parity</span>
+              </label>
+            </div>
           </div>
 
-          <button
-            type="submit"
-            className="w-full px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"
-          >
-            Check Parity
-          </button>
+          {/* Action Buttons */}
+          <div className="flex flex-col sm:flex-row gap-4">
+            <button
+              type="submit"
+              className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+            >
+              Check Parity
+            </button>
+            <button
+              type="button"
+              onClick={exportResults}
+              disabled={!results.length}
+              className="flex-1 px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors flex items-center justify-center"
+            >
+              <FaDownload className="mr-2" /> Export Results
+            </button>
+            <button
+              type="button"
+              onClick={resetForm}
+              className="flex-1 px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors flex items-center justify-center"
+            >
+              <FaSync className="mr-2" /> Reset
+            </button>
+          </div>
         </form>
 
         {/* Error Section */}
         {error && (
-          <div className="mt-4 p-4 bg-red-50 rounded-md text-red-700">
-            <p>{error}</p>
+          <div className="mt-6 p-4 bg-red-50 rounded-lg border border-red-200">
+            <p className="text-red-700">{error}</p>
           </div>
         )}
 
         {/* Results Section */}
         {results.length > 0 && (
-          <div className="mt-4 p-4 bg-gray-50 rounded-md">
-            <h2 className="text-lg font-semibold mb-2">Parity Results:</h2>
+          <div className="mt-6 p-4 bg-gray-50 rounded-lg">
+            <h2 className="text-lg font-semibold mb-4 text-gray-800">Parity Results:</h2>
             <div className="space-y-4 text-sm">
               {results.map((result, index) => (
-                <div key={index} className="border-b pb-2">
-                  <p><span className="font-medium">Input:</span> {result.original}</p>
-                  <p><span className="font-medium">Padded Binary:</span> {result.padded}</p>
-                  <p><span className="font-medium">Decimal:</span> {result.decimal}</p>
-                  <p><span className="font-medium">Number of 1s:</span> {result.ones}</p>
-                  <p><span className="font-medium">Parity:</span> {result.isEven ? 'Even' : 'Odd'}</p>
+                <div
+                  key={index}
+                  className="p-3 bg-white rounded-md shadow-sm border border-gray-200"
+                >
                   <p>
-                    <span className="font-medium">{parityType === 'even' ? 'Even' : 'Odd'} Parity Bit:</span> {result.parityBit}
-                    <span className="ml-2 text-gray-500">(With parity bit: {result.padded + result.parityBit})</span>
+                    <span className="font-medium">Input:</span> {result.original}
+                  </p>
+                  <p>
+                    <span className="font-medium">Padded Binary:</span> {result.padded}
+                  </p>
+                  <p>
+                    <span className="font-medium">Decimal:</span> {result.decimal}
+                  </p>
+                  <p>
+                    <span className="font-medium">Number of 1s:</span> {result.ones}
+                  </p>
+                  <p>
+                    <span className="font-medium">Parity:</span>{" "}
+                    {result.isEven ? "Even" : "Odd"}
+                  </p>
+                  <p>
+                    <span className="font-medium">
+                      {parityType === "even" ? "Even" : "Odd"} Parity Bit:
+                    </span>{" "}
+                    {result.parityBit}
+                    {showBinaryWithParity && (
+                      <span className="ml-2 text-gray-500">
+                        (With parity: {result.padded + result.parityBit})
+                      </span>
+                    )}
                   </p>
                 </div>
               ))}
@@ -190,19 +294,16 @@ const BinaryParityChecker = () => {
           </div>
         )}
 
-        {/* Info Section */}
-        <div className="mt-6 text-sm text-gray-600">
-          <details>
-            <summary className="cursor-pointer font-medium">Features & Usage</summary>
-            <ul className="list-disc list-inside mt-2">
-              <li>Checks parity (even/odd) of binary numbers</li>
-              <li>Supports multiple inputs with dynamic addition/removal</li>
-              <li>Configurable bit length (4, 8, 16, 32)</li>
-              <li>Calculates parity bit for even or odd parity</li>
-              <li>Shows detailed breakdown (1s count, decimal)</li>
-              <li>Example: 1010 (even) → Parity Bit 0 (even), 1 (odd)</li>
-            </ul>
-          </details>
+        {/* Features Section */}
+        <div className="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
+          <h3 className="font-semibold text-blue-700 mb-2">Features</h3>
+          <ul className="list-disc list-inside text-blue-600 text-sm space-y-1">
+            <li>Supports multiple binary inputs</li>
+            <li>Configurable even/odd parity and bit length (4, 8, 16, 32)</li>
+            <li>Dynamic input addition/removal</li>
+            <li>Export results as Text or JSON</li>
+            <li>Option to show binary with parity bit</li>
+          </ul>
         </div>
       </div>
     </div>

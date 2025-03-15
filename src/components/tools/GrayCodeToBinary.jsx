@@ -1,65 +1,81 @@
-'use client';
-
-import React, { useState, useCallback } from 'react';
+"use client";
+import React, { useState, useCallback, useRef } from "react";
+import { FaCopy, FaDownload, FaSync, FaUpload } from "react-icons/fa";
 
 const GrayCodeToBinary = () => {
-  const [grayCodeInput, setGrayCodeInput] = useState('');
-  const [binaryOutput, setBinaryOutput] = useState('');
-  const [delimiter, setDelimiter] = useState('space'); // space, comma, none
-  const [error, setError] = useState('');
+  const [grayCodeInput, setGrayCodeInput] = useState("");
+  const [binaryOutput, setBinaryOutput] = useState("");
+  const [delimiter, setDelimiter] = useState("space");
+  const [error, setError] = useState("");
   const [isDragging, setIsDragging] = useState(false);
   const [showCopyAlert, setShowCopyAlert] = useState(false);
-  const [bitLength, setBitLength] = useState('auto'); // auto, 4, 8, 16
-  const [grouping, setGrouping] = useState('none'); // none, 4
+  const [bitLength, setBitLength] = useState("auto");
+  const [grouping, setGrouping] = useState("none");
+  const [caseFormat, setCaseFormat] = useState("normal"); // normal, upper, lower
+  const [history, setHistory] = useState([]);
+  const fileInputRef = useRef(null);
 
-  const grayCodeToBinary = useCallback((gray) => {
-    try {
-      if (!gray) {
-        setBinaryOutput('');
-        setError('');
-        return;
+  const grayCodeToBinary = useCallback(
+    (gray) => {
+      try {
+        if (!gray) {
+          setBinaryOutput("");
+          setError("");
+          return;
+        }
+
+        let grayArray;
+        switch (delimiter) {
+          case "space":
+            grayArray = gray.trim().split(/\s+/);
+            break;
+          case "comma":
+            grayArray = gray.split(",").map((str) => str.trim());
+            break;
+          case "none":
+            grayArray = [gray.trim()];
+            break;
+          default:
+            grayArray = gray.trim().split(/\s+/);
+        }
+
+        const binaries = grayArray.map((grayCode) => {
+          if (!/^[01]+$/.test(grayCode)) throw new Error("Invalid Gray code format");
+          if (bitLength !== "auto" && grayCode.length !== parseInt(bitLength)) {
+            throw new Error(`Gray code must be ${bitLength} bits when not in auto mode`);
+          }
+
+          let binary = grayCode[0];
+          for (let i = 1; i < grayCode.length; i++) {
+            binary += (parseInt(binary[i - 1]) ^ parseInt(grayCode[i])).toString();
+          }
+
+          if (grouping === "4" && binary.length >= 4) {
+            binary = binary.match(/.{1,4}/g).join(" ");
+          } else if (grouping === "8" && binary.length >= 8) {
+            binary = binary.match(/.{1,8}/g).join(" ");
+          }
+
+          return caseFormat === "upper"
+            ? binary.toUpperCase()
+            : caseFormat === "lower"
+            ? binary.toLowerCase()
+            : binary;
+        });
+
+        const output = binaries.join(
+          delimiter === "none" ? "" : delimiter === "space" ? " " : ", "
+        );
+        setBinaryOutput(output);
+        setError("");
+        setHistory((prev) => [...prev, { input: gray, output }].slice(-10)); // Keep last 10
+      } catch (err) {
+        setError("Error converting Gray code to binary: " + err.message);
+        setBinaryOutput("");
       }
-
-      let grayArray;
-      switch (delimiter) {
-        case 'space':
-          grayArray = gray.trim().split(/\s+/);
-          break;
-        case 'comma':
-          grayArray = gray.split(',').map(str => str.trim());
-          break;
-        case 'none':
-          grayArray = [gray.trim()];
-          break;
-        default:
-          grayArray = gray.trim().split(/\s+/);
-      }
-
-      const binaries = grayArray.map((grayCode) => {
-        if (!/^[01]+$/.test(grayCode)) throw new Error('Invalid Gray code format');
-        if (bitLength !== 'auto' && grayCode.length !== parseInt(bitLength)) {
-          throw new Error(`Gray code must be ${bitLength} bits when not in auto mode`);
-        }
-
-        // Convert Gray code to binary
-        let binary = grayCode[0]; // First bit remains the same
-        for (let i = 1; i < grayCode.length; i++) {
-          binary += (parseInt(binary[i - 1]) ^ parseInt(grayCode[i])).toString();
-        }
-
-        if (grouping === '4' && binary.length >= 4) {
-          return binary.match(/.{1,4}/g).join(' ');
-        }
-        return binary;
-      });
-
-      setBinaryOutput(binaries.join(delimiter === 'none' ? '' : delimiter === 'space' ? ' ' : ', '));
-      setError('');
-    } catch (err) {
-      setError('Error converting Gray code to binary: ' + err.message);
-      setBinaryOutput('');
-    }
-  }, [delimiter, bitLength, grouping]);
+    },
+    [delimiter, bitLength, grouping, caseFormat]
+  );
 
   const handleInputChange = (e) => {
     const value = e.target.value;
@@ -74,7 +90,7 @@ const GrayCodeToBinary = () => {
       setGrayCodeInput(text);
       grayCodeToBinary(text);
     };
-    reader.onerror = () => setError('Error reading file');
+    reader.onerror = () => setError("Error reading file");
     reader.readAsText(file);
   };
 
@@ -82,11 +98,16 @@ const GrayCodeToBinary = () => {
     e.preventDefault();
     setIsDragging(false);
     const file = e.dataTransfer.files[0];
-    if (file && file.type === 'text/plain') {
+    if (file && file.type === "text/plain") {
       handleFileUpload(file);
     } else {
-      setError('Please drop a valid text file');
+      setError("Please drop a valid text file");
     }
+  };
+
+  const handleFileInput = (e) => {
+    const file = e.target.files[0];
+    if (file) handleFileUpload(file);
   };
 
   const copyToClipboard = async () => {
@@ -95,99 +116,120 @@ const GrayCodeToBinary = () => {
       setShowCopyAlert(true);
       setTimeout(() => setShowCopyAlert(false), 2000);
     } catch (err) {
-      setError('Failed to copy to clipboard');
+      setError("Failed to copy to clipboard");
     }
   };
 
   const downloadOutput = () => {
-    const blob = new Blob([binaryOutput], { type: 'text/plain' });
+    const blob = new Blob([binaryOutput], { type: "text/plain" });
     const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
+    const a = document.createElement("a");
     a.href = url;
-    a.download = 'binary_output.txt';
+    a.download = `binary_output_${Date.now()}.txt`;
     a.click();
     window.URL.revokeObjectURL(url);
   };
 
   const clearAll = () => {
-    setGrayCodeInput('');
-    setBinaryOutput('');
-    setError('');
+    setGrayCodeInput("");
+    setBinaryOutput("");
+    setError("");
+    setHistory([]);
+    if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-pink-100 to-indigo-100 flex items-center justify-center p-4">
-      <div className="bg-white p-6 rounded-xl shadow-2xl w-full max-w-2xl relative">
-        <h1 className="text-3xl font-bold mb-6 text-gray-800 text-center">
-          Advanced Gray Code to Binary Converter
+    <div className="min-h-screen  flex items-center justify-center ">
+      <div className="w-full  bg-white rounded-xl shadow-lg p-6 sm:p-8 relative">
+        <h1 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-6 text-center">
+          Gray Code to Binary Converter
         </h1>
 
         {/* Copy Alert */}
         {showCopyAlert && (
-          <div className="absolute top-4 right-4 bg-green-500 text-white px-4 py-2 rounded-md shadow-lg animate-fade-in">
-            Copied to clipboard!
+          <div className="absolute top-4 right-4 bg-green-500 text-white px-3 py-1 rounded-md shadow-lg animate-fade-in">
+            Copied!
           </div>
         )}
 
         {/* Controls */}
-        <div className="flex flex-wrap gap-4 mb-6 justify-center">
-          <div>
-            <label className="text-sm text-gray-600 mr-2">Delimiter:</label>
-            <select
-              value={delimiter}
-              onChange={(e) => {
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+          {[
+            {
+              label: "Delimiter",
+              value: delimiter,
+              onChange: (e) => {
                 setDelimiter(e.target.value);
                 grayCodeToBinary(grayCodeInput);
-              }}
-              className="px-3 py-1 border rounded-md focus:outline-none focus:ring-2 focus:ring-pink-500"
-            >
-              <option value="space">Space</option>
-              <option value="comma">Comma</option>
-              <option value="none">None</option>
-            </select>
-          </div>
-          <div>
-            <label className="text-sm text-gray-600 mr-2">Bit Length:</label>
-            <select
-              value={bitLength}
-              onChange={(e) => {
+              },
+              options: [
+                { value: "space", label: "Space" },
+                { value: "comma", label: "Comma" },
+                { value: "none", label: "None" },
+              ],
+            },
+            {
+              label: "Bit Length",
+              value: bitLength,
+              onChange: (e) => {
                 setBitLength(e.target.value);
                 grayCodeToBinary(grayCodeInput);
-              }}
-              className="px-3 py-1 border rounded-md focus:outline-none focus:ring-2 focus:ring-pink-500"
-            >
-              <option value="auto">Auto</option>
-              <option value="4">4-bit</option>
-              <option value="8">8-bit</option>
-              <option value="16">16-bit</option>
-            </select>
-          </div>
-          <div>
-            <label className="text-sm text-gray-600 mr-2">Grouping:</label>
-            <select
-              value={grouping}
-              onChange={(e) => {
+              },
+              options: [
+                { value: "auto", label: "Auto" },
+                { value: "4", label: "4-bit" },
+                { value: "8", label: "8-bit" },
+                { value: "16", label: "16-bit" },
+              ],
+            },
+            {
+              label: "Grouping",
+              value: grouping,
+              onChange: (e) => {
                 setGrouping(e.target.value);
                 grayCodeToBinary(grayCodeInput);
-              }}
-              className="px-3 py-1 border rounded-md focus:outline-none focus:ring-2 focus:ring-pink-500"
-            >
-              <option value="none">None</option>
-              <option value="4">4-bit Groups</option>
-            </select>
-          </div>
-          <button
-            onClick={clearAll}
-            className="px-3 py-1 bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors"
-          >
-            Clear
-          </button>
+              },
+              options: [
+                { value: "none", label: "None" },
+                { value: "4", label: "4-bit" },
+                { value: "8", label: "8-bit" },
+              ],
+            },
+            {
+              label: "Case",
+              value: caseFormat,
+              onChange: (e) => {
+                setCaseFormat(e.target.value);
+                grayCodeToBinary(grayCodeInput);
+              },
+              options: [
+                { value: "normal", label: "Normal" },
+                { value: "upper", label: "Upper" },
+                { value: "lower", label: "Lower" },
+              ],
+            },
+          ].map(({ label, value, onChange, options }) => (
+            <div key={label}>
+              <label className="block text-sm font-medium text-gray-700 mb-1">{label}</label>
+              <select
+                value={value}
+                onChange={onChange}
+                className="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500"
+              >
+                {options.map((opt) => (
+                  <option key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+          ))}
         </div>
 
         {/* Input Section */}
         <div
-          className={`mb-6 p-4 border-2 rounded-md ${
-            isDragging ? 'border-pink-500 bg-pink-50' : 'border-gray-300'
+          className={`mb-6 p-4 border-2 rounded-lg ${
+            isDragging ? "border-blue-500 bg-blue-50" : "border-gray-300"
           }`}
           onDragOver={(e) => {
             e.preventDefault();
@@ -196,61 +238,105 @@ const GrayCodeToBinary = () => {
           onDragLeave={() => setIsDragging(false)}
           onDrop={handleDrop}
         >
-          <label className="block text-gray-700 mb-2">Enter Gray Code:</label>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Gray Code Input
+          </label>
           <textarea
             value={grayCodeInput}
             onChange={handleInputChange}
-            className="w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-pink-500 resize-y font-mono"
+            className="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500 font-mono resize-y"
             rows="6"
-            placeholder="Enter Gray code (e.g., 0110 0101)"
+            placeholder="e.g., 0110 0101 or 0110,0101"
           />
-          <p className="text-sm text-gray-500 mt-1">
-            Drag and drop a text file with Gray code data
-          </p>
+          <input
+            type="file"
+            accept=".txt"
+            ref={fileInputRef}
+            onChange={handleFileInput}
+            className="mt-2 text-sm text-gray-500 file:mr-4 file:py-1 file:px-3 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+          />
         </div>
 
         {/* Output Section */}
         <div className="mb-6">
-          <label className="block text-gray-700 mb-2">Binary Output:</label>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Binary Output
+          </label>
           <div className="relative">
             <textarea
               value={binaryOutput}
               readOnly
-              className="w-full p-2 border rounded-md bg-gray-50 text-gray-600 min-h-[150px] resize-y font-mono"
+              className="w-full p-2 border rounded-md bg-gray-50 text-gray-600 font-mono resize-y min-h-[150px]"
               placeholder="Binary output will appear here..."
             />
             {binaryOutput && (
-              <div className="absolute right-2 top-2 space-x-2">
+              <div className="absolute right-2 top-2 flex gap-2">
                 <button
                   onClick={copyToClipboard}
-                  className="bg-pink-500 text-white px-3 py-1 rounded-md hover:bg-pink-600 transition-colors"
+                  className="p-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+                  title="Copy to clipboard"
                 >
-                  Copy
+                  <FaCopy />
                 </button>
                 <button
                   onClick={downloadOutput}
-                  className="bg-indigo-500 text-white px-3 py-1 rounded-md hover:bg-indigo-600 transition-colors"
+                  className="p-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors"
+                  title="Download as text file"
                 >
-                  Download
+                  <FaDownload />
                 </button>
               </div>
             )}
           </div>
         </div>
 
+        {/* Action Buttons */}
+        <div className="flex justify-center gap-4 mb-6">
+          <button
+            onClick={clearAll}
+            className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors"
+          >
+            <FaSync /> Clear All
+          </button>
+        </div>
+
         {/* Error Message */}
         {error && (
-          <div className="text-red-500 text-sm text-center mb-4">{error}</div>
+          <div className="text-red-500 text-sm text-center mb-4 p-2 bg-red-50 rounded-md">
+            {error}
+          </div>
         )}
 
-        {/* Info */}
-        <div className="text-gray-600 text-sm text-center">
-          <p>Converts Gray code to binary with customizable formatting</p>
-          <p>Supports file drag-and-drop, bit lengths, and grouping</p>
+        {/* History */}
+        {history.length > 0 && (
+          <div className="mb-6 p-4 bg-gray-50 rounded-lg">
+            <h3 className="text-sm font-medium text-gray-700 mb-2">Conversion History</h3>
+            <ul className="text-sm text-gray-600 space-y-1 max-h-40 overflow-y-auto font-mono">
+              {history.slice().reverse().map((item, index) => (
+                <li key={index}>
+                  <span className="text-gray-500">Gray:</span> {item.input} →{" "}
+                  <span className="text-gray-500">Binary:</span> {item.output}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+
+        {/* Features */}
+        <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
+          <h3 className="font-semibold text-blue-700 mb-2">Features</h3>
+          <ul className="list-disc list-inside text-blue-600 text-sm space-y-1">
+            <li>Convert Gray code to binary with multiple delimiters</li>
+            <li>Support for fixed bit lengths (4, 8, 16) or auto-detection</li>
+            <li>Custom grouping (4-bit, 8-bit) and case formatting</li>
+            <li>File upload and drag-and-drop support</li>
+            <li>Copy to clipboard and download output</li>
+            <li>Conversion history tracking</li>
+          </ul>
         </div>
       </div>
     </div>
   );
 };
 
-export default GrayCodeToBinary;
+export default GrayCode

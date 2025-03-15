@@ -1,22 +1,31 @@
-'use client';
-
-import React, { useState } from 'react';
+"use client";
+import React, { useState, useCallback } from "react";
+import { FaSync, FaDownload } from "react-icons/fa";
 
 const BinaryBitCounter = () => {
-  const [input, setInput] = useState('');
-  const [inputType, setInputType] = useState('binary'); // binary, decimal, hex
-  const [bitLength, setBitLength] = useState(8); // 8, 16, 32, 64
+  const [input, setInput] = useState("");
+  const [inputType, setInputType] = useState("binary");
+  const [bitLength, setBitLength] = useState(8);
   const [result, setResult] = useState(null);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
+  const [signedMode, setSignedMode] = useState(false); // Signed vs Unsigned
+  const [endianness, setEndianness] = useState("big"); // Big vs Little Endian
 
   const validateInput = (value, type) => {
+    const maxValue = signedMode
+      ? (2n ** BigInt(bitLength - 1)) - 1n
+      : (2n ** BigInt(bitLength)) - 1n;
+    const minValue = signedMode ? -(2n ** BigInt(bitLength - 1)) : 0n;
+
     switch (type) {
-      case 'binary':
+      case "binary":
         return /^[01]+$/.test(value);
-      case 'decimal':
-        return /^\d+$/.test(value) && BigInt(value) <= (2n ** BigInt(bitLength)) - 1n;
-      case 'hex':
-        return /^[0-9A-Fa-f]+$/.test(value) && BigInt(`0x${value}`) <= (2n ** BigInt(bitLength)) - 1n;
+      case "decimal":
+        const num = BigInt(value);
+        return /^\-?\d+$/.test(value) && num >= minValue && num <= maxValue;
+      case "hex":
+        const hexNum = BigInt(`0x${value}`);
+        return /^[0-9A-Fa-f]+$/.test(value) && hexNum >= minValue && hexNum <= maxValue;
       default:
         return false;
     }
@@ -24,78 +33,138 @@ const BinaryBitCounter = () => {
 
   const convertToBinary = (value, type) => {
     switch (type) {
-      case 'binary':
+      case "binary":
         return value;
-      case 'decimal':
-        return BigInt(value).toString(2);
-      case 'hex':
-        return BigInt(`0x${value}`).toString(2);
+      case "decimal":
+        let num = BigInt(value);
+        if (signedMode && num < 0) {
+          num = (2n ** BigInt(bitLength)) + num; // Two's complement
+        }
+        return num.toString(2);
+      case "hex":
+        let hexNum = BigInt(`0x${value}`);
+        if (signedMode && hexNum < 0) {
+          hexNum = (2n ** BigInt(bitLength)) + hexNum;
+        }
+        return hexNum.toString(2);
       default:
-        return '';
+        return "";
     }
   };
 
   const padBinary = (binary, length) => {
-    return binary.padStart(length, '0');
+    return binary.padStart(length, "0");
+  };
+
+  const reverseEndianness = (binary) => {
+    if (endianness === "little") {
+      return binary.match(/.{1,8}/g)?.reverse().join("") || binary;
+    }
+    return binary;
   };
 
   const countBits = (binary) => {
-    return binary.split('').reduce((count, bit) => count + (bit === '1' ? 1 : 0), 0);
+    return binary.split("").reduce((count, bit) => count + (bit === "1" ? 1 : 0), 0);
   };
 
-  const analyzeBits = () => {
-    setError('');
+  const analyzeBits = useCallback(() => {
+    setError("");
     setResult(null);
 
     if (!input.trim()) {
-      setError('Please enter a value');
+      setError("Please enter a value");
       return;
     }
 
     if (!validateInput(input, inputType)) {
-      setError(`Invalid ${inputType} input`);
+      setError(`Invalid ${inputType} input for ${signedMode ? "signed" : "unsigned"} mode`);
       return;
     }
 
-    const binary = convertToBinary(input, inputType);
-    const paddedBinary = padBinary(binary, bitLength);
-    const bitCount = countBits(paddedBinary);
-    const decimal = BigInt(`0b${paddedBinary}`).toString();
-    const hex = BigInt(`0b${paddedBinary}`).toString(16).toUpperCase().padStart(Math.ceil(bitLength / 4), '0');
-    
-    // Bit positions (0-based, right to left)
-    const bitPositions = paddedBinary
-      .split('')
+    let binary = convertToBinary(input, inputType);
+    binary = padBinary(binary, bitLength);
+    const adjustedBinary = reverseEndianness(binary);
+    const bitCount = countBits(adjustedBinary);
+    const decimal = BigInt(`0b${adjustedBinary}`).toString();
+    const hex = BigInt(`0b${adjustedBinary}`)
+      .toString(16)
+      .toUpperCase()
+      .padStart(Math.ceil(bitLength / 4), "0");
+    const signedDecimal = signedMode
+      ? BigInt(`0b${adjustedBinary}`) >= 2n ** BigInt(bitLength - 1)
+        ? BigInt(`0b${adjustedBinary}`) - (2n ** BigInt(bitLength))
+        : BigInt(`0b${adjustedBinary}`)
+      : null;
+
+    const bitPositions = adjustedBinary
+      .split("")
       .reverse()
       .map((bit, index) => ({ position: index, value: bit }))
-      .filter(bit => bit.value === '1');
+      .filter((bit) => bit.value === "1");
 
     setResult({
-      binary: paddedBinary,
+      binary: adjustedBinary,
       decimal,
       hex,
+      signedDecimal,
       bitCount,
       bitPositions,
     });
-  };
+  }, [input, inputType, bitLength, signedMode, endianness]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
     analyzeBits();
   };
 
+  const reset = () => {
+    setInput("");
+    setInputType("binary");
+    setBitLength(8);
+    setSignedMode(false);
+    setEndianness("big");
+    setResult(null);
+    setError("");
+  };
+
+  const downloadResult = () => {
+    if (!result) return;
+    const text = [
+      `Binary Bit Counter Result:`,
+      `Input: ${input} (${inputType})`,
+      `Bit Length: ${bitLength}`,
+      `Signed Mode: ${signedMode ? "Yes" : "No"}`,
+      `Endianness: ${endianness === "big" ? "Big" : "Little"}`,
+      `\nRepresentations:`,
+      `Binary: ${result.binary}`,
+      `Decimal: ${result.decimal}`,
+      signedMode ? `Signed Decimal: ${result.signedDecimal}` : "",
+      `Hex: ${result.hex}`,
+      `\nBit Count: ${result.bitCount}`,
+      `\nBit Positions (right-to-left, 0-based):`,
+      result.bitPositions.map((bit) => `Position ${bit.position}`).join("\n"),
+    ]
+      .filter(Boolean)
+      .join("\n");
+    const blob = new Blob([text], { type: "text/plain" });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = `bit-counter-result-${Date.now()}.txt`;
+    link.click();
+  };
+
   return (
-    <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4">
-      <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-3xl">
-        <h1 className="text-3xl font-bold text-center mb-6 text-gray-800">
+    <div className="min-h-screen flex items-center justify-center ">
+      <div className="w-full  bg-white rounded-xl shadow-lg p-6 sm:p-8">
+        <h1 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-6 text-center">
           Binary Bit Counter
         </h1>
 
-        <form onSubmit={handleSubmit} className="grid gap-6">
+        <form onSubmit={handleSubmit} className="space-y-6">
           {/* Input Section */}
-          <div className="grid gap-4">
-            <div className="flex flex-col gap-2">
-              <label className="block text-sm font-medium text-gray-700">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="col-span-1 sm:col-span-2">
+              <label className="block text-sm font-medium text-gray-700 mb-1">
                 Input Value
               </label>
               <input
@@ -106,121 +175,147 @@ const BinaryBitCounter = () => {
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
-
-            <div className="grid gap-2 md:grid-cols-2">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Input Type
-                </label>
-                <select
-                  value={inputType}
-                  onChange={(e) => {
-                    setInputType(e.target.value);
-                    setInput('');
-                  }}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                  <option value="binary">Binary</option>
-                  <option value="decimal">Decimal</option>
-                  <option value="hex">Hexadecimal</option>
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Bit Length
-                </label>
-                <select
-                  value={bitLength}
-                  onChange={(e) => setBitLength(parseInt(e.target.value))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                  <option value={8}>8-bit</option>
-                  <option value={16}>16-bit</option>
-                  <option value={32}>32-bit</option>
-                  <option value={64}>64-bit</option>
-                </select>
-              </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Input Type</label>
+              <select
+                value={inputType}
+                onChange={(e) => {
+                  setInputType(e.target.value);
+                  setInput("");
+                }}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="binary">Binary</option>
+                <option value="decimal">Decimal</option>
+                <option value="hex">Hexadecimal</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Bit Length</label>
+              <select
+                value={bitLength}
+                onChange={(e) => setBitLength(parseInt(e.target.value))}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value={8}>8-bit</option>
+                <option value={16}>16-bit</option>
+                <option value={32}>32-bit</option>
+                <option value={64}>64-bit</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Number Mode</label>
+              <select
+                value={signedMode ? "signed" : "unsigned"}
+                onChange={(e) => setSignedMode(e.target.value === "signed")}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="unsigned">Unsigned</option>
+                <option value="signed">Signed</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Endianness</label>
+              <select
+                value={endianness}
+                onChange={(e) => setEndianness(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="big">Big Endian</option>
+                <option value="little">Little Endian</option>
+              </select>
             </div>
           </div>
 
-          <button
-            type="submit"
-            className="w-full px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"
-          >
-            Count Bits
-          </button>
+          <div className="flex flex-col sm:flex-row gap-4">
+            <button
+              type="submit"
+              className="flex-1 py-2 px-4 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+            >
+              Count Bits
+            </button>
+            <button
+              type="button"
+              onClick={reset}
+              className="flex-1 py-2 px-4 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors flex items-center justify-center"
+            >
+              <FaSync className="mr-2" /> Reset
+            </button>
+            <button
+              type="button"
+              onClick={downloadResult}
+              disabled={!result}
+              className="flex-1 py-2 px-4 bg-green-600 text-white rounded-md hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors flex items-center justify-center"
+            >
+              <FaDownload className="mr-2" /> Download
+            </button>
+          </div>
         </form>
 
         {/* Error Section */}
         {error && (
-          <div className="mt-4 p-4 bg-red-50 rounded-md text-red-700">
-            <p>{error}</p>
+          <div className="mt-6 p-4 bg-red-50 rounded-lg border border-red-200">
+            <p className="text-red-700">{error}</p>
           </div>
         )}
 
         {/* Results Section */}
         {result && (
-          <div className="mt-4 p-4 bg-gray-50 rounded-md">
-            <h2 className="text-lg font-semibold mb-2">Results:</h2>
-            <div className="space-y-4 text-sm">
+          <div className="mt-6 p-4 bg-gray-50 rounded-lg">
+            <h2 className="text-lg font-semibold text-gray-800 mb-4">Results</h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
               <div>
-                <p className="font-medium">Representations:</p>
-                <p>Binary: {result.binary}</p>
-                <p>Decimal: {result.decimal}</p>
-                <p>Hex: {result.hex}</p>
+                <p className="font-medium text-gray-700">Representations:</p>
+                <p>Binary: <span className="font-mono">{result.binary}</span></p>
+                <p>Decimal: <span className="font-mono">{result.decimal}</span></p>
+                {signedMode && (
+                  <p>Signed Decimal: <span className="font-mono">{result.signedDecimal}</span></p>
+                )}
+                <p>Hex: <span className="font-mono">{result.hex}</span></p>
               </div>
               <div>
-                <p className="font-medium">Bit Count:</p>
+                <p className="font-medium text-gray-700">Bit Analysis:</p>
                 <p>Total Set Bits (1s): {result.bitCount}</p>
-              </div>
-              <div>
-                <p className="font-medium">Bit Positions (Set Bits):</p>
+                <p>Bit Positions (right-to-left, 0-based):</p>
                 {result.bitPositions.length > 0 ? (
-                  <ul className="list-disc list-inside">
+                  <ul className="list-disc list-inside ml-4 max-h-32 overflow-y-auto">
                     {result.bitPositions.map((bit) => (
-                      <li key={bit.position}>
-                        Position {bit.position} (right-to-left, 0-based)
-                      </li>
+                      <li key={bit.position}>Position {bit.position}</li>
                     ))}
                   </ul>
                 ) : (
-                  <p>No set bits (all 0s)</p>
+                  <p className="text-gray-600">No set bits (all 0s)</p>
                 )}
               </div>
-              <div>
-                <p className="font-medium">Visualization:</p>
-                <div className="font-mono text-xs">
-                  <p>{result.binary.split('').join(' ')}</p>
-                  <p>
-                    {result.binary
-                      .split('')
-                      .map((bit, i) => (bit === '1' ? '↑' : ' '))
-                      .join(' ')}
-                  </p>
-                </div>
+            </div>
+            <div className="mt-4">
+              <p className="font-medium text-gray-700">Visualization:</p>
+              <div className="font-mono text-xs bg-white p-2 rounded border">
+                <p>{result.binary.match(/.{1,8}/g)?.join(" ") || result.binary}</p>
+                <p>
+                  {result.binary
+                    .match(/.{1,8}/g)
+                    ?.join(" ")
+                    .split("")
+                    .map((bit) => (bit === "1" ? "↑" : bit === " " ? " " : " "))
+                    .join("") || result.binary.split("").map((bit) => (bit === "1" ? "↑" : " ")).join("")}
+                </p>
               </div>
             </div>
           </div>
         )}
 
-        {/* Info Section */}
-        <div className="mt-6 text-sm text-gray-600">
-          <details>
-            <summary className="cursor-pointer font-medium">Features & Usage</summary>
-            <ul className="list-disc list-inside mt-2">
-              <li>Counts set bits (1s) in binary numbers</li>
-              <li>Supports binary, decimal, and hex input</li>
-              <li>Configurable bit length (8, 16, 32, 64)</li>
-              <li>Shows bit positions and visualization</li>
-              <li>Examples:
-                <ul className="list-circle list-inside ml-4">
-                  <li>Binary: 1010 → 2 bits</li>
-                  <li>Decimal: 10 → 2 bits</li>
-                  <li>Hex: A → 2 bits</li>
-                </ul>
-              </li>
-            </ul>
-          </details>
+        {/* Features Section */}
+        <div className="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
+          <h3 className="font-semibold text-blue-700 mb-2">Features</h3>
+          <ul className="list-disc list-inside text-blue-600 text-sm space-y-1">
+            <li>Supports binary, decimal, and hexadecimal input</li>
+            <li>Configurable bit length (8, 16, 32, 64)</li>
+            <li>Signed and unsigned number modes</li>
+            <li>Big and Little Endian support</li>
+            <li>Bit count and position analysis</li>
+            <li>Download results as text file</li>
+          </ul>
         </div>
       </div>
     </div>

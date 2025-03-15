@@ -1,69 +1,68 @@
-'use client';
-
-import React, { useState } from 'react';
+"use client";
+import React, { useState, useCallback, useRef } from "react";
+import { FaDownload, FaSync, FaUpload, FaCopy } from "react-icons/fa";
 
 const ASCII85ToBinary = () => {
-  const [ascii85Input, setAscii85Input] = useState('');
-  const [binaryOutput, setBinaryOutput] = useState('');
-  const [decodedText, setDecodedText] = useState('');
-  const [error, setError] = useState('');
-  const [showBinaryAs, setShowBinaryAs] = useState('bits'); // Options: bits, hex, bytes
+  const [ascii85Input, setAscii85Input] = useState("");
+  const [binaryOutput, setBinaryOutput] = useState("");
+  const [decodedText, setDecodedText] = useState("");
+  const [error, setError] = useState("");
+  const [showBinaryAs, setShowBinaryAs] = useState("bits"); // bits, hex, bytes
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [wrapLength, setWrapLength] = useState(32); // For binary formatting
+  const fileInputRef = useRef(null);
 
   // ASCII85 decoding function
-  const decodeASCII85 = (input) => {
-    const cleanInput = input.replace(/<~|~>/g, '').trim(); // Remove optional <~ ~> delimiters
+  const decodeASCII85 = useCallback((input) => {
+    const cleanInput = input.replace(/<~|~>/g, "").trim();
     if (!cleanInput.match(/^[!-u]*$/)) {
-      throw new Error('Invalid ASCII85 input: Only characters ! to u are allowed');
+      throw new Error("Invalid ASCII85 input: Only characters ! to u are allowed");
     }
 
-    let binary = '';
+    let binary = "";
     let tuple = 0;
     let count = 0;
 
     for (let i = 0; i < cleanInput.length; i++) {
-      const charCode = cleanInput.charCodeAt(i) - 33; // ASCII85 uses ! (33) to u (117)
+      const charCode = cleanInput.charCodeAt(i) - 33;
       tuple = tuple * 85 + charCode;
       count++;
 
       if (count === 5 || i === cleanInput.length - 1) {
         if (count < 5) {
-          // Pad remaining characters
           while (count < 5) {
-            tuple = tuple * 85 + 84; // 'u' is the max value, used for padding
+            tuple = tuple * 85 + 84;
             count++;
           }
         }
 
-        // Convert tuple to 4 bytes
         const bytes = [
-          (tuple >> 24) & 0xFF,
-          (tuple >> 16) & 0xFF,
-          (tuple >> 8) & 0xFF,
-          tuple & 0xFF,
+          (tuple >> 24) & 0xff,
+          (tuple >> 16) & 0xff,
+          (tuple >> 8) & 0xff,
+          tuple & 0xff,
         ];
 
-        // Adjust for padding
         const byteCount = Math.min(4, Math.ceil((i + 1) / 5) * 4 - (5 - count));
         for (let j = 0; j < byteCount; j++) {
-          binary += bytes[j].toString(2).padStart(8, '0');
+          binary += bytes[j].toString(2).padStart(8, "0");
         }
 
         tuple = 0;
         count = 0;
       }
     }
-
     return binary;
-  };
+  }, []);
 
   // ASCII85 encoding function
-  const encodeASCII85 = (binary) => {
+  const encodeASCII85 = useCallback((binary) => {
     const bytes = [];
     for (let i = 0; i < binary.length; i += 8) {
       bytes.push(parseInt(binary.slice(i, i + 8), 2));
     }
 
-    let result = '';
+    let result = "";
     for (let i = 0; i < bytes.length; i += 4) {
       let tuple = 0;
       const chunk = bytes.slice(i, i + 4);
@@ -72,9 +71,9 @@ const ASCII85ToBinary = () => {
       }
 
       if (tuple === 0 && chunk.length === 4) {
-        result += 'z';
+        result += "z";
       } else {
-        let encoded = '';
+        let encoded = "";
         for (let k = 0; k < 5; k++) {
           encoded = String.fromCharCode((tuple % 85) + 33) + encoded;
           tuple = Math.floor(tuple / 85);
@@ -82,21 +81,21 @@ const ASCII85ToBinary = () => {
         result += encoded.slice(0, chunk.length + 1);
       }
     }
-
     return `<~${result}~>`;
-  };
+  }, []);
 
-  const handleDecode = () => {
-    setError('');
-    setBinaryOutput('');
-    setDecodedText('');
+  // Decode handler
+  const handleDecode = useCallback(() => {
+    setError("");
+    setBinaryOutput("");
+    setDecodedText("");
+    setIsProcessing(true);
 
     try {
       const binary = decodeASCII85(ascii85Input);
       setBinaryOutput(binary);
 
-      // Convert binary to text
-      let text = '';
+      let text = "";
       for (let i = 0; i < binary.length; i += 8) {
         const byte = parseInt(binary.slice(i, i + 8), 2);
         text += String.fromCharCode(byte);
@@ -104,20 +103,27 @@ const ASCII85ToBinary = () => {
       setDecodedText(text);
     } catch (err) {
       setError(err.message);
+    } finally {
+      setIsProcessing(false);
     }
-  };
+  }, [ascii85Input, decodeASCII85]);
 
-  const handleEncode = () => {
-    setError('');
+  // Encode handler
+  const handleEncode = useCallback(() => {
+    setError("");
+    setIsProcessing(true);
     try {
       const binary = binaryOutput || decodeASCII85(ascii85Input);
       const encoded = encodeASCII85(binary);
       setAscii85Input(encoded);
     } catch (err) {
-      setError('Error encoding to ASCII85: ' + err.message);
+      setError("Error encoding to ASCII85: " + err.message);
+    } finally {
+      setIsProcessing(false);
     }
-  };
+  }, [ascii85Input, binaryOutput, decodeASCII85, encodeASCII85]);
 
+  // File upload handler
   const handleFileUpload = (e) => {
     const file = e.target.files[0];
     if (file) {
@@ -130,55 +136,76 @@ const ASCII85ToBinary = () => {
     }
   };
 
+  // Download binary file
   const downloadBinary = () => {
     if (!binaryOutput) return;
     const bytes = [];
     for (let i = 0; i < binaryOutput.length; i += 8) {
       bytes.push(parseInt(binaryOutput.slice(i, i + 8), 2));
     }
-    const blob = new Blob([new Uint8Array(bytes)], { type: 'application/octet-stream' });
+    const blob = new Blob([new Uint8Array(bytes)], { type: "application/octet-stream" });
     const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
+    const a = document.createElement("a");
     a.href = url;
-    a.download = 'binary_output.bin';
+    a.download = `binary_output_${Date.now()}.bin`;
     a.click();
     URL.revokeObjectURL(url);
   };
 
+  // Copy to clipboard
+  const copyToClipboard = (text) => {
+    navigator.clipboard.writeText(text);
+    alert("Copied to clipboard!");
+  };
+
+  // Format binary output
   const formatBinaryOutput = () => {
-    if (!binaryOutput) return '';
+    if (!binaryOutput) return "";
+    let formatted = "";
     switch (showBinaryAs) {
-      case 'bits':
-        return binaryOutput.match(/.{1,8}/g)?.join(' ') || binaryOutput;
-      case 'hex':
-        let hex = '';
+      case "bits":
+        formatted = binaryOutput.match(new RegExp(`.{1,${wrapLength}}`, "g"))?.join(" ") || binaryOutput;
+        break;
+      case "hex":
         for (let i = 0; i < binaryOutput.length; i += 8) {
           const byte = parseInt(binaryOutput.slice(i, i + 8), 2);
-          hex += byte.toString(16).padStart(2, '0') + ' ';
+          formatted += byte.toString(16).padStart(2, "0") + " ";
         }
-        return hex.trim();
-      case 'bytes':
-        let bytes = '';
+        break;
+      case "bytes":
         for (let i = 0; i < binaryOutput.length; i += 8) {
           const byte = parseInt(binaryOutput.slice(i, i + 8), 2);
-          bytes += byte + ' ';
+          formatted += byte + " ";
         }
-        return bytes.trim();
+        break;
       default:
-        return binaryOutput;
+        formatted = binaryOutput;
     }
+    return formatted.trim();
+  };
+
+  // Reset everything
+  const reset = () => {
+    setAscii85Input("");
+    setBinaryOutput("");
+    setDecodedText("");
+    setError("");
+    setShowBinaryAs("bits");
+    setWrapLength(32);
+    setIsProcessing(false);
+    if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4">
-      <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-3xl">
-        <h1 className="text-3xl font-bold text-center mb-6 text-gray-800">
+    <div className="min-h-screen  flex items-center justify-center ">
+      <div className="w-full  bg-white rounded-xl shadow-lg p-6 sm:p-8">
+        <h1 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-6 text-center">
           ASCII85 to Binary Converter
         </h1>
 
-        <div className="grid gap-6">
+        <div className="space-y-6">
           {/* Input Section */}
-          <div className="grid gap-4">
+          <div className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 ASCII85 Input
@@ -186,65 +213,110 @@ const ASCII85ToBinary = () => {
               <textarea
                 value={ascii85Input}
                 onChange={(e) => setAscii85Input(e.target.value)}
-                placeholder="e.g., <~9jqo^BlbD-BleB1DJ+*+~>"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 h-24"
+                placeholder="e.g., <~9jqo^~> or 9jqo^"
+                className="w-full p-3 border rounded-md focus:ring-2 focus:ring-blue-500 h-32 resize-y font-mono text-sm"
+                disabled={isProcessing}
               />
             </div>
-            <div className="flex gap-2">
+            <div className="flex flex-col sm:flex-row gap-2">
               <button
                 onClick={handleDecode}
-                className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"
+                disabled={!ascii85Input || isProcessing}
+                className="flex-1 py-2 px-4 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors flex items-center justify-center"
               >
-                Decode to Binary
+                <FaUpload className="mr-2" /> Decode
               </button>
               <button
                 onClick={handleEncode}
-                className="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600"
+                disabled={!binaryOutput || isProcessing}
+                className="flex-1 py-2 px-4 bg-green-600 text-white rounded-md hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors flex items-center justify-center"
               >
-                Encode to ASCII85
+                <FaSync className="mr-2" /> Encode
               </button>
               <input
                 type="file"
+                ref={fileInputRef}
                 onChange={handleFileUpload}
-                className="px-4 py-2 border border-gray-300 rounded-md"
+                accept=".txt"
+                className="flex-1 text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
               />
             </div>
           </div>
 
-          {/* Output Format Selector */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Show Binary As
-            </label>
-            <select
-              value={showBinaryAs}
-              onChange={(e) => setShowBinaryAs(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              <option value="bits">Binary Bits (e.g., 0100 1010)</option>
-              <option value="hex">Hexadecimal (e.g., 4A)</option>
-              <option value="bytes">Decimal Bytes (e.g., 74)</option>
-            </select>
+          {/* Output Settings */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Show Binary As
+              </label>
+              <select
+                value={showBinaryAs}
+                onChange={(e) => setShowBinaryAs(e.target.value)}
+                className="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="bits">Binary Bits</option>
+                <option value="hex">Hexadecimal</option>
+                <option value="bytes">Decimal Bytes</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Wrap Length ({wrapLength} bits)
+              </label>
+              <input
+                type="range"
+                min="8"
+                max="64"
+                step="8"
+                value={wrapLength}
+                onChange={(e) => setWrapLength(parseInt(e.target.value))}
+                className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-500"
+                disabled={showBinaryAs !== "bits"}
+              />
+            </div>
           </div>
 
           {/* Results Section */}
-          {binaryOutput && (
-            <div className="p-4 bg-gray-50 rounded-md">
-              <h2 className="text-lg font-semibold mb-2">Results:</h2>
-              <div className="space-y-4 text-sm">
-                <div>
-                  <p className="font-medium">Binary Output:</p>
-                  <p className="font-mono break-all">{formatBinaryOutput()}</p>
-                </div>
-                <div>
-                  <p className="font-medium">Decoded Text:</p>
-                  <p>{decodedText}</p>
-                </div>
+          {(binaryOutput || decodedText) && (
+            <div className="p-4 bg-gray-50 rounded-lg">
+              <h2 className="text-lg font-semibold text-gray-700 mb-3">Results</h2>
+              <div className="space-y-4">
+                {binaryOutput && (
+                  <div>
+                    <div className="flex justify-between items-center mb-1">
+                      <p className="font-medium text-gray-700">Binary Output:</p>
+                      <button
+                        onClick={() => copyToClipboard(formatBinaryOutput())}
+                        className="p-1 text-gray-500 hover:text-blue-500"
+                      >
+                        <FaCopy />
+                      </button>
+                    </div>
+                    <pre className="font-mono text-sm bg-white p-2 rounded border break-all">
+                      {formatBinaryOutput()}
+                    </pre>
+                  </div>
+                )}
+                {decodedText && (
+                  <div>
+                    <div className="flex justify-between items-center mb-1">
+                      <p className="font-medium text-gray-700">Decoded Text:</p>
+                      <button
+                        onClick={() => copyToClipboard(decodedText)}
+                        className="p-1 text-gray-500 hover:text-blue-500"
+                      >
+                        <FaCopy />
+                      </button>
+                    </div>
+                    <p className="text-sm bg-white p-2 rounded border">{decodedText}</p>
+                  </div>
+                )}
                 <button
                   onClick={downloadBinary}
-                  className="px-4 py-2 bg-purple-500 text-white rounded-md hover:bg-purple-600"
+                  disabled={!binaryOutput || isProcessing}
+                  className="w-full py-2 px-4 bg-purple-600 text-white rounded-md hover:bg-purple-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors flex items-center justify-center"
                 >
-                  Download Binary File
+                  <FaDownload className="mr-2" /> Download Binary
                 </button>
               </div>
             </div>
@@ -252,25 +324,43 @@ const ASCII85ToBinary = () => {
 
           {/* Error Section */}
           {error && (
-            <div className="p-4 bg-red-50 rounded-md text-red-700">
+            <div className="p-4 bg-red-50 rounded-lg text-red-700">
               <p>{error}</p>
             </div>
           )}
-        </div>
 
-        {/* Info Section */}
-        <div className="mt-6 text-sm text-gray-600">
-          <details>
-            <summary className="cursor-pointer font-medium">Features & Usage</summary>
-            <ul className="list-disc list-inside mt-2">
+          {/* Processing Indicator */}
+          {isProcessing && (
+            <div className="text-center">
+              <div className="inline-block animate-spin rounded-full h-6 w-6 border-t-2 border-b-2 border-blue-500"></div>
+            </div>
+          )}
+
+          {/* Controls */}
+          <div className="flex justify-center">
+            <button
+              onClick={reset}
+              className="py-2 px-4 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors flex items-center"
+            >
+              <FaSync className="mr-2" /> Reset
+            </button>
+          </div>
+
+          {/* Features & Info */}
+          <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
+            <h3 className="font-semibold text-blue-700 mb-2">Features</h3>
+            <ul className="list-disc list-inside text-blue-600 text-sm space-y-1">
               <li>Decode ASCII85 to binary and text</li>
-              <li>Encode binary back to ASCII85</li>
-              <li>Supports file upload for ASCII85 input</li>
+              <li>Encode binary to ASCII85</li>
+              <li>Upload ASCII85 from text files</li>
               <li>Download binary as .bin file</li>
-              <li>View binary as bits, hex, or bytes</li>
-              <li>Example: {`<~9jqo^~>`} decodes to "Hello"</li>
+              <li>View binary as bits, hex, or bytes with adjustable wrap length</li>
+              <li>Copy results to clipboard</li>
             </ul>
-          </details>
+            <p className="text-blue-600 text-sm mt-2">
+              Example: <code>&lt;~9jqo^~&gt;</code> decodes to "Hello"
+            </p>
+          </div>
         </div>
       </div>
     </div>

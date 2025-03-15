@@ -3942,7 +3942,6 @@ const ToolList = [
         desc: "Calculate the one's complement of a Binary number.",
         code: "BinaryComplement",
        },
-      // New 50 Binary Converter Tools
       {
         name: "Binary to Float",
         slug: "binary-to-float",

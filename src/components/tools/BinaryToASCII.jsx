@@ -1,64 +1,75 @@
-'use client';
-
-import React, { useState, useCallback } from 'react';
+"use client";
+import React, { useState, useCallback, useRef } from "react";
+import { FaCopy, FaDownload, FaSync, FaUpload } from "react-icons/fa";
 
 const BinaryToASCII = () => {
-  const [binaryInput, setBinaryInput] = useState('');
-  const [asciiOutput, setAsciiOutput] = useState('');
-  const [delimiter, setDelimiter] = useState('space'); // space, comma, none
-  const [error, setError] = useState('');
+  const [binaryInput, setBinaryInput] = useState("");
+  const [asciiOutput, setAsciiOutput] = useState("");
+  const [delimiter, setDelimiter] = useState("space"); // space, comma, none, custom
+  const [customDelimiter, setCustomDelimiter] = useState("");
+  const [bitLength, setBitLength] = useState("8"); // 7, 8, custom
+  const [customBitLength, setCustomBitLength] = useState(8);
+  const [extendedASCII, setExtendedASCII] = useState(false);
+  const [error, setError] = useState("");
   const [isDragging, setIsDragging] = useState(false);
   const [showCopyAlert, setShowCopyAlert] = useState(false);
-  const [bitLength, setBitLength] = useState('8'); // 7, 8
-  const [extendedASCII, setExtendedASCII] = useState(false); // Standard vs Extended
+  const fileInputRef = useRef(null);
 
-  const binaryToASCII = useCallback((binary) => {
-    try {
-      if (!binary) {
-        setAsciiOutput('');
-        setError('');
-        return;
+  const binaryToASCII = useCallback(
+    (binary) => {
+      try {
+        if (!binary) {
+          setAsciiOutput("");
+          setError("");
+          return;
+        }
+
+        const effectiveBitLength =
+          bitLength === "custom" ? customBitLength : parseInt(bitLength);
+        const effectiveDelimiter =
+          delimiter === "custom"
+            ? customDelimiter
+            : delimiter === "space"
+            ? " "
+            : delimiter === "comma"
+            ? ", "
+            : "";
+
+        let binaryArray;
+        if (delimiter === "none") {
+          binaryArray = binary.match(new RegExp(`.{1,${effectiveBitLength}}`, "g")) || [];
+        } else {
+          binaryArray = binary.split(effectiveDelimiter).map((str) => str.trim());
+        }
+
+        const ascii = binaryArray
+          .map((bin) => {
+            if (!/^[01]+$/.test(bin)) throw new Error("Invalid binary format");
+            if (delimiter !== "none" && bin.length !== effectiveBitLength) {
+              throw new Error(`Binary segments must be ${effectiveBitLength} bits`);
+            }
+
+            const decimal = parseInt(bin, 2);
+            const maxValue = extendedASCII ? 255 : 127;
+            if (decimal > maxValue) {
+              throw new Error(
+                `Value exceeds ${extendedASCII ? "extended" : "standard"} ASCII range (0-${maxValue})`
+              );
+            }
+
+            return String.fromCharCode(decimal);
+          })
+          .join("");
+
+        setAsciiOutput(ascii);
+        setError("");
+      } catch (err) {
+        setError("Error converting binary to ASCII: " + err.message);
+        setAsciiOutput("");
       }
-
-      let binaryArray;
-      switch (delimiter) {
-        case 'space':
-          binaryArray = binary.trim().split(/\s+/);
-          break;
-        case 'comma':
-          binaryArray = binary.split(',').map(str => str.trim());
-          break;
-        case 'none':
-          binaryArray = binary.match(new RegExp(`.{1,${bitLength}}`, 'g')) || [];
-          break;
-        default:
-          binaryArray = binary.trim().split(/\s+/);
-      }
-
-      const ascii = binaryArray.map((bin) => {
-        if (!/^[01]+$/.test(bin)) throw new Error('Invalid binary format');
-        if (bin.length !== parseInt(bitLength)) {
-          throw new Error(`Binary segments must be ${bitLength} bits`);
-        }
-
-        const decimal = parseInt(bin, 2);
-        if (!extendedASCII && decimal > 127) {
-          throw new Error('Value exceeds standard ASCII range (0-127)');
-        }
-        if (decimal > 255) {
-          throw new Error('Value exceeds extended ASCII range (0-255)');
-        }
-
-        return String.fromCharCode(decimal);
-      }).join('');
-
-      setAsciiOutput(ascii);
-      setError('');
-    } catch (err) {
-      setError('Error converting binary to ASCII: ' + err.message);
-      setAsciiOutput('');
-    }
-  }, [delimiter, bitLength, extendedASCII]);
+    },
+    [delimiter, customDelimiter, bitLength, customBitLength, extendedASCII]
+  );
 
   const handleInputChange = (e) => {
     const value = e.target.value;
@@ -69,11 +80,11 @@ const BinaryToASCII = () => {
   const handleFileUpload = (file) => {
     const reader = new FileReader();
     reader.onload = (e) => {
-      const text = e.target.result;
+      const text = e.target.result.slice(0, 10000); // Limit to 10k chars for performance
       setBinaryInput(text);
       binaryToASCII(text);
     };
-    reader.onerror = () => setError('Error reading file');
+    reader.onerror = () => setError("Error reading file");
     reader.readAsText(file);
   };
 
@@ -81,10 +92,10 @@ const BinaryToASCII = () => {
     e.preventDefault();
     setIsDragging(false);
     const file = e.dataTransfer.files[0];
-    if (file && file.type === 'text/plain') {
+    if (file && file.type === "text/plain") {
       handleFileUpload(file);
     } else {
-      setError('Please drop a valid text file');
+      setError("Please drop a valid text file");
     }
   };
 
@@ -94,30 +105,36 @@ const BinaryToASCII = () => {
       setShowCopyAlert(true);
       setTimeout(() => setShowCopyAlert(false), 2000);
     } catch (err) {
-      setError('Failed to copy to clipboard');
+      setError("Failed to copy to clipboard");
     }
   };
 
   const downloadOutput = () => {
-    const blob = new Blob([asciiOutput], { type: 'text/plain' });
+    const blob = new Blob([asciiOutput], { type: "text/plain" });
     const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
+    const a = document.createElement("a");
     a.href = url;
-    a.download = 'ascii_output.txt';
+    a.download = `ascii_output_${Date.now()}.txt`;
     a.click();
     window.URL.revokeObjectURL(url);
   };
 
   const clearAll = () => {
-    setBinaryInput('');
-    setAsciiOutput('');
-    setError('');
+    setBinaryInput("");
+    setAsciiOutput("");
+    setDelimiter("space");
+    setCustomDelimiter("");
+    setBitLength("8");
+    setCustomBitLength(8);
+    setExtendedASCII(false);
+    setError("");
+    if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-100 to-green-100 flex items-center justify-center p-4">
-      <div className="bg-white p-6 rounded-xl shadow-2xl w-full max-w-2xl relative">
-        <h1 className="text-3xl font-bold mb-6 text-gray-800 text-center">
+    <div className="min-h-screen  flex items-center justify-center ">
+      <div className="w-full  bg-white rounded-xl shadow-lg p-6 sm:p-8 relative">
+        <h1 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-6 text-center">
           Advanced Binary to ASCII Converter
         </h1>
 
@@ -129,62 +146,92 @@ const BinaryToASCII = () => {
         )}
 
         {/* Controls */}
-        <div className="flex flex-wrap gap-4 mb-6 justify-center">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
           <div>
-            <label className="text-sm text-gray-600 mr-2">Delimiter:</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Delimiter</label>
             <select
               value={delimiter}
               onChange={(e) => {
                 setDelimiter(e.target.value);
                 binaryToASCII(binaryInput);
               }}
-              className="px-3 py-1 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500"
             >
               <option value="space">Space</option>
               <option value="comma">Comma</option>
               <option value="none">None (Continuous)</option>
+              <option value="custom">Custom</option>
             </select>
+            {delimiter === "custom" && (
+              <input
+                type="text"
+                value={customDelimiter}
+                onChange={(e) => {
+                  setCustomDelimiter(e.target.value);
+                  binaryToASCII(binaryInput);
+                }}
+                className="mt-2 w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500"
+                placeholder="Enter custom delimiter"
+              />
+            )}
           </div>
           <div>
-            <label className="text-sm text-gray-600 mr-2">Bit Length:</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Bit Length</label>
             <select
               value={bitLength}
               onChange={(e) => {
                 setBitLength(e.target.value);
                 binaryToASCII(binaryInput);
               }}
-              className="px-3 py-1 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500"
             >
               <option value="7">7-bit</option>
               <option value="8">8-bit</option>
+              <option value="custom">Custom</option>
             </select>
+            {bitLength === "custom" && (
+              <input
+                type="number"
+                min="1"
+                max="32"
+                value={customBitLength}
+                onChange={(e) => {
+                  const value = Math.max(1, Math.min(32, e.target.value));
+                  setCustomBitLength(value);
+                  binaryToASCII(binaryInput);
+                }}
+                className="mt-2 w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500"
+              />
+            )}
           </div>
           <div>
-            <label className="text-sm text-gray-600 mr-2">ASCII Type:</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">ASCII Type</label>
             <select
-              value={extendedASCII ? 'extended' : 'standard'}
+              value={extendedASCII ? "extended" : "standard"}
               onChange={(e) => {
-                setExtendedASCII(e.target.value === 'extended');
+                setExtendedASCII(e.target.value === "extended");
                 binaryToASCII(binaryInput);
               }}
-              className="px-3 py-1 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500"
             >
               <option value="standard">Standard (0-127)</option>
               <option value="extended">Extended (0-255)</option>
             </select>
           </div>
-          <button
-            onClick={clearAll}
-            className="px-3 py-1 bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors"
-          >
-            Clear
-          </button>
+          <div className="flex items-end">
+            <button
+              onClick={clearAll}
+              className="w-full py-2 px-4 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors flex items-center justify-center"
+            >
+              <FaSync className="mr-2" /> Clear All
+            </button>
+          </div>
         </div>
 
         {/* Input Section */}
         <div
-          className={`mb-6 p-4 border-2 rounded-md ${
-            isDragging ? 'border-blue-500 bg-blue-50' : 'border-gray-300'
+          className={`mb-6 p-4 border-2 rounded-lg ${
+            isDragging ? "border-blue-500 bg-blue-50" : "border-gray-300"
           }`}
           onDragOver={(e) => {
             e.preventDefault();
@@ -193,22 +240,27 @@ const BinaryToASCII = () => {
           onDragLeave={() => setIsDragging(false)}
           onDrop={handleDrop}
         >
-          <label className="block text-gray-700 mb-2">Enter Binary:</label>
+          <label className="block text-sm font-medium text-gray-700 mb-2">Binary Input</label>
           <textarea
             value={binaryInput}
             onChange={handleInputChange}
-            className="w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 resize-y font-mono"
+            className="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500 resize-y font-mono"
             rows="6"
-            placeholder={`Enter ${bitLength}-bit binary (e.g., 01001000 01100101)`}
+            placeholder={`Enter ${bitLength === "custom" ? customBitLength : bitLength}-bit binary (e.g., 01001000 01100101)`}
           />
-          <p className="text-sm text-gray-500 mt-1">
-            Drag and drop a text file with binary data
-          </p>
+          <input
+            type="file"
+            accept="text/plain"
+            ref={fileInputRef}
+            onChange={(e) => e.target.files[0] && handleFileUpload(e.target.files[0])}
+            className="mt-2 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+          />
+          <p className="text-xs text-gray-500 mt-1">Or drag and drop a text file</p>
         </div>
 
         {/* Output Section */}
         <div className="mb-6">
-          <label className="block text-gray-700 mb-2">ASCII Output:</label>
+          <label className="block text-sm font-medium text-gray-700 mb-2">ASCII Output</label>
           <div className="relative">
             <textarea
               value={asciiOutput}
@@ -217,18 +269,20 @@ const BinaryToASCII = () => {
               placeholder="ASCII output will appear here..."
             />
             {asciiOutput && (
-              <div className="absolute right-2 top-2 space-x-2">
+              <div className="absolute right-2 top-2 flex gap-2">
                 <button
                   onClick={copyToClipboard}
-                  className="bg-blue-500 text-white px-3 py-1 rounded-md hover:bg-blue-600 transition-colors"
+                  className="p-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+                  title="Copy to clipboard"
                 >
-                  Copy
+                  <FaCopy />
                 </button>
                 <button
                   onClick={downloadOutput}
-                  className="bg-green-500 text-white px-3 py-1 rounded-md hover:bg-green-600 transition-colors"
+                  className="p-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors"
+                  title="Download as text file"
                 >
-                  Download
+                  <FaDownload />
                 </button>
               </div>
             )}
@@ -237,13 +291,21 @@ const BinaryToASCII = () => {
 
         {/* Error Message */}
         {error && (
-          <div className="text-red-500 text-sm text-center mb-4">{error}</div>
+          <div className="mt-4 p-4 bg-red-50 rounded-lg border border-red-200 text-red-700 text-sm text-center">
+            {error}
+          </div>
         )}
 
-        {/* Info */}
-        <div className="text-gray-600 text-sm text-center">
-          <p>Converts binary to ASCII with standard/extended support</p>
-          <p>Supports file drag-and-drop and variable bit lengths</p>
+        {/* Features */}
+        <div className="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
+          <h3 className="font-semibold text-blue-700 mb-2">Features</h3>
+          <ul className="list-disc list-inside text-blue-600 text-sm space-y-1">
+            <li>Customizable delimiter and bit length (up to 32 bits)</li>
+            <li>Standard (0-127) and Extended (0-255) ASCII support</li>
+            <li>File upload and drag-and-drop functionality</li>
+            <li>Copy to clipboard and download options</li>
+            <li>Real-time conversion with error handling</li>
+          </ul>
         </div>
       </div>
     </div>

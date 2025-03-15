@@ -1,78 +1,107 @@
-'use client';
-
-import React, { useState } from 'react';
+"use client";
+import React, { useState, useCallback } from "react";
+import { FaPlus, FaTrash, FaSync, FaCalculator } from "react-icons/fa";
 
 const BinaryNORCalculator = () => {
-  const [inputs, setInputs] = useState(['', '']); // Array for multiple binary inputs
+  const [inputs, setInputs] = useState(["", ""]);
   const [result, setResult] = useState(null);
-  const [error, setError] = useState('');
-  const [bitLength, setBitLength] = useState(8); // Default to 8-bit representation
+  const [error, setError] = useState("");
+  const [bitLength, setBitLength] = useState(8);
+  const [showSteps, setShowSteps] = useState(true);
+  const [inputBase, setInputBase] = useState("binary"); // New: binary, decimal, hex input modes
 
-  const validateBinary = (binary) => {
-    return /^[01]+$/.test(binary);
+  // Validation and conversion functions
+  const validateInput = (value, base) => {
+    switch (base) {
+      case "binary":
+        return /^[01]+$/.test(value);
+      case "decimal":
+        return /^\d+$/.test(value);
+      case "hex":
+        return /^[0-9A-Fa-f]+$/.test(value);
+      default:
+        return false;
+    }
   };
 
-  const padBinary = (binary, length) => {
-    return binary.padStart(length, '0');
+  const convertToBinary = (value, base) => {
+    switch (base) {
+      case "binary":
+        return value;
+      case "decimal":
+        return parseInt(value, 10).toString(2);
+      case "hex":
+        return parseInt(value, 16).toString(2);
+      default:
+        return value;
+    }
   };
 
-  const binaryToDecimal = (binary) => {
-    return parseInt(binary, 2);
-  };
+  const padBinary = (binary, length) => binary.padStart(length, "0");
 
-  const decimalToBinary = (decimal, length) => {
-    return decimal.toString(2).padStart(length, '0');
-  };
+  const binaryToDecimal = (binary) => parseInt(binary, 2);
 
-  const performNOR = () => {
-    setError('');
+  const decimalToBinary = (decimal, length) =>
+    (decimal >>> 0).toString(2).padStart(length, "0"); // Use >>> for unsigned shift
+
+  const performNOR = useCallback(() => {
+    setError("");
     setResult(null);
 
-    // Validate all inputs
-    const validInputs = inputs.filter(input => input.trim() !== '');
+    const validInputs = inputs.filter((input) => input.trim() !== "");
     if (validInputs.length < 2) {
-      setError('Please enter at least two binary numbers');
+      setError("Please enter at least two numbers");
       return;
     }
 
+    // Validate and convert inputs
+    const binaryInputs = [];
     for (const input of validInputs) {
-      if (!validateBinary(input)) {
-        setError(`Invalid binary input: ${input}`);
+      if (!validateInput(input, inputBase)) {
+        setError(`Invalid ${inputBase} input: ${input}`);
         return;
       }
+      binaryInputs.push(convertToBinary(input, inputBase));
     }
 
-    // Convert to decimal and perform OR, then NOT
-    const decimals = validInputs.map(binary => binaryToDecimal(binary));
+    // Pad to bit length
+    const paddedInputs = binaryInputs.map((binary) => padBinary(binary, bitLength));
+    const decimals = paddedInputs.map(binaryToDecimal);
     const orResult = decimals.reduce((acc, curr) => acc | curr, 0);
-    const norResult = ~orResult & ((1 << bitLength) - 1); // Apply NOT and mask to bit length
-    const paddedInputs = validInputs.map(binary => padBinary(binary, bitLength));
+    const norResult = ~orResult & ((1 << bitLength) - 1); // NOR with bit mask
     const binaryResult = decimalToBinary(norResult, bitLength);
 
     setResult({
       inputs: paddedInputs,
-      decimals: decimals,
-      orResult: orResult,
-      norResult: norResult,
-      binaryResult: binaryResult,
+      rawInputs: validInputs,
+      decimals,
+      orResult,
+      norResult,
+      binaryResult,
     });
-  };
+  }, [inputs, bitLength, inputBase]);
 
+  // Input handlers
   const handleInputChange = (index, value) => {
     const newInputs = [...inputs];
     newInputs[index] = value;
     setInputs(newInputs);
   };
 
-  const addInput = () => {
-    setInputs([...inputs, '']);
-  };
-
+  const addInput = () => setInputs([...inputs, ""]);
   const removeInput = (index) => {
     if (inputs.length > 2) {
-      const newInputs = inputs.filter((_, i) => i !== index);
-      setInputs(newInputs);
+      setInputs(inputs.filter((_, i) => i !== index));
     }
+  };
+
+  const reset = () => {
+    setInputs(["", ""]);
+    setResult(null);
+    setError("");
+    setBitLength(8);
+    setShowSteps(true);
+    setInputBase("binary");
   };
 
   const handleSubmit = (e) => {
@@ -81,31 +110,31 @@ const BinaryNORCalculator = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4">
-      <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-3xl">
-        <h1 className="text-3xl font-bold text-center mb-6 text-gray-800">
+    <div className="min-h-screen  flex items-center justify-center ">
+      <div className="w-full  bg-white rounded-xl shadow-lg p-6 sm:p-8">
+        <h1 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-6 text-center">
           Binary NOR Calculator
         </h1>
 
-        <form onSubmit={handleSubmit} className="grid gap-6">
+        <form onSubmit={handleSubmit} className="space-y-6">
           {/* Input Section */}
-          <div className="grid gap-4">
+          <div className="space-y-4">
             {inputs.map((input, index) => (
-              <div key={index} className="flex items-center gap-2">
+              <div key={index} className="flex flex-col sm:flex-row items-center gap-2">
                 <input
                   type="text"
                   value={input}
                   onChange={(e) => handleInputChange(index, e.target.value)}
-                  placeholder={`Binary ${index + 1} (e.g., 1010)`}
+                  placeholder={`${inputBase.charAt(0).toUpperCase() + inputBase.slice(1)} ${index + 1} (e.g., ${inputBase === "binary" ? "1010" : inputBase === "decimal" ? "10" : "A"})`}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
                 {inputs.length > 2 && (
                   <button
                     type="button"
                     onClick={() => removeInput(index)}
-                    className="px-2 py-1 bg-red-500 text-white rounded-md hover:bg-red-600"
+                    className="p-2 bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors"
                   >
-                    Remove
+                    <FaTrash />
                   </button>
                 )}
               </div>
@@ -113,56 +142,95 @@ const BinaryNORCalculator = () => {
             <button
               type="button"
               onClick={addInput}
-              className="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 w-32"
+              className="flex items-center gap-2 px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 transition-colors"
             >
-              Add Input
+              <FaPlus /> Add Input
             </button>
           </div>
 
-          {/* Bit Length Selector */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Bit Length
-            </label>
-            <select
-              value={bitLength}
-              onChange={(e) => setBitLength(parseInt(e.target.value))}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              <option value={4}>4-bit</option>
-              <option value={8}>8-bit</option>
-              <option value={16}>16-bit</option>
-              <option value={32}>32-bit</option>
-            </select>
+          {/* Settings */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Input Base
+              </label>
+              <select
+                value={inputBase}
+                onChange={(e) => setInputBase(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="binary">Binary</option>
+                <option value="decimal">Decimal</option>
+                <option value="hex">Hexadecimal</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Bit Length
+              </label>
+              <select
+                value={bitLength}
+                onChange={(e) => setBitLength(parseInt(e.target.value))}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value={4}>4-bit</option>
+                <option value={8}>8-bit</option>
+                <option value={16}>16-bit</option>
+                <option value={32}>32-bit</option>
+              </select>
+            </div>
+            <div className="flex items-center">
+              <label className="flex items-center">
+                <input
+                  type="checkbox"
+                  checked={showSteps}
+                  onChange={(e) => setShowSteps(e.target.checked)}
+                  className="mr-2 accent-blue-500"
+                />
+                <span className="text-sm text-gray-700">Show Steps</span>
+              </label>
+            </div>
           </div>
 
-          <button
-            type="submit"
-            className="w-full px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"
-          >
-            Calculate NOR
-          </button>
+          {/* Action Buttons */}
+          <div className="flex flex-col sm:flex-row gap-4">
+            <button
+              type="submit"
+              className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+            >
+              <FaCalculator /> Calculate NOR
+            </button>
+            <button
+              type="button"
+              onClick={reset}
+              className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors"
+            >
+              <FaSync /> Reset
+            </button>
+          </div>
         </form>
 
         {/* Error Section */}
         {error && (
-          <div className="mt-4 p-4 bg-red-50 rounded-md text-red-700">
-            <p>{error}</p>
+          <div className="mt-6 p-4 bg-red-50 rounded-lg border border-red-200">
+            <p className="text-red-700">{error}</p>
           </div>
         )}
 
         {/* Results Section */}
         {result && (
-          <div className="mt-4 p-4 bg-gray-50 rounded-md">
-            <h2 className="text-lg font-semibold mb-2">Results:</h2>
-            <div className="space-y-4 text-sm">
+          <div className="mt-6 p-4 bg-gray-50 rounded-lg">
+            <h2 className="text-lg font-semibold text-gray-800 mb-4">Results</h2>
+            <div className="space-y-6 text-sm">
               <div>
-                <p className="font-medium">Inputs (Padded):</p>
-                <div className="grid grid-cols-2 gap-2">
-                  {result.inputs.map((input, index) => (
+                <p className="font-medium">Inputs ({inputBase}):</p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  {result.rawInputs.map((input, index) => (
                     <div key={index} className="flex items-center gap-2">
                       <span>{input}</span>
-                      <span className="text-gray-500">(decimal: {result.decimals[index]})</span>
+                      <span className="text-gray-500">
+                        (binary: {result.inputs[index]}, decimal: {result.decimals[index]})
+                      </span>
                     </div>
                   ))}
                 </div>
@@ -172,6 +240,7 @@ const BinaryNORCalculator = () => {
                 <div className="flex flex-col gap-2">
                   <p>Binary: {decimalToBinary(result.orResult, bitLength)}</p>
                   <p>Decimal: {result.orResult}</p>
+                  <p>Hex: {result.orResult.toString(16).toUpperCase().padStart(Math.ceil(bitLength / 4), "0")}</p>
                 </div>
               </div>
               <div>
@@ -179,38 +248,37 @@ const BinaryNORCalculator = () => {
                 <div className="flex flex-col gap-2">
                   <p>Binary: {result.binaryResult}</p>
                   <p>Decimal: {result.norResult}</p>
-                  <p>Hex: {result.norResult.toString(16).toUpperCase().padStart(Math.ceil(bitLength / 4), '0')}</p>
+                  <p>Hex: {result.norResult.toString(16).toUpperCase().padStart(Math.ceil(bitLength / 4), "0")}</p>
                 </div>
               </div>
-              <div>
-                <p className="font-medium">Operation Visualization:</p>
-                <div className="font-mono text-xs">
-                  {result.inputs.map((input, index) => (
-                    <p key={index}>{input} ({index + 1})</p>
-                  ))}
-                  <p className="border-t border-gray-300">{'-'.repeat(bitLength)} (OR)</p>
-                  <p>{decimalToBinary(result.orResult, bitLength)}</p>
-                  <p className="border-t border-gray-300">{'-'.repeat(bitLength)} (NOT)</p>
-                  <p>{result.binaryResult} (NOR)</p>
+              {showSteps && (
+                <div>
+                  <p className="font-medium">Operation Steps:</p>
+                  <div className="font-mono text-xs bg-white p-2 rounded border">
+                    {result.inputs.map((input, index) => (
+                      <p key={index}>{input.padEnd(bitLength + 2)} ({index + 1})</p>
+                    ))}
+                    <p className="border-t border-gray-300 my-1">{"-".repeat(bitLength)}</p>
+                    <p>{decimalToBinary(result.orResult, bitLength).padEnd(bitLength + 2)} (OR)</p>
+                    <p className="border-t border-gray-300 my-1">{"-".repeat(bitLength)}</p>
+                    <p>{result.binaryResult.padEnd(bitLength + 2)} (NOR)</p>
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
           </div>
         )}
 
-        {/* Info Section */}
-        <div className="mt-6 text-sm text-gray-600">
-          <details>
-            <summary className="cursor-pointer font-medium">Features & Usage</summary>
-            <ul className="list-disc list-inside mt-2">
-              <li>Performs NOR (NOT OR) on multiple binary inputs</li>
-              <li>Supports 4, 8, 16, or 32-bit representations</li>
-              <li>Add/remove binary inputs dynamically (min 2)</li>
-              <li>Shows intermediate OR and final NOR results</li>
-              <li>Displays in binary, decimal, and hex</li>
-              <li>Example: 1010 NOR 1100 = ~(1010 | 1100) = ~1110 = 0001 (8-bit)</li>
-            </ul>
-          </details>
+        {/* Features Section */}
+        <div className="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
+          <h3 className="font-semibold text-blue-700 mb-2">Features</h3>
+          <ul className="list-disc list-inside text-blue-600 text-sm space-y-1">
+            <li>Supports binary, decimal, or hexadecimal inputs</li>
+            <li>Dynamic bit length (4, 8, 16, 32 bits)</li>
+            <li>Add/remove multiple inputs (minimum 2)</li>
+            <li>Displays results in binary, decimal, and hex</li>
+            <li>Toggleable step-by-step visualization</li>
+          </ul>
         </div>
       </div>
     </div>

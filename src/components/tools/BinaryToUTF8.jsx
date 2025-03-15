@@ -1,61 +1,107 @@
-'use client';
-
-import React, { useState, useCallback } from 'react';
+"use client";
+import React, { useState, useCallback, useRef } from "react";
+import { FaCopy, FaDownload, FaSync, FaUpload } from "react-icons/fa";
 
 const BinaryToUTF8 = () => {
-  const [binaryInput, setBinaryInput] = useState('');
-  const [utf8Output, setUtf8Output] = useState('');
-  const [delimiter, setDelimiter] = useState('space'); // space, comma, none
-  const [error, setError] = useState('');
+  const [binaryInput, setBinaryInput] = useState("");
+  const [utf8Output, setUtf8Output] = useState("");
+  const [delimiter, setDelimiter] = useState("space");
+  const [error, setError] = useState("");
   const [isDragging, setIsDragging] = useState(false);
   const [showCopyAlert, setShowCopyAlert] = useState(false);
+  const [inputFormat, setInputFormat] = useState("binary"); // binary, hex, decimal
+  const [ignoreWhitespace, setIgnoreWhitespace] = useState(true);
+  const fileInputRef = useRef(null);
 
-  const binaryToUTF8 = useCallback((binary) => {
-    try {
-      if (!binary) {
-        setUtf8Output('');
-        setError('');
-        return;
-      }
+  const binaryToUTF8 = useCallback(
+    (input) => {
+      try {
+        if (!input) {
+          setUtf8Output("");
+          setError("");
+          return;
+        }
 
-      let binaryString;
-      switch (delimiter) {
-        case 'space':
-          binaryString = binary.trim().split(/\s+/).join('');
-          break;
-        case 'comma':
-          binaryString = binary.split(',').map(str => str.trim()).join('');
-          break;
-        case 'none':
-          binaryString = binary.trim();
-          break;
-        default:
-          binaryString = binary.trim().split(/\s+/).join('');
-      }
+        let byteArray = [];
+        let cleanedInput = input.trim();
 
-      if (!/^[01]+$/.test(binaryString)) {
-        throw new Error('Invalid binary format');
-      }
-      if (binaryString.length % 8 !== 0) {
-        throw new Error('Binary length must be a multiple of 8 bits for UTF-8 decoding');
-      }
+        if (ignoreWhitespace) {
+          cleanedInput = cleanedInput.replace(/\s+/g, "");
+        }
 
-      // Convert binary string to byte array
-      const byteArray = [];
-      for (let i = 0; i < binaryString.length; i += 8) {
-        const byte = binaryString.slice(i, i + 8);
-        byteArray.push(parseInt(byte, 2));
-      }
+        switch (inputFormat) {
+          case "binary": {
+            let binaryString;
+            switch (delimiter) {
+              case "space":
+                binaryString = ignoreWhitespace
+                  ? cleanedInput
+                  : cleanedInput.split(/\s+/).join("");
+                break;
+              case "comma":
+                binaryString = cleanedInput.split(",").map((str) => str.trim()).join("");
+                break;
+              case "none":
+                binaryString = cleanedInput;
+                break;
+              default:
+                binaryString = cleanedInput.split(/\s+/).join("");
+            }
 
-      // Decode UTF-8 byte array to string
-      const utf8String = new TextDecoder('utf-8').decode(new Uint8Array(byteArray));
-      setUtf8Output(utf8String);
-      setError('');
-    } catch (err) {
-      setError('Error converting binary to UTF-8: ' + err.message);
-      setUtf8Output('');
-    }
-  }, [delimiter]);
+            if (!/^[01]+$/.test(binaryString)) {
+              throw new Error("Invalid binary format (only 0s and 1s allowed)");
+            }
+            if (binaryString.length % 8 !== 0) {
+              throw new Error("Binary length must be a multiple of 8 bits for UTF-8 decoding");
+            }
+
+            for (let i = 0; i < binaryString.length; i += 8) {
+              const byte = binaryString.slice(i, i + 8);
+              byteArray.push(parseInt(byte, 2));
+            }
+            break;
+          }
+          case "hex": {
+            const hexString = ignoreWhitespace
+              ? cleanedInput
+              : cleanedInput.split(delimiter === "comma" ? "," : /\s+/).join("");
+            if (!/^[0-9A-Fa-f]+$/.test(hexString)) {
+              throw new Error("Invalid hexadecimal format");
+            }
+            if (hexString.length % 2 !== 0) {
+              throw new Error("Hex length must be even for byte conversion");
+            }
+            for (let i = 0; i < hexString.length; i += 2) {
+              const byte = hexString.slice(i, i + 2);
+              byteArray.push(parseInt(byte, 16));
+            }
+            break;
+          }
+          case "decimal": {
+            const decimalArray = cleanedInput
+              .split(delimiter === "comma" ? "," : /\s+/)
+              .map((num) => num.trim())
+              .filter(Boolean);
+            if (!decimalArray.every((num) => /^[0-255]$/.test(num) || parseInt(num) <= 255)) {
+              throw new Error("Decimal values must be between 0 and 255");
+            }
+            byteArray = decimalArray.map((num) => parseInt(num, 10));
+            break;
+          }
+          default:
+            throw new Error("Unsupported input format");
+        }
+
+        const utf8String = new TextDecoder("utf-8").decode(new Uint8Array(byteArray));
+        setUtf8Output(utf8String);
+        setError("");
+      } catch (err) {
+        setError("Error converting to UTF-8: " + err.message);
+        setUtf8Output("");
+      }
+    },
+    [delimiter, inputFormat, ignoreWhitespace]
+  );
 
   const handleInputChange = (e) => {
     const value = e.target.value;
@@ -70,7 +116,7 @@ const BinaryToUTF8 = () => {
       setBinaryInput(text);
       binaryToUTF8(text);
     };
-    reader.onerror = () => setError('Error reading file');
+    reader.onerror = () => setError("Error reading file");
     reader.readAsText(file);
   };
 
@@ -78,11 +124,16 @@ const BinaryToUTF8 = () => {
     e.preventDefault();
     setIsDragging(false);
     const file = e.dataTransfer.files[0];
-    if (file && file.type === 'text/plain') {
+    if (file && file.type === "text/plain") {
       handleFileUpload(file);
     } else {
-      setError('Please drop a valid text file');
+      setError("Please drop a valid text file");
     }
+  };
+
+  const handleFileInputChange = (e) => {
+    const file = e.target.files[0];
+    if (file) handleFileUpload(file);
   };
 
   const copyToClipboard = async () => {
@@ -91,31 +142,35 @@ const BinaryToUTF8 = () => {
       setShowCopyAlert(true);
       setTimeout(() => setShowCopyAlert(false), 2000);
     } catch (err) {
-      setError('Failed to copy to clipboard');
+      setError("Failed to copy to clipboard");
     }
   };
 
   const downloadOutput = () => {
-    const blob = new Blob([utf8Output], { type: 'text/plain;charset=utf-8' });
+    const blob = new Blob([utf8Output], { type: "text/plain;charset=utf-8" });
     const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
+    const a = document.createElement("a");
     a.href = url;
-    a.download = 'utf8_output.txt';
+    a.download = `utf8_output_${Date.now()}.txt`;
     a.click();
     window.URL.revokeObjectURL(url);
   };
 
   const clearAll = () => {
-    setBinaryInput('');
-    setUtf8Output('');
-    setError('');
+    setBinaryInput("");
+    setUtf8Output("");
+    setError("");
+    setDelimiter("space");
+    setInputFormat("binary");
+    setIgnoreWhitespace(true);
+    if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-teal-100 to-pink-100 flex items-center justify-center p-4">
-      <div className="bg-white p-6 rounded-xl shadow-2xl w-full max-w-2xl relative">
-        <h1 className="text-3xl font-bold mb-6 text-gray-800 text-center">
-          Advanced Binary to UTF-8 Converter
+    <div className="min-h-screen  flex items-center justify-center ">
+      <div className="w-full  bg-white rounded-xl shadow-lg p-6 sm:p-8">
+        <h1 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-6 text-center">
+          Binary/Hex/Decimal to UTF-8 Converter
         </h1>
 
         {/* Copy Alert */}
@@ -126,34 +181,61 @@ const BinaryToUTF8 = () => {
         )}
 
         {/* Controls */}
-        <div className="flex flex-wrap gap-4 mb-6 justify-center">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
           <div>
-            <label className="text-sm text-gray-600 mr-2">Delimiter:</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Input Format
+            </label>
+            <select
+              value={inputFormat}
+              onChange={(e) => {
+                setInputFormat(e.target.value);
+                binaryToUTF8(binaryInput);
+              }}
+              className="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="binary">Binary</option>
+              <option value="hex">Hexadecimal</option>
+              <option value="decimal">Decimal</option>
+            </select>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Delimiter
+            </label>
             <select
               value={delimiter}
               onChange={(e) => {
                 setDelimiter(e.target.value);
                 binaryToUTF8(binaryInput);
               }}
-              className="px-3 py-1 border rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500"
+              className="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500"
             >
               <option value="space">Space</option>
               <option value="comma">Comma</option>
               <option value="none">None</option>
             </select>
           </div>
-          <button
-            onClick={clearAll}
-            className="px-3 py-1 bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors"
-          >
-            Clear
-          </button>
+          <div className="flex items-center">
+            <label className="flex items-center">
+              <input
+                type="checkbox"
+                checked={ignoreWhitespace}
+                onChange={(e) => {
+                  setIgnoreWhitespace(e.target.checked);
+                  binaryToUTF8(binaryInput);
+                }}
+                className="mr-2 accent-blue-500"
+              />
+              <span className="text-sm text-gray-700">Ignore Whitespace</span>
+            </label>
+          </div>
         </div>
 
         {/* Input Section */}
         <div
-          className={`mb-6 p-4 border-2 rounded-md ${
-            isDragging ? 'border-teal-500 bg-teal-50' : 'border-gray-300'
+          className={`mb-6 p-4 border-2 rounded-lg ${
+            isDragging ? "border-blue-500 bg-blue-50" : "border-gray-300"
           }`}
           onDragOver={(e) => {
             e.preventDefault();
@@ -162,22 +244,39 @@ const BinaryToUTF8 = () => {
           onDragLeave={() => setIsDragging(false)}
           onDrop={handleDrop}
         >
-          <label className="block text-gray-700 mb-2">Enter Binary:</label>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            {inputFormat.charAt(0).toUpperCase() + inputFormat.slice(1)} Input
+          </label>
           <textarea
             value={binaryInput}
             onChange={handleInputChange}
-            className="w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500 resize-y font-mono"
+            className="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500 resize-y font-mono"
             rows="6"
-            placeholder="Enter 8-bit binary (e.g., 01001000 01100101 01101100 01101100 01101111)"
+            placeholder={
+              inputFormat === "binary"
+                ? "Enter 8-bit binary (e.g., 01001000 01100101 01101100 01101100 01101111)"
+                : inputFormat === "hex"
+                ? "Enter hex bytes (e.g., 48 65 6C 6C 6F)"
+                : "Enter decimal bytes (e.g., 72 101 108 108 111)"
+            }
           />
-          <p className="text-sm text-gray-500 mt-1">
-            Drag and drop a text file with binary data
+          <input
+            type="file"
+            accept="text/plain"
+            ref={fileInputRef}
+            onChange={handleFileInputChange}
+            className="mt-2 text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+          />
+          <p className="text-xs text-gray-500 mt-1">
+            Drag and drop a text file or use the file input
           </p>
         </div>
 
         {/* Output Section */}
         <div className="mb-6">
-          <label className="block text-gray-700 mb-2">UTF-8 Output:</label>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            UTF-8 Output
+          </label>
           <div className="relative">
             <textarea
               value={utf8Output}
@@ -186,18 +285,20 @@ const BinaryToUTF8 = () => {
               placeholder="UTF-8 output will appear here..."
             />
             {utf8Output && (
-              <div className="absolute right-2 top-2 space-x-2">
+              <div className="absolute right-2 top-2 flex gap-2">
                 <button
                   onClick={copyToClipboard}
-                  className="bg-teal-500 text-white px-3 py-1 rounded-md hover:bg-teal-600 transition-colors"
+                  className="p-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+                  title="Copy to Clipboard"
                 >
-                  Copy
+                  <FaCopy />
                 </button>
                 <button
                   onClick={downloadOutput}
-                  className="bg-pink-500 text-white px-3 py-1 rounded-md hover:bg-pink-600 transition-colors"
+                  className="p-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors"
+                  title="Download as Text File"
                 >
-                  Download
+                  <FaDownload />
                 </button>
               </div>
             )}
@@ -206,13 +307,31 @@ const BinaryToUTF8 = () => {
 
         {/* Error Message */}
         {error && (
-          <div className="text-red-500 text-sm text-center mb-4">{error}</div>
+          <div className="mb-6 p-4 bg-red-50 rounded-lg border border-red-200">
+            <p className="text-red-700 text-sm">{error}</p>
+          </div>
         )}
 
-        {/* Info */}
-        <div className="text-gray-600 text-sm text-center">
-          <p>Converts 8-bit binary to UTF-8 encoded text</p>
-          <p>Supports file drag-and-drop and multiple delimiters</p>
+        {/* Action Buttons */}
+        <div className="flex justify-center">
+          <button
+            onClick={clearAll}
+            className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors"
+          >
+            <FaSync /> Clear All
+          </button>
+        </div>
+
+        {/* Features */}
+        <div className="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
+          <h3 className="font-semibold text-blue-700 mb-2">Features</h3>
+          <ul className="list-disc list-inside text-blue-600 text-sm space-y-1">
+            <li>Convert Binary, Hex, or Decimal to UTF-8</li>
+            <li>Customizable delimiter options</li>
+            <li>Ignore whitespace toggle</li>
+            <li>Drag-and-drop or file upload support</li>
+            <li>Copy to clipboard and download as text file</li>
+          </ul>
         </div>
       </div>
     </div>

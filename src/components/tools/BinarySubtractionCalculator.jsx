@@ -1,72 +1,62 @@
-'use client';
-
-import React, { useState } from 'react';
+"use client";
+import React, { useState, useCallback } from "react";
+import { FaCalculator, FaSync, FaCopy } from "react-icons/fa";
 
 const BinarySubtractionCalculator = () => {
-  const [minuend, setMinuend] = useState(''); // First number (minuend)
-  const [subtrahend, setSubtrahend] = useState(''); // Second number (subtrahend)
-  const [bitLength, setBitLength] = useState(8); // Default to 8-bit
+  const [minuend, setMinuend] = useState("");
+  const [subtrahend, setSubtrahend] = useState("");
+  const [bitLength, setBitLength] = useState(8);
   const [result, setResult] = useState(null);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
   const [steps, setSteps] = useState([]);
+  const [showSteps, setShowSteps] = useState(true);
+  const [displayMode, setDisplayMode] = useState("all"); // all, binary, decimal, hex
 
-  const validateBinary = (binary) => {
-    return /^[01]+$/.test(binary);
-  };
+  const validateBinary = (binary) => /^[01]+$/.test(binary);
 
-  const padBinary = (binary, length) => {
-    return binary.padStart(length, '0');
-  };
+  const padBinary = (binary, length) => binary.padStart(length, "0");
 
-  const binaryToDecimal = (binary) => {
-    return parseInt(binary, 2);
-  };
+  const binaryToDecimal = (binary) => parseInt(binary, 2);
 
   const decimalToBinary = (decimal, length) => {
     if (decimal < 0) {
-      // Handle negative numbers using two's complement
       const positiveBinary = (Math.pow(2, length) + decimal).toString(2);
       return padBinary(positiveBinary, length);
     }
-    return decimal.toString(2).padStart(length, '0');
+    return padBinary(decimal.toString(2), length);
   };
 
-  const performBinarySubtraction = () => {
-    setError('');
+  const performBinarySubtraction = useCallback(() => {
+    setError("");
     setResult(null);
     setSteps([]);
 
     if (!minuend || !subtrahend) {
-      setError('Please enter both binary numbers');
+      setError("Please enter both binary numbers");
       return;
     }
 
     if (!validateBinary(minuend) || !validateBinary(subtrahend)) {
-      setError('Invalid binary input: only 0s and 1s are allowed');
+      setError("Invalid binary input: only 0s and 1s are allowed");
       return;
     }
 
-    // Pad inputs to the selected bit length
     const paddedMinuend = padBinary(minuend, bitLength);
     const paddedSubtrahend = padBinary(subtrahend, bitLength);
 
-    // Convert to decimal for subtraction
     const decMinuend = binaryToDecimal(paddedMinuend);
     const decSubtrahend = binaryToDecimal(paddedSubtrahend);
     const decResult = decMinuend - decSubtrahend;
 
-    // Perform binary subtraction step-by-step using two's complement
     const stepsArray = [];
     stepsArray.push(`1. Minuend: ${paddedMinuend} (${decMinuend} decimal)`);
     stepsArray.push(`2. Subtrahend: ${paddedSubtrahend} (${decSubtrahend} decimal)`);
 
-    // Two's complement subtraction: minuend + (-subtrahend)
     const subtrahendComplement = decimalToBinary(-decSubtrahend, bitLength);
     stepsArray.push(`3. Two's Complement of Subtrahend: ${subtrahendComplement}`);
 
-    // Perform binary addition
     let carry = 0;
-    let binaryResult = '';
+    let binaryResult = "";
     for (let i = bitLength - 1; i >= 0; i--) {
       const m = parseInt(paddedMinuend[i]);
       const s = parseInt(subtrahendComplement[i]);
@@ -74,37 +64,59 @@ const BinarySubtractionCalculator = () => {
       binaryResult = (sum % 2) + binaryResult;
       carry = Math.floor(sum / 2);
     }
-    binaryResult = binaryResult.slice(-bitLength); // Truncate to bit length
+    binaryResult = binaryResult.slice(-bitLength);
     stepsArray.push(`4. Addition (Minuend + Complement): ${binaryResult}`);
 
     const finalDecimal = binaryToDecimal(binaryResult);
+    const hexResult =
+      finalDecimal < 0
+        ? (Math.pow(2, bitLength) + finalDecimal)
+            .toString(16)
+            .toUpperCase()
+            .padStart(bitLength / 4, "0")
+        : finalDecimal.toString(16).toUpperCase().padStart(bitLength / 4, "0");
+
     setResult({
       minuend: paddedMinuend,
       subtrahend: paddedSubtrahend,
       binaryResult,
       decimalResult: finalDecimal,
-      hexResult: finalDecimal < 0 
-        ? (Math.pow(2, bitLength) + finalDecimal).toString(16).toUpperCase().padStart(bitLength / 4, '0')
-        : finalDecimal.toString(16).toUpperCase().padStart(bitLength / 4, '0'),
+      hexResult,
     });
     setSteps(stepsArray);
-  };
+  }, [minuend, subtrahend, bitLength]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
     performBinarySubtraction();
   };
 
+  const reset = () => {
+    setMinuend("");
+    setSubtrahend("");
+    setBitLength(8);
+    setResult(null);
+    setError("");
+    setSteps([]);
+    setShowSteps(true);
+    setDisplayMode("all");
+  };
+
+  const copyToClipboard = (text) => {
+    navigator.clipboard.writeText(text);
+    alert("Copied to clipboard!");
+  };
+
   return (
-    <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4">
-      <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-3xl">
-        <h1 className="text-3xl font-bold text-center mb-6 text-gray-800">
+    <div className="min-h-screen  flex items-center justify-center ">
+      <div className="w-full  bg-white rounded-xl shadow-lg p-6 sm:p-8">
+        <h1 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-6 text-center">
           Binary Subtraction Calculator
         </h1>
 
-        <form onSubmit={handleSubmit} className="grid gap-6">
+        <form onSubmit={handleSubmit} className="space-y-6">
           {/* Input Section */}
-          <div className="grid gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Minuend (First Number)
@@ -144,64 +156,110 @@ const BinarySubtractionCalculator = () => {
                 <option value={32}>32-bit</option>
               </select>
             </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Display Mode
+              </label>
+              <select
+                value={displayMode}
+                onChange={(e) => setDisplayMode(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="all">All Formats</option>
+                <option value="binary">Binary Only</option>
+                <option value="decimal">Decimal Only</option>
+                <option value="hex">Hex Only</option>
+              </select>
+            </div>
           </div>
 
-          <button
-            type="submit"
-            className="w-full px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"
-          >
-            Calculate Subtraction
-          </button>
+          <div className="flex flex-col sm:flex-row gap-4">
+            <button
+              type="submit"
+              className="flex-1 py-2 px-4 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors flex items-center justify-center"
+            >
+              <FaCalculator className="mr-2" /> Calculate
+            </button>
+            <button
+              type="button"
+              onClick={reset}
+              className="flex-1 py-2 px-4 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors flex items-center justify-center"
+            >
+              <FaSync className="mr-2" /> Reset
+            </button>
+          </div>
         </form>
 
         {/* Error Section */}
         {error && (
-          <div className="mt-4 p-4 bg-red-50 rounded-md text-red-700">
-            <p>{error}</p>
+          <div className="mt-6 p-4 bg-red-50 rounded-lg border border-red-200">
+            <p className="text-red-700">{error}</p>
           </div>
         )}
 
         {/* Results Section */}
         {result && (
-          <div className="mt-4 p-4 bg-gray-50 rounded-md">
-            <h2 className="text-lg font-semibold mb-2">Results:</h2>
-            <div className="space-y-4 text-sm">
+          <div className="mt-6 p-4 bg-gray-50 rounded-lg">
+            <h2 className="text-lg font-semibold text-gray-800 mb-4">Results</h2>
+            <div className="space-y-4 text-sm text-gray-700">
               <div>
                 <p className="font-medium">Inputs:</p>
                 <p>Minuend: {result.minuend} ({binaryToDecimal(result.minuend)} decimal)</p>
                 <p>Subtrahend: {result.subtrahend} ({binaryToDecimal(result.subtrahend)} decimal)</p>
               </div>
               <div>
-                <p className="font-medium">Result:</p>
-                <p>Binary: {result.binaryResult}</p>
-                <p>Decimal: {result.decimalResult}</p>
-                <p>Hex: {result.hexResult}</p>
+                <p className="font-medium flex items-center">
+                  Result:
+                  <button
+                    onClick={() => copyToClipboard(result.binaryResult)}
+                    className="ml-2 p-1 text-blue-500 hover:text-blue-700"
+                    title="Copy Binary Result"
+                  >
+                    <FaCopy />
+                  </button>
+                </p>
+                {(displayMode === "all" || displayMode === "binary") && (
+                  <p>Binary: {result.binaryResult}</p>
+                )}
+                {(displayMode === "all" || displayMode === "decimal") && (
+                  <p>Decimal: {result.decimalResult}</p>
+                )}
+                {(displayMode === "all" || displayMode === "hex") && (
+                  <p>Hex: {result.hexResult}</p>
+                )}
               </div>
               <div>
-                <p className="font-medium">Step-by-Step Process:</p>
-                <div className="font-mono text-xs space-y-1">
-                  {steps.map((step, index) => (
-                    <p key={index}>{step}</p>
-                  ))}
-                </div>
+                <label className="flex items-center">
+                  <input
+                    type="checkbox"
+                    checked={showSteps}
+                    onChange={(e) => setShowSteps(e.target.checked)}
+                    className="mr-2 accent-blue-500"
+                  />
+                  <span className="font-medium">Show Step-by-Step Process</span>
+                </label>
+                {showSteps && (
+                  <div className="font-mono text-xs mt-2 bg-white p-2 rounded border">
+                    {steps.map((step, index) => (
+                      <p key={index}>{step}</p>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
           </div>
         )}
 
-        {/* Info Section */}
-        <div className="mt-6 text-sm text-gray-600">
-          <details>
-            <summary className="cursor-pointer font-medium">Features & Usage</summary>
-            <ul className="list-disc list-inside mt-2">
-              <li>Performs binary subtraction using two's complement</li>
-              <li>Supports 4, 8, 16, or 32-bit representations</li>
-              <li>Shows step-by-step process</li>
-              <li>Displays results in binary, decimal, and hex</li>
-              <li>Handles negative results</li>
-              <li>Example: 1010 - 0011 = 0111 (10 - 3 = 7)</li>
-            </ul>
-          </details>
+        {/* Features Section */}
+        <div className="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
+          <h3 className="font-semibold text-blue-700 mb-2">Features</h3>
+          <ul className="list-disc list-inside text-blue-600 text-sm space-y-1">
+            <li>Binary subtraction using two's complement</li>
+            <li>Supports 4, 8, 16, or 32-bit representations</li>
+            <li>Customizable display: Binary, Decimal, Hex</li>
+            <li>Step-by-step process toggle</li>
+            <li>Copy result to clipboard</li>
+          </ul>
         </div>
       </div>
     </div>
