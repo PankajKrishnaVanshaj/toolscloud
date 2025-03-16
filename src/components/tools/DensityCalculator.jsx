@@ -1,59 +1,65 @@
-'use client';
-import React, { useState } from 'react';
+"use client";
+import React, { useState, useCallback } from "react";
+import { FaCalculator, FaSync, FaInfoCircle } from "react-icons/fa";
 
 const DensityCalculator = () => {
-  const [calculateFor, setCalculateFor] = useState('density'); // density, mass, volume
-  const [density, setDensity] = useState('');
-  const [densityUnit, setDensityUnit] = useState('kg/m³');
-  const [mass, setMass] = useState('');
-  const [massUnit, setMassUnit] = useState('kg');
-  const [volume, setVolume] = useState('');
-  const [volumeUnit, setVolumeUnit] = useState('m³');
+  const [calculateFor, setCalculateFor] = useState("density");
+  const [density, setDensity] = useState("");
+  const [densityUnit, setDensityUnit] = useState("kg/m³");
+  const [mass, setMass] = useState("");
+  const [massUnit, setMassUnit] = useState("kg");
+  const [volume, setVolume] = useState("");
+  const [volumeUnit, setVolumeUnit] = useState("m³");
   const [result, setResult] = useState(null);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
+  const [history, setHistory] = useState([]);
 
   // Unit conversion factors (to base units: kg, m³)
   const densityUnits = {
-    'kg/m³': 1,
-    'g/cm³': 1000,
-    'kg/L': 1000,
+    "kg/m³": 1,
+    "g/cm³": 1000,
+    "kg/L": 1000,
+    "lb/ft³": 16.0185,
   };
 
   const massUnits = {
-    'kg': 1,
-    'g': 0.001,
-    'mg': 0.000001,
+    kg: 1,
+    g: 0.001,
+    mg: 0.000001,
+    lb: 0.453592,
   };
 
   const volumeUnits = {
-    'm³': 1,
-    'L': 0.001,
-    'mL': 0.000001,
-    'cm³': 0.000001,
+    m³: 1,
+    L: 0.001,
+    mL: 0.000001,
+    cm³: 0.000001,
+    "ft³": 0.0283168,
   };
 
-  const calculateDensityValues = () => {
-    setError('');
+  const calculateDensityValues = useCallback(() => {
+    setError("");
     setResult(null);
 
-    // Convert inputs to base units (kg, m³)
     const rho = density ? parseFloat(density) * densityUnits[densityUnit] : null;
     const m = mass ? parseFloat(mass) * massUnits[massUnit] : null;
     const V = volume ? parseFloat(volume) * volumeUnits[volumeUnit] : null;
 
-    // Validation
     const inputs = { rho, m, V };
-    const required = calculateFor === 'density' ? ['m', 'V'] :
-                    calculateFor === 'mass' ? ['rho', 'V'] :
-                    ['rho', 'm'];
+    const required =
+      calculateFor === "density"
+        ? ["m", "V"]
+        : calculateFor === "mass"
+        ? ["rho", "V"]
+        : ["rho", "m"];
 
     for (let key of required) {
       if (inputs[key] === null || isNaN(inputs[key])) {
-        setError(`Please enter a valid ${key === 'rho' ? 'density' : key === 'm' ? 'mass' : 'volume'}`);
+        setError(`Please enter a valid ${key === "rho" ? "density" : key === "m" ? "mass" : "volume"}`);
         return;
       }
       if (inputs[key] <= 0) {
-        setError(`${key === 'rho' ? 'Density' : key === 'm' ? 'Mass' : 'Volume'} must be positive`);
+        setError(`${key === "rho" ? "Density" : key === "m" ? "Mass" : "Volume"} must be positive`);
         return;
       }
     }
@@ -63,68 +69,70 @@ const DensityCalculator = () => {
       let displayUnit;
 
       switch (calculateFor) {
-        case 'density':
+        case "density":
           calculatedValue = m / V;
           displayUnit = densityUnit;
-          calculatedValue /= densityUnits[densityUnit]; // Convert to chosen unit
-          setResult({
-            density: calculatedValue,
-            mass: parseFloat(mass),
-            volume: parseFloat(volume),
-            units: { density: densityUnit, mass: massUnit, volume: volumeUnit },
-          });
+          calculatedValue /= densityUnits[densityUnit];
           break;
-
-        case 'mass':
+        case "mass":
           calculatedValue = rho * V;
           displayUnit = massUnit;
-          calculatedValue /= massUnits[massUnit]; // Convert to chosen unit
-          setResult({
-            density: parseFloat(density),
-            mass: calculatedValue,
-            volume: parseFloat(volume),
-            units: { density: densityUnit, mass: massUnit, volume: volumeUnit },
-          });
+          calculatedValue /= massUnits[massUnit];
           break;
-
-        case 'volume':
+        case "volume":
           calculatedValue = m / rho;
           displayUnit = volumeUnit;
-          calculatedValue /= volumeUnits[volumeUnit]; // Convert to chosen unit
-          setResult({
-            density: parseFloat(density),
-            mass: parseFloat(mass),
-            volume: calculatedValue,
-            units: { density: densityUnit, mass: massUnit, volume: volumeUnit },
-          });
+          calculatedValue /= volumeUnits[volumeUnit];
           break;
-
         default:
-          throw new Error('Invalid calculation type');
+          throw new Error("Invalid calculation type");
       }
+
+      const newResult = {
+        density: calculateFor === "density" ? calculatedValue : parseFloat(density),
+        mass: calculateFor === "mass" ? calculatedValue : parseFloat(mass),
+        volume: calculateFor === "volume" ? calculatedValue : parseFloat(volume),
+        units: { density: densityUnit, mass: massUnit, volume: volumeUnit },
+        timestamp: new Date().toLocaleTimeString(),
+      };
+
+      setResult(newResult);
+      setHistory((prev) => [newResult, ...prev.slice(0, 9)]); // Keep last 10 calculations
     } catch (err) {
-      setError('Calculation error: ' + err.message);
+      setError("Calculation error: " + err.message);
     }
-  };
+  }, [density, densityUnit, mass, massUnit, volume, volumeUnit, calculateFor]);
 
   const formatNumber = (num, digits = 2) => {
-    if (num < 1e-6 || num > 1e6) {
-      return num.toExponential(digits);
-    }
-    return num.toLocaleString('en-US', { maximumFractionDigits: digits });
+    if (num === null || isNaN(num)) return "N/A";
+    if (num < 1e-6 || num > 1e6) return num.toExponential(digits);
+    return num.toLocaleString("en-US", { maximumFractionDigits: digits });
   };
 
   const resetInputs = () => {
-    setDensity('');
-    setMass('');
-    setVolume('');
+    setDensity("");
+    setMass("");
+    setVolume("");
     setResult(null);
+    setError("");
+  };
+
+  const applyPreset = (preset) => {
+    setCalculateFor(preset.calculateFor);
+    setDensity(preset.density || "");
+    setDensityUnit(preset.densityUnit || "kg/m³");
+    setMass(preset.mass || "");
+    setMassUnit(preset.massUnit || "kg");
+    setVolume(preset.volume || "");
+    setVolumeUnit(preset.volumeUnit || "m³");
+    setResult(null);
+    setError("");
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4">
-      <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-lg">
-        <h1 className="text-2xl font-bold text-center mb-6 text-gray-800">
+    <div className="min-h-screen  flex items-center justify-center ">
+      <div className="w-full  bg-white rounded-xl shadow-lg p-6 sm:p-8">
+        <h1 className="text-2xl sm:text-3xl font-bold text-center mb-6 text-gray-800">
           Density Calculator
         </h1>
 
@@ -149,8 +157,8 @@ const DensityCalculator = () => {
           </div>
 
           {/* Inputs */}
-          <div className="space-y-4">
-            {calculateFor !== 'density' && (
+          <div className="grid grid-cols-1 gap-4">
+            {calculateFor !== "density" && (
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Density
@@ -168,14 +176,16 @@ const DensityCalculator = () => {
                     onChange={(e) => setDensityUnit(e.target.value)}
                     className="w-28 px-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
-                    <option value="kg/m³">kg/m³</option>
-                    <option value="g/cm³">g/cm³</option>
-                    <option value="kg/L">kg/L</option>
+                    {Object.keys(densityUnits).map((unit) => (
+                      <option key={unit} value={unit}>
+                        {unit}
+                      </option>
+                    ))}
                   </select>
                 </div>
               </div>
             )}
-            {calculateFor !== 'mass' && (
+            {calculateFor !== "mass" && (
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Mass
@@ -193,14 +203,16 @@ const DensityCalculator = () => {
                     onChange={(e) => setMassUnit(e.target.value)}
                     className="w-24 px-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
-                    <option value="kg">kg</option>
-                    <option value="g">g</option>
-                    <option value="mg">mg</option>
+                    {Object.keys(massUnits).map((unit) => (
+                      <option key={unit} value={unit}>
+                        {unit}
+                      </option>
+                    ))}
                   </select>
                 </div>
               </div>
             )}
-            {calculateFor !== 'volume' && (
+            {calculateFor !== "volume" && (
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Volume
@@ -218,100 +230,107 @@ const DensityCalculator = () => {
                     onChange={(e) => setVolumeUnit(e.target.value)}
                     className="w-24 px-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
-                    <option value="m³">m³</option>
-                    <option value="L">L</option>
-                    <option value="mL">mL</option>
-                    <option value="cm³">cm³</option>
+                    {Object.keys(volumeUnits).map((unit) => (
+                      <option key={unit} value={unit}>
+                        {unit}
+                      </option>
+                    ))}
                   </select>
                 </div>
               </div>
             )}
           </div>
 
-          {/* Calculate Button */}
-          <button
-            onClick={calculateDensityValues}
-            className="w-full px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"
-          >
-            Calculate
-          </button>
+          {/* Action Buttons */}
+          <div className="flex flex-col sm:flex-row gap-4">
+            <button
+              onClick={calculateDensityValues}
+              className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors flex items-center justify-center"
+            >
+              <FaCalculator className="mr-2" /> Calculate
+            </button>
+            <button
+              onClick={resetInputs}
+              className="flex-1 px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors flex items-center justify-center"
+            >
+              <FaSync className="mr-2" /> Reset
+            </button>
+          </div>
 
           {/* Results */}
           {result && (
-            <div className="p-4 bg-gray-50 rounded-md">
-              <h2 className="text-lg font-semibold mb-2">Results:</h2>
-              <p>Density: {formatNumber(result.density)} {result.units.density}</p>
-              <p>Mass: {formatNumber(result.mass)} {result.units.mass}</p>
-              <p>Volume: {formatNumber(result.volume)} {result.units.volume}</p>
+            <div className="p-4 bg-gray-50 rounded-lg">
+              <h2 className="text-lg font-semibold mb-2 text-gray-700">Result:</h2>
+              <p>
+                Density: {formatNumber(result.density)} {result.units.density}
+              </p>
+              <p>
+                Mass: {formatNumber(result.mass)} {result.units.mass}
+              </p>
+              <p>
+                Volume: {formatNumber(result.volume)} {result.units.volume}
+              </p>
             </div>
           )}
 
           {/* Error */}
           {error && (
-            <div className="p-4 bg-red-50 rounded-md text-red-700">
+            <div className="p-4 bg-red-50 rounded-lg text-red-700">
               <p>{error}</p>
             </div>
           )}
 
           {/* Presets */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Presets
-            </label>
-            <div className="flex gap-2 flex-wrap">
-              <button
-                onClick={() => {
-                  setCalculateFor('density');
-                  setMass(1);
-                  setMassUnit('kg');
-                  setVolume(1);
-                  setVolumeUnit('L');
-                }}
-                className="px-3 py-1 bg-gray-200 rounded hover:bg-gray-300 text-sm"
-              >
-                Water (1 kg, 1 L)
-              </button>
-              <button
-                onClick={() => {
-                  setCalculateFor('mass');
-                  setDensity(2700);
-                  setDensityUnit('kg/m³');
-                  setVolume(0.001);
-                  setVolumeUnit('m³');
-                }}
-                className="px-3 py-1 bg-gray-200 rounded hover:bg-gray-300 text-sm"
-              >
-                Aluminum (1 L)
-              </button>
-              <button
-                onClick={() => {
-                  setCalculateFor('volume');
-                  setDensity(11.34);
-                  setDensityUnit('g/cm³');
-                  setMass(113.4);
-                  setMassUnit('g');
-                }}
-                className="px-3 py-1 bg-gray-200 rounded hover:bg-gray-300 text-sm"
-              >
-                Lead (113.4 g)
-              </button>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Presets</label>
+            <div className="flex flex-wrap gap-2">
+              {[
+                { label: "Water", calculateFor: "density", mass: 1, massUnit: "kg", volume: 1, volumeUnit: "L" },
+                { label: "Aluminum", calculateFor: "mass", density: 2700, densityUnit: "kg/m³", volume: 0.001, volumeUnit: "m³" },
+                { label: "Lead", calculateFor: "volume", density: 11.34, densityUnit: "g/cm³", mass: 113.4, massUnit: "g" },
+                { label: "Air", calculateFor: "density", mass: 0.001225, massUnit: "kg", volume: 1, volumeUnit: "m³" },
+              ].map((preset, index) => (
+                <button
+                  key={index}
+                  onClick={() => applyPreset(preset)}
+                  className="px-3 py-1 bg-gray-200 rounded-md hover:bg-gray-300 text-sm transition-colors"
+                >
+                  {preset.label}
+                </button>
+              ))}
             </div>
           </div>
 
+          {/* History */}
+          {history.length > 0 && (
+            <div className="p-4 bg-blue-50 rounded-lg">
+              <h3 className="text-lg font-semibold mb-2 text-blue-700">Calculation History</h3>
+              <ul className="text-sm text-blue-600 space-y-1 max-h-40 overflow-y-auto">
+                {history.map((entry, index) => (
+                  <li key={index}>
+                    [{entry.timestamp}] ρ: {formatNumber(entry.density)} {entry.units.density}, m:{" "}
+                    {formatNumber(entry.mass)} {entry.units.mass}, V: {formatNumber(entry.volume)}{" "}
+                    {entry.units.volume}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
           {/* Info */}
-          <div className="text-sm text-gray-600">
-            <details>
-              <summary className="cursor-pointer font-medium">About</summary>
-              <div className="mt-2 space-y-2">
-                <p>Uses the density formula: ρ = m / V</p>
-                <ul className="list-disc list-inside">
-                  <li>ρ = Density</li>
-                  <li>m = Mass</li>
-                  <li>V = Volume</li>
-                </ul>
-                <p>Supports multiple units with automatic conversion.</p>
-              </div>
-            </details>
+          <div className="p-4 bg-green-50 rounded-lg border border-green-200">
+            <h3 className="font-semibold text-green-700 mb-2 flex items-center">
+              <FaInfoCircle className="mr-2" /> About
+            </h3>
+            <div className="text-sm text-green-600 space-y-1">
+              <p>Formula: ρ = m / V</p>
+              <ul className="list-disc list-inside">
+                <li>ρ = Density</li>
+                <li>m = Mass</li>
+                <li>V = Volume</li>
+              </ul>
+              <p>Supports multiple units with automatic conversion.</p>
+            </div>
           </div>
         </div>
       </div>

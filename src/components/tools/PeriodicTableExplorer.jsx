@@ -1,14 +1,14 @@
 "use client";
+import React, { useState } from "react";
+import { FaSearch, FaSync, FaDownload, FaCopy } from "react-icons/fa";
 
-import { useState } from "react";
-
-// Full Periodic Table Data
+// Updated Periodic Table Data (complete 118 elements)
 const periodicTable = [
   {
     number: 1,
     symbol: "H",
     name: "Hydrogen",
-    atomicMass: 1.008,
+    atomicMass: 1.00794,
     category: "Nonmetal",
     electronConfig: "1s¹",
     group: 1,
@@ -16,14 +16,16 @@ const periodicTable = [
     block: "s",
     phase: "Gas",
     density: 0.00008988,
-    meltingPoint: 14.01,
-    boilingPoint: 20.28,
+    meltingPoint: 13.99,
+    boilingPoint: 20.271,
+    electronegativity: 2.20,
+    ionizationEnergy: 1312.0,
   },
   {
     number: 2,
     symbol: "He",
     name: "Helium",
-    atomicMass: 4.0026,
+    atomicMass: 4.002602,
     category: "Noble Gas",
     electronConfig: "1s²",
     group: 18,
@@ -32,7 +34,9 @@ const periodicTable = [
     phase: "Gas",
     density: 0.0001785,
     meltingPoint: 0.95,
-    boilingPoint: 4.22,
+    boilingPoint: 4.222,
+    electronegativity: null,
+    ionizationEnergy: 2372.3,
   },
   {
     number: 3,
@@ -46,14 +50,16 @@ const periodicTable = [
     block: "s",
     phase: "Solid",
     density: 0.534,
-    meltingPoint: 453.69,
+    meltingPoint: 453.65,
     boilingPoint: 1603,
+    electronegativity: 0.98,
+    ionizationEnergy: 520.2,
   },
   {
     number: 4,
     symbol: "Be",
     name: "Beryllium",
-    atomicMass: 9.0122,
+    atomicMass: 9.0121831,
     category: "Alkaline Earth",
     electronConfig: "[He] 2s²",
     group: 2,
@@ -62,7 +68,9 @@ const periodicTable = [
     phase: "Solid",
     density: 1.85,
     meltingPoint: 1560,
-    boilingPoint: 2744,
+    boilingPoint: 2742,
+    electronegativity: 1.57,
+    ionizationEnergy: 899.5,
   },
   {
     number: 5,
@@ -76,8 +84,10 @@ const periodicTable = [
     block: "p",
     phase: "Solid",
     density: 2.34,
-    meltingPoint: 2573,
+    meltingPoint: 2349,
     boilingPoint: 4200,
+    electronegativity: 2.04,
+    ionizationEnergy: 800.6,
   },
   {
     number: 6,
@@ -92,8 +102,10 @@ const periodicTable = [
     phase: "Solid",
     density: 2.267,
     meltingPoint: 3915,
-    boilingPoint: 4300,
-  }, // Sublimates
+    boilingPoint: null,
+    electronegativity: 2.55,
+    ionizationEnergy: 1086.5,
+  },
   {
     number: 7,
     symbol: "N",
@@ -105,9 +117,11 @@ const periodicTable = [
     period: 2,
     block: "p",
     phase: "Gas",
-    density: 0.001251,
+    density: 0.0012506,
     meltingPoint: 63.15,
-    boilingPoint: 77.36,
+    boilingPoint: 77.355,
+    electronegativity: 3.04,
+    ionizationEnergy: 1402.3,
   },
   {
     number: 8,
@@ -123,12 +137,14 @@ const periodicTable = [
     density: 0.001429,
     meltingPoint: 54.36,
     boilingPoint: 90.188,
+    electronegativity: 3.44,
+    ionizationEnergy: 1313.9,
   },
   {
     number: 9,
     symbol: "F",
     name: "Fluorine",
-    atomicMass: 18.998,
+    atomicMass: 18.998403163,
     category: "Halogen",
     electronConfig: "[He] 2s² 2p⁵",
     group: 17,
@@ -136,14 +152,16 @@ const periodicTable = [
     block: "p",
     phase: "Gas",
     density: 0.001696,
-    meltingPoint: 53.53,
+    meltingPoint: 53.48,
     boilingPoint: 85.03,
+    electronegativity: 3.98,
+    ionizationEnergy: 1681.0,
   },
   {
     number: 10,
     symbol: "Ne",
     name: "Neon",
-    atomicMass: 20.18,
+    atomicMass: 20.1797,
     category: "Noble Gas",
     electronConfig: "[He] 2s² 2p⁶",
     group: 18,
@@ -152,13 +170,15 @@ const periodicTable = [
     phase: "Gas",
     density: 0.0008999,
     meltingPoint: 24.56,
-    boilingPoint: 27.07,
+    boilingPoint: 27.104,
+    electronegativity: null,
+    ionizationEnergy: 2080.7,
   },
   {
     number: 11,
     symbol: "Na",
     name: "Sodium",
-    atomicMass: 22.99,
+    atomicMass: 22.98976928,
     category: "Alkali Metal",
     electronConfig: "[Ne] 3s¹",
     group: 1,
@@ -168,6 +188,8 @@ const periodicTable = [
     density: 0.968,
     meltingPoint: 370.944,
     boilingPoint: 1156,
+    electronegativity: 0.93,
+    ionizationEnergy: 495.8,
   },
   {
     number: 12,
@@ -183,12 +205,14 @@ const periodicTable = [
     density: 1.738,
     meltingPoint: 923,
     boilingPoint: 1363,
+    electronegativity: 1.31,
+    ionizationEnergy: 737.7,
   },
   {
     number: 13,
     symbol: "Al",
     name: "Aluminium",
-    atomicMass: 26.982,
+    atomicMass: 26.9815385,
     category: "Post-transition Metal",
     electronConfig: "[Ne] 3s² 3p¹",
     group: 13,
@@ -198,6 +222,8 @@ const periodicTable = [
     density: 2.7,
     meltingPoint: 933.47,
     boilingPoint: 2743,
+    electronegativity: 1.61,
+    ionizationEnergy: 577.5,
   },
   {
     number: 14,
@@ -210,15 +236,17 @@ const periodicTable = [
     period: 3,
     block: "p",
     phase: "Solid",
-    density: 2.33,
+    density: 2.329,
     meltingPoint: 1687,
     boilingPoint: 3538,
+    electronegativity: 1.90,
+    ionizationEnergy: 786.5,
   },
   {
     number: 15,
     symbol: "P",
     name: "Phosphorus",
-    atomicMass: 30.974,
+    atomicMass: 30.973761998,
     category: "Nonmetal",
     electronConfig: "[Ne] 3s² 3p³",
     group: 15,
@@ -227,7 +255,9 @@ const periodicTable = [
     phase: "Solid",
     density: 1.823,
     meltingPoint: 317.3,
-    boilingPoint: 553,
+    boilingPoint: 553.7,
+    electronegativity: 2.19,
+    ionizationEnergy: 1011.8,
   },
   {
     number: 16,
@@ -243,6 +273,8 @@ const periodicTable = [
     density: 2.07,
     meltingPoint: 388.36,
     boilingPoint: 717.8,
+    electronegativity: 2.58,
+    ionizationEnergy: 999.6,
   },
   {
     number: 17,
@@ -258,12 +290,14 @@ const periodicTable = [
     density: 0.003214,
     meltingPoint: 171.6,
     boilingPoint: 239.11,
+    electronegativity: 3.16,
+    ionizationEnergy: 1251.2,
   },
   {
     number: 18,
     symbol: "Ar",
     name: "Argon",
-    atomicMass: 39.95,
+    atomicMass: 39.948,
     category: "Noble Gas",
     electronConfig: "[Ne] 3s² 3p⁶",
     group: 18,
@@ -271,23 +305,27 @@ const periodicTable = [
     block: "p",
     phase: "Gas",
     density: 0.001784,
-    meltingPoint: 83.8,
-    boilingPoint: 87.3,
+    meltingPoint: 83.81,
+    boilingPoint: 87.302,
+    electronegativity: null,
+    ionizationEnergy: 1520.6,
   },
   {
     number: 19,
     symbol: "K",
     name: "Potassium",
-    atomicMass: 39.098,
+    atomicMass: 39.0983,
     category: "Alkali Metal",
     electronConfig: "[Ar] 4s¹",
     group: 1,
     period: 4,
     block: "s",
     phase: "Solid",
-    density: 0.856,
-    meltingPoint: 336.53,
+    density: 0.862,
+    meltingPoint: 336.7,
     boilingPoint: 1032,
+    electronegativity: 0.82,
+    ionizationEnergy: 418.8,
   },
   {
     number: 20,
@@ -303,12 +341,14 @@ const periodicTable = [
     density: 1.55,
     meltingPoint: 1115,
     boilingPoint: 1757,
+    electronegativity: 1.00,
+    ionizationEnergy: 589.8,
   },
   {
     number: 21,
     symbol: "Sc",
     name: "Scandium",
-    atomicMass: 44.955,
+    atomicMass: 44.955908,
     category: "Transition Metal",
     electronConfig: "[Ar] 3d¹ 4s²",
     group: 3,
@@ -318,6 +358,8 @@ const periodicTable = [
     density: 2.985,
     meltingPoint: 1814,
     boilingPoint: 3109,
+    electronegativity: 1.36,
+    ionizationEnergy: 633.1,
   },
   {
     number: 22,
@@ -333,12 +375,14 @@ const periodicTable = [
     density: 4.506,
     meltingPoint: 1941,
     boilingPoint: 3560,
+    electronegativity: 1.54,
+    ionizationEnergy: 658.8,
   },
   {
     number: 23,
     symbol: "V",
     name: "Vanadium",
-    atomicMass: 50.942,
+    atomicMass: 50.9415,
     category: "Transition Metal",
     electronConfig: "[Ar] 3d³ 4s²",
     group: 5,
@@ -348,12 +392,14 @@ const periodicTable = [
     density: 6.11,
     meltingPoint: 2183,
     boilingPoint: 3680,
+    electronegativity: 1.63,
+    ionizationEnergy: 650.9,
   },
   {
     number: 24,
     symbol: "Cr",
     name: "Chromium",
-    atomicMass: 51.996,
+    atomicMass: 51.9961,
     category: "Transition Metal",
     electronConfig: "[Ar] 3d⁵ 4s¹",
     group: 6,
@@ -363,12 +409,14 @@ const periodicTable = [
     density: 7.15,
     meltingPoint: 2180,
     boilingPoint: 2944,
+    electronegativity: 1.66,
+    ionizationEnergy: 652.9,
   },
   {
     number: 25,
     symbol: "Mn",
     name: "Manganese",
-    atomicMass: 54.938,
+    atomicMass: 54.938044,
     category: "Transition Metal",
     electronConfig: "[Ar] 3d⁵ 4s²",
     group: 7,
@@ -378,6 +426,8 @@ const periodicTable = [
     density: 7.21,
     meltingPoint: 1519,
     boilingPoint: 2334,
+    electronegativity: 1.55,
+    ionizationEnergy: 717.3,
   },
   {
     number: 26,
@@ -393,12 +443,14 @@ const periodicTable = [
     density: 7.874,
     meltingPoint: 1811,
     boilingPoint: 3134,
+    electronegativity: 1.83,
+    ionizationEnergy: 762.5,
   },
   {
     number: 27,
     symbol: "Co",
     name: "Cobalt",
-    atomicMass: 58.933,
+    atomicMass: 58.933194,
     category: "Transition Metal",
     electronConfig: "[Ar] 3d⁷ 4s²",
     group: 9,
@@ -408,12 +460,14 @@ const periodicTable = [
     density: 8.9,
     meltingPoint: 1768,
     boilingPoint: 3200,
+    electronegativity: 1.88,
+    ionizationEnergy: 760.4,
   },
   {
     number: 28,
     symbol: "Ni",
     name: "Nickel",
-    atomicMass: 58.693,
+    atomicMass: 58.6934,
     category: "Transition Metal",
     electronConfig: "[Ar] 3d⁸ 4s²",
     group: 10,
@@ -423,6 +477,8 @@ const periodicTable = [
     density: 8.908,
     meltingPoint: 1728,
     boilingPoint: 3003,
+    electronegativity: 1.91,
+    ionizationEnergy: 737.1,
   },
   {
     number: 29,
@@ -438,6 +494,8 @@ const periodicTable = [
     density: 8.96,
     meltingPoint: 1357.77,
     boilingPoint: 2835,
+    electronegativity: 1.90,
+    ionizationEnergy: 745.5,
   },
   {
     number: 30,
@@ -453,6 +511,8 @@ const periodicTable = [
     density: 7.14,
     meltingPoint: 692.68,
     boilingPoint: 1180,
+    electronegativity: 1.65,
+    ionizationEnergy: 906.4,
   },
   {
     number: 31,
@@ -466,8 +526,10 @@ const periodicTable = [
     block: "p",
     phase: "Solid",
     density: 5.91,
-    meltingPoint: 302.91,
+    meltingPoint: 302.9146,
     boilingPoint: 2477,
+    electronegativity: 1.81,
+    ionizationEnergy: 578.8,
   },
   {
     number: 32,
@@ -482,13 +544,15 @@ const periodicTable = [
     phase: "Solid",
     density: 5.323,
     meltingPoint: 1211.4,
-    boilingPoint: 3093,
+    boilingPoint: 3106,
+    electronegativity: 2.01,
+    ionizationEnergy: 762.2,
   },
   {
     number: 33,
     symbol: "As",
     name: "Arsenic",
-    atomicMass: 74.922,
+    atomicMass: 74.921595,
     category: "Metalloid",
     electronConfig: "[Ar] 3d¹⁰ 4s² 4p³",
     group: 15,
@@ -498,6 +562,8 @@ const periodicTable = [
     density: 5.727,
     meltingPoint: 1090,
     boilingPoint: 876,
+    electronegativity: 2.18,
+    ionizationEnergy: 947.0,
   },
   {
     number: 34,
@@ -513,6 +579,8 @@ const periodicTable = [
     density: 4.81,
     meltingPoint: 494,
     boilingPoint: 958,
+    electronegativity: 2.55,
+    ionizationEnergy: 941.0,
   },
   {
     number: 35,
@@ -528,6 +596,8 @@ const periodicTable = [
     density: 3.1028,
     meltingPoint: 265.8,
     boilingPoint: 332.0,
+    electronegativity: 2.96,
+    ionizationEnergy: 1139.9,
   },
   {
     number: 36,
@@ -543,12 +613,14 @@ const periodicTable = [
     density: 0.003749,
     meltingPoint: 115.78,
     boilingPoint: 119.93,
+    electronegativity: 3.00,
+    ionizationEnergy: 1350.8,
   },
   {
     number: 37,
     symbol: "Rb",
     name: "Rubidium",
-    atomicMass: 85.468,
+    atomicMass: 85.4678,
     category: "Alkali Metal",
     electronConfig: "[Kr] 5s¹",
     group: 1,
@@ -556,8 +628,10 @@ const periodicTable = [
     block: "s",
     phase: "Solid",
     density: 1.532,
-    meltingPoint: 312.46,
+    meltingPoint: 312.45,
     boilingPoint: 961,
+    electronegativity: 0.82,
+    ionizationEnergy: 403.0,
   },
   {
     number: 38,
@@ -573,21 +647,25 @@ const periodicTable = [
     density: 2.64,
     meltingPoint: 1050,
     boilingPoint: 1655,
+    electronegativity: 0.95,
+    ionizationEnergy: 549.5,
   },
   {
     number: 39,
     symbol: "Y",
     name: "Yttrium",
-    atomicMass: 88.906,
+    atomicMass: 88.90584,
     category: "Transition Metal",
     electronConfig: "[Kr] 4d¹ 5s²",
     group: 3,
     period: 5,
     block: "d",
     phase: "Solid",
-    density: 4.47,
+    density: 4.472,
     meltingPoint: 1799,
     boilingPoint: 3609,
+    electronegativity: 1.22,
+    ionizationEnergy: 600.0,
   },
   {
     number: 40,
@@ -603,12 +681,14 @@ const periodicTable = [
     density: 6.52,
     meltingPoint: 2128,
     boilingPoint: 4650,
+    electronegativity: 1.33,
+    ionizationEnergy: 640.1,
   },
   {
     number: 41,
     symbol: "Nb",
     name: "Niobium",
-    atomicMass: 92.906,
+    atomicMass: 92.90637,
     category: "Transition Metal",
     electronConfig: "[Kr] 4d⁴ 5s¹",
     group: 5,
@@ -618,6 +698,8 @@ const periodicTable = [
     density: 8.57,
     meltingPoint: 2750,
     boilingPoint: 5017,
+    electronegativity: 1.60,
+    ionizationEnergy: 652.1,
   },
   {
     number: 42,
@@ -633,6 +715,8 @@ const periodicTable = [
     density: 10.28,
     meltingPoint: 2896,
     boilingPoint: 4912,
+    electronegativity: 2.16,
+    ionizationEnergy: 684.3,
   },
   {
     number: 43,
@@ -646,8 +730,10 @@ const periodicTable = [
     block: "d",
     phase: "Solid",
     density: 11.5,
-    meltingPoint: 2473,
+    meltingPoint: 2430,
     boilingPoint: 4538,
+    electronegativity: 1.90,
+    ionizationEnergy: 702.0,
   },
   {
     number: 44,
@@ -660,15 +746,17 @@ const periodicTable = [
     period: 5,
     block: "d",
     phase: "Solid",
-    density: 12.37,
+    density: 12.45,
     meltingPoint: 2607,
     boilingPoint: 4423,
+    electronegativity: 2.20,
+    ionizationEnergy: 710.2,
   },
   {
     number: 45,
     symbol: "Rh",
     name: "Rhodium",
-    atomicMass: 102.91,
+    atomicMass: 102.90550,
     category: "Transition Metal",
     electronConfig: "[Kr] 4d⁸ 5s¹",
     group: 9,
@@ -678,6 +766,8 @@ const periodicTable = [
     density: 12.41,
     meltingPoint: 2237,
     boilingPoint: 3968,
+    electronegativity: 2.28,
+    ionizationEnergy: 719.7,
   },
   {
     number: 46,
@@ -693,12 +783,14 @@ const periodicTable = [
     density: 12.023,
     meltingPoint: 1828.05,
     boilingPoint: 3236,
+    electronegativity: 2.20,
+    ionizationEnergy: 804.4,
   },
   {
     number: 47,
     symbol: "Ag",
     name: "Silver",
-    atomicMass: 107.87,
+    atomicMass: 107.8682,
     category: "Transition Metal",
     electronConfig: "[Kr] 4d¹⁰ 5s¹",
     group: 11,
@@ -708,12 +800,14 @@ const periodicTable = [
     density: 10.49,
     meltingPoint: 1234.93,
     boilingPoint: 2435,
+    electronegativity: 1.93,
+    ionizationEnergy: 731.0,
   },
   {
     number: 48,
     symbol: "Cd",
     name: "Cadmium",
-    atomicMass: 112.41,
+    atomicMass: 112.414,
     category: "Transition Metal",
     electronConfig: "[Kr] 4d¹⁰ 5s²",
     group: 12,
@@ -722,13 +816,15 @@ const periodicTable = [
     phase: "Solid",
     density: 8.65,
     meltingPoint: 594.22,
-    boilingPoint: 1038,
+    boilingPoint: 1040,
+    electronegativity: 1.69,
+    ionizationEnergy: 867.8,
   },
   {
     number: 49,
     symbol: "In",
     name: "Indium",
-    atomicMass: 114.82,
+    atomicMass: 114.818,
     category: "Post-transition Metal",
     electronConfig: "[Kr] 4d¹⁰ 5s² 5p¹",
     group: 13,
@@ -736,14 +832,16 @@ const periodicTable = [
     block: "p",
     phase: "Solid",
     density: 7.31,
-    meltingPoint: 429.75,
+    meltingPoint: 429.7485,
     boilingPoint: 2345,
+    electronegativity: 1.78,
+    ionizationEnergy: 558.3,
   },
   {
     number: 50,
     symbol: "Sn",
     name: "Tin",
-    atomicMass: 118.71,
+    atomicMass: 118.710,
     category: "Post-transition Metal",
     electronConfig: "[Kr] 4d¹⁰ 5s² 5p²",
     group: 14,
@@ -752,13 +850,15 @@ const periodicTable = [
     phase: "Solid",
     density: 7.287,
     meltingPoint: 505.08,
-    boilingPoint: 2543,
+    boilingPoint: 2875,
+    electronegativity: 1.96,
+    ionizationEnergy: 708.6,
   },
   {
     number: 51,
     symbol: "Sb",
     name: "Antimony",
-    atomicMass: 121.76,
+    atomicMass: 121.760,
     category: "Metalloid",
     electronConfig: "[Kr] 4d¹⁰ 5s² 5p³",
     group: 15,
@@ -768,12 +868,14 @@ const periodicTable = [
     density: 6.697,
     meltingPoint: 903.78,
     boilingPoint: 1908,
+    electronegativity: 2.05,
+    ionizationEnergy: 834.0,
   },
   {
     number: 52,
     symbol: "Te",
     name: "Tellurium",
-    atomicMass: 127.6,
+    atomicMass: 127.60,
     category: "Metalloid",
     electronConfig: "[Kr] 4d¹⁰ 5s² 5p⁴",
     group: 16,
@@ -783,27 +885,31 @@ const periodicTable = [
     density: 6.24,
     meltingPoint: 722.66,
     boilingPoint: 1261,
+    electronegativity: 2.10,
+    ionizationEnergy: 869.3,
   },
   {
     number: 53,
     symbol: "I",
     name: "Iodine",
-    atomicMass: 126.9,
+    atomicMass: 126.90447,
     category: "Halogen",
     electronConfig: "[Kr] 4d¹⁰ 5s² 5p⁵",
     group: 17,
     period: 5,
     block: "p",
     phase: "Solid",
-    density: 4.94,
+    density: 4.933,
     meltingPoint: 386.85,
     boilingPoint: 457.4,
+    electronegativity: 2.66,
+    ionizationEnergy: 1008.4,
   },
   {
     number: 54,
     symbol: "Xe",
     name: "Xenon",
-    atomicMass: 131.29,
+    atomicMass: 131.293,
     category: "Noble Gas",
     electronConfig: "[Kr] 4d¹⁰ 5s² 5p⁶",
     group: 18,
@@ -812,13 +918,15 @@ const periodicTable = [
     phase: "Gas",
     density: 0.005894,
     meltingPoint: 161.4,
-    boilingPoint: 165.05,
+    boilingPoint: 165.051,
+    electronegativity: 2.60,
+    ionizationEnergy: 1170.4,
   },
   {
     number: 55,
     symbol: "Cs",
     name: "Caesium",
-    atomicMass: 132.91,
+    atomicMass: 132.90545196,
     category: "Alkali Metal",
     electronConfig: "[Xe] 6s¹",
     group: 1,
@@ -828,12 +936,14 @@ const periodicTable = [
     density: 1.93,
     meltingPoint: 301.7,
     boilingPoint: 944,
+    electronegativity: 0.79,
+    ionizationEnergy: 375.7,
   },
   {
     number: 56,
     symbol: "Ba",
     name: "Barium",
-    atomicMass: 137.33,
+    atomicMass: 137.327,
     category: "Alkaline Earth",
     electronConfig: "[Xe] 6s²",
     group: 2,
@@ -843,66 +953,76 @@ const periodicTable = [
     density: 3.51,
     meltingPoint: 1000,
     boilingPoint: 2118,
+    electronegativity: 0.89,
+    ionizationEnergy: 502.9,
   },
   {
     number: 57,
     symbol: "La",
     name: "Lanthanum",
-    atomicMass: 138.91,
+    atomicMass: 138.90547,
     category: "Lanthanide",
     electronConfig: "[Xe] 5d¹ 6s²",
     group: 3,
     period: 6,
     block: "d",
     phase: "Solid",
-    density: 6.15,
+    density: 6.162,
     meltingPoint: 1193,
     boilingPoint: 3737,
+    electronegativity: 1.10,
+    ionizationEnergy: 538.1,
   },
   {
     number: 58,
     symbol: "Ce",
     name: "Cerium",
-    atomicMass: 140.12,
+    atomicMass: 140.116,
     category: "Lanthanide",
     electronConfig: "[Xe] 4f¹ 5d¹ 6s²",
+    group: null,
     period: 6,
     block: "f",
     phase: "Solid",
     density: 6.77,
-    meltingPoint: 1071,
+    meltingPoint: 1068,
     boilingPoint: 3716,
-    group: null,
+    electronegativity: 1.12,
+    ionizationEnergy: 534.4,
   },
   {
     number: 59,
     symbol: "Pr",
     name: "Praseodymium",
-    atomicMass: 140.91,
+    atomicMass: 140.90766,
     category: "Lanthanide",
     electronConfig: "[Xe] 4f³ 6s²",
+    group: null,
     period: 6,
     block: "f",
     phase: "Solid",
     density: 6.77,
     meltingPoint: 1208,
     boilingPoint: 3793,
-    group: null,
+    electronegativity: 1.13,
+    ionizationEnergy: 527.0,
   },
   {
     number: 60,
     symbol: "Nd",
     name: "Neodymium",
-    atomicMass: 144.24,
+    atomicMass: 144.242,
     category: "Lanthanide",
     electronConfig: "[Xe] 4f⁴ 6s²",
+    group: null,
     period: 6,
     block: "f",
     phase: "Solid",
     density: 7.01,
     meltingPoint: 1297,
-    boilingPoint: 3343,
-    group: null,
+    boilingPoint: 3347,
+    electronegativity: 1.14,
+    ionizationEnergy: 533.1,
   },
   {
     number: 61,
@@ -911,13 +1031,15 @@ const periodicTable = [
     atomicMass: 145,
     category: "Lanthanide",
     electronConfig: "[Xe] 4f⁵ 6s²",
+    group: null,
     period: 6,
     block: "f",
     phase: "Solid",
     density: 7.26,
     meltingPoint: 1315,
     boilingPoint: 3273,
-    group: null,
+    electronegativity: 1.13,
+    ionizationEnergy: 540.0,
   },
   {
     number: 62,
@@ -926,28 +1048,32 @@ const periodicTable = [
     atomicMass: 150.36,
     category: "Lanthanide",
     electronConfig: "[Xe] 4f⁶ 6s²",
+    group: null,
     period: 6,
     block: "f",
     phase: "Solid",
     density: 7.52,
     meltingPoint: 1345,
     boilingPoint: 2067,
-    group: null,
+    electronegativity: 1.17,
+    ionizationEnergy: 544.5,
   },
   {
     number: 63,
     symbol: "Eu",
     name: "Europium",
-    atomicMass: 151.96,
+    atomicMass: 151.964,
     category: "Lanthanide",
     electronConfig: "[Xe] 4f⁷ 6s²",
+    group: null,
     period: 6,
     block: "f",
     phase: "Solid",
     density: 5.244,
     meltingPoint: 1099,
     boilingPoint: 1802,
-    group: null,
+    electronegativity: 1.20,
+    ionizationEnergy: 547.1,
   },
   {
     number: 64,
@@ -956,109 +1082,123 @@ const periodicTable = [
     atomicMass: 157.25,
     category: "Lanthanide",
     electronConfig: "[Xe] 4f⁷ 5d¹ 6s²",
+    group: null,
     period: 6,
     block: "f",
     phase: "Solid",
-    density: 7.9,
+    density: 7.90,
     meltingPoint: 1585,
     boilingPoint: 3546,
-    group: null,
+    electronegativity: 1.20,
+    ionizationEnergy: 593.4,
   },
   {
     number: 65,
     symbol: "Tb",
     name: "Terbium",
-    atomicMass: 158.93,
+    atomicMass: 158.92535,
     category: "Lanthanide",
     electronConfig: "[Xe] 4f⁹ 6s²",
+    group: null,
     period: 6,
     block: "f",
     phase: "Solid",
     density: 8.23,
     meltingPoint: 1629,
     boilingPoint: 3503,
-    group: null,
+    electronegativity: 1.20,
+    ionizationEnergy: 565.8,
   },
   {
     number: 66,
     symbol: "Dy",
     name: "Dysprosium",
-    atomicMass: 162.5,
+    atomicMass: 162.500,
     category: "Lanthanide",
     electronConfig: "[Xe] 4f¹⁰ 6s²",
+    group: null,
     period: 6,
     block: "f",
     phase: "Solid",
     density: 8.55,
-    meltingPoint: 1644,
+    meltingPoint: 1680,
     boilingPoint: 2840,
-    group: null,
+    electronegativity: 1.22,
+    ionizationEnergy: 573.0,
   },
   {
     number: 67,
     symbol: "Ho",
     name: "Holmium",
-    atomicMass: 164.93,
+    atomicMass: 164.93033,
     category: "Lanthanide",
     electronConfig: "[Xe] 4f¹¹ 6s²",
+    group: null,
     period: 6,
     block: "f",
     phase: "Solid",
-    density: 8.8,
-    meltingPoint: 1747,
+    density: 8.79,
+    meltingPoint: 1734,
     boilingPoint: 2993,
-    group: null,
+    electronegativity: 1.23,
+    ionizationEnergy: 581.0,
   },
   {
     number: 68,
     symbol: "Er",
     name: "Erbium",
-    atomicMass: 167.26,
+    atomicMass: 167.259,
     category: "Lanthanide",
     electronConfig: "[Xe] 4f¹² 6s²",
+    group: null,
     period: 6,
     block: "f",
     phase: "Solid",
     density: 9.066,
     meltingPoint: 1802,
     boilingPoint: 3141,
-    group: null,
+    electronegativity: 1.24,
+    ionizationEnergy: 589.3,
   },
   {
     number: 69,
     symbol: "Tm",
     name: "Thulium",
-    atomicMass: 168.93,
+    atomicMass: 168.93422,
     category: "Lanthanide",
     electronConfig: "[Xe] 4f¹³ 6s²",
+    group: null,
     period: 6,
     block: "f",
     phase: "Solid",
     density: 9.32,
     meltingPoint: 1818,
     boilingPoint: 2223,
-    group: null,
+    electronegativity: 1.25,
+    ionizationEnergy: 596.7,
   },
   {
     number: 70,
     symbol: "Yb",
     name: "Ytterbium",
-    atomicMass: 173.05,
+    atomicMass: 173.045,
     category: "Lanthanide",
     electronConfig: "[Xe] 4f¹⁴ 6s²",
+    group: null,
     period: 6,
     block: "f",
     phase: "Solid",
-    density: 6.9,
+    density: 6.90,
     meltingPoint: 1097,
     boilingPoint: 1469,
-    group: null,
+    electronegativity: 1.10,
+    ionizationEnergy: 603.4,
   },
   {
     number: 71,
     symbol: "Lu",
     name: "Lutetium",
-    atomicMass: 174.97,
+    atomicMass: 174.9668,
     category: "Lanthanide",
     electronConfig: "[Xe] 4f¹⁴ 5d¹ 6s²",
     group: 3,
@@ -1068,6 +1208,8 @@ const periodicTable = [
     density: 9.841,
     meltingPoint: 1925,
     boilingPoint: 3675,
+    electronegativity: 1.27,
+    ionizationEnergy: 523.5,
   },
   {
     number: 72,
@@ -1083,12 +1225,14 @@ const periodicTable = [
     density: 13.31,
     meltingPoint: 2506,
     boilingPoint: 4876,
+    electronegativity: 1.30,
+    ionizationEnergy: 658.5,
   },
   {
     number: 73,
     symbol: "Ta",
     name: "Tantalum",
-    atomicMass: 180.95,
+    atomicMass: 180.94788,
     category: "Transition Metal",
     electronConfig: "[Xe] 4f¹⁴ 5d³ 6s²",
     group: 5,
@@ -1098,6 +1242,8 @@ const periodicTable = [
     density: 16.69,
     meltingPoint: 3290,
     boilingPoint: 5731,
+    electronegativity: 1.50,
+    ionizationEnergy: 761.0,
   },
   {
     number: 74,
@@ -1113,12 +1259,14 @@ const periodicTable = [
     density: 19.25,
     meltingPoint: 3695,
     boilingPoint: 5828,
+    electronegativity: 2.36,
+    ionizationEnergy: 770.0,
   },
   {
     number: 75,
     symbol: "Re",
     name: "Rhenium",
-    atomicMass: 186.21,
+    atomicMass: 186.207,
     category: "Transition Metal",
     electronConfig: "[Xe] 4f¹⁴ 5d⁵ 6s²",
     group: 7,
@@ -1128,6 +1276,8 @@ const periodicTable = [
     density: 21.02,
     meltingPoint: 3459,
     boilingPoint: 5869,
+    electronegativity: 1.90,
+    ionizationEnergy: 760.0,
   },
   {
     number: 76,
@@ -1143,27 +1293,31 @@ const periodicTable = [
     density: 22.59,
     meltingPoint: 3306,
     boilingPoint: 5285,
+    electronegativity: 2.20,
+    ionizationEnergy: 840.0,
   },
   {
     number: 77,
     symbol: "Ir",
     name: "Iridium",
-    atomicMass: 192.22,
+    atomicMass: 192.217,
     category: "Transition Metal",
     electronConfig: "[Xe] 4f¹⁴ 5d⁷ 6s²",
     group: 9,
     period: 6,
     block: "d",
     phase: "Solid",
-    density: 22.65,
+    density: 22.56,
     meltingPoint: 2719,
     boilingPoint: 4701,
+    electronegativity: 2.20,
+    ionizationEnergy: 880.0,
   },
   {
     number: 78,
     symbol: "Pt",
     name: "Platinum",
-    atomicMass: 195.08,
+    atomicMass: 195.084,
     category: "Transition Metal",
     electronConfig: "[Xe] 4f¹⁴ 5d⁹ 6s¹",
     group: 10,
@@ -1173,27 +1327,31 @@ const periodicTable = [
     density: 21.45,
     meltingPoint: 2041.4,
     boilingPoint: 4098,
+    electronegativity: 2.28,
+    ionizationEnergy: 870.0,
   },
   {
     number: 79,
     symbol: "Au",
     name: "Gold",
-    atomicMass: 196.97,
+    atomicMass: 196.966569,
     category: "Transition Metal",
     electronConfig: "[Xe] 4f¹⁴ 5d¹⁰ 6s¹",
     group: 11,
     period: 6,
     block: "d",
     phase: "Solid",
-    density: 19.3,
+    density: 19.32,
     meltingPoint: 1337.33,
     boilingPoint: 3129,
+    electronegativity: 2.54,
+    ionizationEnergy: 890.1,
   },
   {
     number: 80,
     symbol: "Hg",
     name: "Mercury",
-    atomicMass: 200.59,
+    atomicMass: 200.592,
     category: "Transition Metal",
     electronConfig: "[Xe] 4f¹⁴ 5d¹⁰ 6s²",
     group: 12,
@@ -1201,8 +1359,10 @@ const periodicTable = [
     block: "d",
     phase: "Liquid",
     density: 13.534,
-    meltingPoint: 234.32,
+    meltingPoint: 234.3210,
     boilingPoint: 629.88,
+    electronegativity: 2.00,
+    ionizationEnergy: 1007.1,
   },
   {
     number: 81,
@@ -1218,6 +1378,8 @@ const periodicTable = [
     density: 11.85,
     meltingPoint: 577,
     boilingPoint: 1746,
+    electronegativity: 1.62,
+    ionizationEnergy: 589.4,
   },
   {
     number: 82,
@@ -1233,12 +1395,14 @@ const periodicTable = [
     density: 11.34,
     meltingPoint: 600.61,
     boilingPoint: 2022,
+    electronegativity: 2.33,
+    ionizationEnergy: 715.6,
   },
   {
     number: 83,
     symbol: "Bi",
     name: "Bismuth",
-    atomicMass: 208.98,
+    atomicMass: 208.98040,
     category: "Post-transition Metal",
     electronConfig: "[Xe] 4f¹⁴ 5d¹⁰ 6s² 6p³",
     group: 15,
@@ -1248,6 +1412,8 @@ const periodicTable = [
     density: 9.78,
     meltingPoint: 544.7,
     boilingPoint: 1837,
+    electronegativity: 2.02,
+    ionizationEnergy: 703.0,
   },
   {
     number: 84,
@@ -1260,9 +1426,11 @@ const periodicTable = [
     period: 6,
     block: "p",
     phase: "Solid",
-    density: 9.32,
+    density: 9.196,
     meltingPoint: 527,
     boilingPoint: 1235,
+    electronegativity: 2.00,
+    ionizationEnergy: 812.1,
   },
   {
     number: 85,
@@ -1275,9 +1443,11 @@ const periodicTable = [
     period: 6,
     block: "p",
     phase: "Solid",
-    density: 7,
+    density: 6.35,
     meltingPoint: 575,
     boilingPoint: 610,
+    electronegativity: 2.20,
+    ionizationEnergy: 890.0,
   },
   {
     number: 86,
@@ -1292,7 +1462,9 @@ const periodicTable = [
     phase: "Gas",
     density: 0.00973,
     meltingPoint: 202,
-    boilingPoint: 211.3,
+    boilingPoint: 211.5,
+    electronegativity: 2.20,
+    ionizationEnergy: 1037.0,
   },
   {
     number: 87,
@@ -1308,6 +1480,8 @@ const periodicTable = [
     density: 2.48,
     meltingPoint: 300,
     boilingPoint: 950,
+    electronegativity: 0.70,
+    ionizationEnergy: 380.0,
   },
   {
     number: 88,
@@ -1323,6 +1497,8 @@ const periodicTable = [
     density: 5.5,
     meltingPoint: 973,
     boilingPoint: 2010,
+    electronegativity: 0.90,
+    ionizationEnergy: 509.3,
   },
   {
     number: 89,
@@ -1337,52 +1513,60 @@ const periodicTable = [
     phase: "Solid",
     density: 10.07,
     meltingPoint: 1323,
-    boilingPoint: 3473,
+    boilingPoint: 3471,
+    electronegativity: 1.10,
+    ionizationEnergy: 499.0,
   },
   {
     number: 90,
     symbol: "Th",
     name: "Thorium",
-    atomicMass: 232.04,
+    atomicMass: 232.0377,
     category: "Actinide",
     electronConfig: "[Rn] 6d² 7s²",
+    group: null,
     period: 7,
-    block: "d",
+    block: "f",
     phase: "Solid",
-    density: 11.7,
+    density: 11.72,
     meltingPoint: 2023,
     boilingPoint: 5061,
-    group: null,
+    electronegativity: 1.30,
+    ionizationEnergy: 587.0,
   },
   {
     number: 91,
     symbol: "Pa",
     name: "Protactinium",
-    atomicMass: 231.04,
+    atomicMass: 231.03588,
     category: "Actinide",
     electronConfig: "[Rn] 5f² 6d¹ 7s²",
+    group: null,
     period: 7,
     block: "f",
     phase: "Solid",
     density: 15.37,
     meltingPoint: 1841,
     boilingPoint: 4300,
-    group: null,
+    electronegativity: 1.50,
+    ionizationEnergy: 568.0,
   },
   {
     number: 92,
     symbol: "U",
     name: "Uranium",
-    atomicMass: 238.03,
+    atomicMass: 238.02891,
     category: "Actinide",
     electronConfig: "[Rn] 5f³ 6d¹ 7s²",
+    group: null,
     period: 7,
     block: "f",
     phase: "Solid",
     density: 19.05,
     meltingPoint: 1405.3,
-    boilingPoint: 4407,
-    group: null,
+    boilingPoint: 4404,
+    electronegativity: 1.38,
+    ionizationEnergy: 597.6,
   },
   {
     number: 93,
@@ -1391,13 +1575,15 @@ const periodicTable = [
     atomicMass: 237,
     category: "Actinide",
     electronConfig: "[Rn] 5f⁴ 6d¹ 7s²",
+    group: null,
     period: 7,
     block: "f",
     phase: "Solid",
     density: 20.45,
     meltingPoint: 912,
     boilingPoint: 4273,
-    group: null,
+    electronegativity: 1.36,
+    ionizationEnergy: 604.5,
   },
   {
     number: 94,
@@ -1406,13 +1592,15 @@ const periodicTable = [
     atomicMass: 244,
     category: "Actinide",
     electronConfig: "[Rn] 5f⁶ 7s²",
+    group: null,
     period: 7,
     block: "f",
     phase: "Solid",
     density: 19.816,
-    meltingPoint: 913,
-    boilingPoint: 3501,
-    group: null,
+    meltingPoint: 912.5,
+    boilingPoint: 3505,
+    electronegativity: 1.28,
+    ionizationEnergy: 584.7,
   },
   {
     number: 95,
@@ -1421,13 +1609,15 @@ const periodicTable = [
     atomicMass: 243,
     category: "Actinide",
     electronConfig: "[Rn] 5f⁷ 7s²",
+    group: null,
     period: 7,
     block: "f",
     phase: "Solid",
     density: 13.69,
     meltingPoint: 1449,
     boilingPoint: 2880,
-    group: null,
+    electronegativity: 1.30,
+    ionizationEnergy: 578.0,
   },
   {
     number: 96,
@@ -1436,13 +1626,15 @@ const periodicTable = [
     atomicMass: 247,
     category: "Actinide",
     electronConfig: "[Rn] 5f⁷ 6d¹ 7s²",
+    group: null,
     period: 7,
     block: "f",
     phase: "Solid",
     density: 13.51,
     meltingPoint: 1613,
     boilingPoint: 3383,
-    group: null,
+    electronegativity: 1.30,
+    ionizationEnergy: 581.0,
   },
   {
     number: 97,
@@ -1451,13 +1643,15 @@ const periodicTable = [
     atomicMass: 247,
     category: "Actinide",
     electronConfig: "[Rn] 5f⁹ 7s²",
+    group: null,
     period: 7,
     block: "f",
     phase: "Solid",
     density: 14.78,
     meltingPoint: 1259,
     boilingPoint: 2900,
-    group: null,
+    electronegativity: 1.30,
+    ionizationEnergy: 601.0,
   },
   {
     number: 98,
@@ -1466,13 +1660,15 @@ const periodicTable = [
     atomicMass: 251,
     category: "Actinide",
     electronConfig: "[Rn] 5f¹⁰ 7s²",
+    group: null,
     period: 7,
     block: "f",
     phase: "Solid",
     density: 15.1,
     meltingPoint: 1173,
     boilingPoint: 1743,
-    group: null,
+    electronegativity: 1.30,
+    ionizationEnergy: 608.0,
   },
   {
     number: 99,
@@ -1481,13 +1677,15 @@ const periodicTable = [
     atomicMass: 252,
     category: "Actinide",
     electronConfig: "[Rn] 5f¹¹ 7s²",
+    group: null,
     period: 7,
     block: "f",
     phase: "Solid",
     density: 8.84,
     meltingPoint: 1133,
     boilingPoint: 1269,
-    group: null,
+    electronegativity: 1.30,
+    ionizationEnergy: 619.0,
   },
   {
     number: 100,
@@ -1496,13 +1694,15 @@ const periodicTable = [
     atomicMass: 257,
     category: "Actinide",
     electronConfig: "[Rn] 5f¹² 7s²",
+    group: null,
     period: 7,
     block: "f",
     phase: "Solid",
     density: 9.7,
     meltingPoint: 1800,
     boilingPoint: null,
-    group: null,
+    electronegativity: 1.30,
+    ionizationEnergy: 627.0,
   },
   {
     number: 101,
@@ -1511,13 +1711,15 @@ const periodicTable = [
     atomicMass: 258,
     category: "Actinide",
     electronConfig: "[Rn] 5f¹³ 7s²",
+    group: null,
     period: 7,
     block: "f",
     phase: "Solid",
     density: 10.3,
     meltingPoint: 1100,
     boilingPoint: null,
-    group: null,
+    electronegativity: 1.30,
+    ionizationEnergy: 635.0,
   },
   {
     number: 102,
@@ -1526,13 +1728,15 @@ const periodicTable = [
     atomicMass: 259,
     category: "Actinide",
     electronConfig: "[Rn] 5f¹⁴ 7s²",
+    group: null,
     period: 7,
     block: "f",
     phase: "Solid",
     density: 9.9,
     meltingPoint: 1100,
     boilingPoint: null,
-    group: null,
+    electronegativity: 1.30,
+    ionizationEnergy: 642.0,
   },
   {
     number: 103,
@@ -1545,9 +1749,11 @@ const periodicTable = [
     period: 7,
     block: "d",
     phase: "Solid",
-    density: null,
+    density: 15.6,
     meltingPoint: 1900,
     boilingPoint: null,
+    electronegativity: 1.30,
+    ionizationEnergy: 470.0,
   },
   {
     number: 104,
@@ -1560,9 +1766,11 @@ const periodicTable = [
     period: 7,
     block: "d",
     phase: "Solid",
-    density: null,
-    meltingPoint: null,
-    boilingPoint: null,
+    density: 23.2,
+    meltingPoint: 2400,
+    boilingPoint: 5800,
+    electronegativity: 1.30,
+    ionizationEnergy: 580.0,
   },
   {
     number: 105,
@@ -1575,9 +1783,11 @@ const periodicTable = [
     period: 7,
     block: "d",
     phase: "Solid",
-    density: null,
+    density: 29.3,
     meltingPoint: null,
     boilingPoint: null,
+    electronegativity: null,
+    ionizationEnergy: 665.0,
   },
   {
     number: 106,
@@ -1590,9 +1800,11 @@ const periodicTable = [
     period: 7,
     block: "d",
     phase: "Solid",
-    density: null,
+    density: 35.0,
     meltingPoint: null,
     boilingPoint: null,
+    electronegativity: null,
+    ionizationEnergy: 757.0,
   },
   {
     number: 107,
@@ -1605,9 +1817,11 @@ const periodicTable = [
     period: 7,
     block: "d",
     phase: "Solid",
-    density: null,
+    density: 37.1,
     meltingPoint: null,
     boilingPoint: null,
+    electronegativity: null,
+    ionizationEnergy: 733.0,
   },
   {
     number: 108,
@@ -1620,9 +1834,11 @@ const periodicTable = [
     period: 7,
     block: "d",
     phase: "Solid",
-    density: null,
+    density: 40.7,
     meltingPoint: null,
     boilingPoint: null,
+    electronegativity: null,
+    ionizationEnergy: 730.0,
   },
   {
     number: 109,
@@ -1635,9 +1851,11 @@ const periodicTable = [
     period: 7,
     block: "d",
     phase: "Solid",
-    density: null,
+    density: 37.4,
     meltingPoint: null,
     boilingPoint: null,
+    electronegativity: null,
+    ionizationEnergy: 825.0,
   },
   {
     number: 110,
@@ -1645,14 +1863,16 @@ const periodicTable = [
     name: "Darmstadtium",
     atomicMass: 281,
     category: "Transition Metal",
-    electronConfig: "[Rn] 5f¹⁴ 6d¹⁰ 7s¹",
+    electronConfig: "[Rn] 5f¹⁴ 6d⁸ 7s²",
     group: 10,
     period: 7,
     block: "d",
     phase: "Solid",
-    density: null,
+    density: 34.8,
     meltingPoint: null,
     boilingPoint: null,
+    electronegativity: null,
+    ionizationEnergy: 960.0,
   },
   {
     number: 111,
@@ -1660,14 +1880,16 @@ const periodicTable = [
     name: "Roentgenium",
     atomicMass: 282,
     category: "Transition Metal",
-    electronConfig: "[Rn] 5f¹⁴ 6d¹⁰ 7s¹",
+    electronConfig: "[Rn] 5f¹⁴ 6d⁹ 7s²",
     group: 11,
     period: 7,
     block: "d",
     phase: "Solid",
-    density: null,
+    density: 28.7,
     meltingPoint: null,
     boilingPoint: null,
+    electronegativity: null,
+    ionizationEnergy: 1020.0,
   },
   {
     number: 112,
@@ -1680,9 +1902,11 @@ const periodicTable = [
     period: 7,
     block: "d",
     phase: "Solid",
-    density: null,
+    density: 23.7,
     meltingPoint: null,
     boilingPoint: null,
+    electronegativity: null,
+    ionizationEnergy: 1155.0,
   },
   {
     number: 113,
@@ -1695,9 +1919,11 @@ const periodicTable = [
     period: 7,
     block: "p",
     phase: "Solid",
-    density: null,
-    meltingPoint: null,
-    boilingPoint: null,
+    density: 16,
+    meltingPoint: 700,
+    boilingPoint: 1430,
+    electronegativity: null,
+    ionizationEnergy: 704.9,
   },
   {
     number: 114,
@@ -1710,9 +1936,11 @@ const periodicTable = [
     period: 7,
     block: "p",
     phase: "Solid",
-    density: null,
-    meltingPoint: null,
-    boilingPoint: null,
+    density: 14,
+    meltingPoint: 340,
+    boilingPoint: 420,
+    electronegativity: null,
+    ionizationEnergy: 832.2,
   },
   {
     number: 115,
@@ -1725,9 +1953,11 @@ const periodicTable = [
     period: 7,
     block: "p",
     phase: "Solid",
-    density: null,
-    meltingPoint: null,
-    boilingPoint: null,
+    density: 13.5,
+    meltingPoint: 670,
+    boilingPoint: 1400,
+    electronegativity: null,
+    ionizationEnergy: 538.3,
   },
   {
     number: 116,
@@ -1740,9 +1970,11 @@ const periodicTable = [
     period: 7,
     block: "p",
     phase: "Solid",
-    density: null,
-    meltingPoint: null,
-    boilingPoint: null,
+    density: 12.9,
+    meltingPoint: 709,
+    boilingPoint: 1085,
+    electronegativity: null,
+    ionizationEnergy: 723.6,
   },
   {
     number: 117,
@@ -1755,9 +1987,11 @@ const periodicTable = [
     period: 7,
     block: "p",
     phase: "Solid",
-    density: null,
-    meltingPoint: null,
-    boilingPoint: null,
+    density: 7.2,
+    meltingPoint: 723,
+    boilingPoint: 883,
+    electronegativity: null,
+    ionizationEnergy: 736.0,
   },
   {
     number: 118,
@@ -1770,139 +2004,253 @@ const periodicTable = [
     period: 7,
     block: "p",
     phase: "Solid",
-    density: null,
-    meltingPoint: null,
-    boilingPoint: null,
+    density: 7.2,
+    meltingPoint: 325,
+    boilingPoint: 450,
+    electronegativity: null,
+    ionizationEnergy: 839.4,
   },
 ];
 
-const PeriodicTableExplorer = () => {
-  const [selectedElement, setSelectedElement] = useState(null);
-  const [filter, setFilter] = useState("All");
-
-  // Filtered list based on category
-  const filteredElements =
-    filter === "All"
-      ? periodicTable
-      : periodicTable.filter((element) => element.category === filter);
-
-  return (
-    <div className="mx-auto p-6 bg-white shadow-lg rounded-lg">
-      <h2 className="text-2xl font-semibold mb-6 text-center text-gray-800">
-        Periodic Table Explorer
-      </h2>
-
-      {/* Filter Dropdown */}
-      <div className="mb-4">
-        <label className="font-medium text-secondary">
-          Filter by Category:
-        </label>
-        <select
-          value={filter}
-          onChange={(e) => setFilter(e.target.value)}
-          className="ml-2 p-2 border rounded-lg"
-        >
-          <option value="All">All</option>
-          <option value="Nonmetal">Nonmetals</option>
-          <option value="Noble Gas">Noble Gases</option>
-          <option value="Alkali Metal">Alkali Metals</option>
-          <option value="Alkaline Earth">Alkaline Earth Metals</option>
-          <option value="Metalloid">Metalloids</option>
-          <option value="Halogen">Halogens</option>
-          <option value="Post-transition Metal">Post-transition Metals</option>
-          <option value="Transition Metal">Transition Metals</option>
-          <option value="Lanthanide">Lanthanides</option>
-          <option value="Actinide">Actinides</option>
-        </select>
-      </div>
-
-      {/* Grid Display of Elements */}
-      <div className="flex flex-wrap gap-3 text-center">
-        {filteredElements.map((element) => (
-          <button
-            key={element.number}
-            className={`py-1.5 px-5 rounded-xl shadow-md transition duration-200 transform hover:scale-105`}
-            onClick={() => setSelectedElement(element)}
-          >
-            <div className="text-xl font-bold text-secondary">
-              {element.symbol}
-            </div>
-            <div className="text-sm text-primary">{element.number}</div>
-          </button>
-        ))}
-      </div>
-
-      {/* Selected Element Details */}
-      {selectedElement && (
-        <div className="mt-6 p-4 border rounded-lg bg-gray-50">
-          <h3 className="text-lg font-semibold text-primary">
-            {selectedElement.name} ({selectedElement.symbol})
-          </h3>
-          <div className="flex flex-wrap gap-1 text-primary mt-1">
-            <p className="bg-white py-0.5 px-3 rounded-full shadow-sm">
-              <strong className="text-secondary">Atomic Number:</strong>{" "}
-              {selectedElement.number}
-            </p>
-
-            <p className="bg-white py-0.5 px-3 rounded-full shadow-sm">
-              <strong className="text-secondary">Atomic Mass:</strong>{" "}
-              {selectedElement.atomicMass}
-            </p>
-
-            <p className="bg-white py-0.5 px-3 rounded-full shadow-sm">
-              <strong className="text-secondary">Category:</strong>{" "}
-              {selectedElement.category}
-            </p>
-
-            <p className="bg-white py-0.5 px-3 rounded-full shadow-sm">
-              <strong className="text-secondary">
-                Electron Configuration:
-              </strong>
-              {selectedElement.electronConfig}
-            </p>
-
-            <p className="bg-white py-0.5 px-3 rounded-full shadow-sm">
-              <strong className="text-secondary">Group:</strong>{" "}
-              {selectedElement.group || "N/A"}
-            </p>
-
-            <p className="bg-white py-0.5 px-3 rounded-full shadow-sm">
-              <strong className="text-secondary">Period:</strong>{" "}
-              {selectedElement.period}
-            </p>
-
-            <p className="bg-white py-0.5 px-3 rounded-full shadow-sm">
-              <strong className="text-secondary">Block:</strong>{" "}
-              {selectedElement.block}
-            </p>
-
-            <p className="bg-white py-0.5 px-3 rounded-full shadow-sm">
-              <strong className="text-secondary">Phase:</strong>{" "}
-              {selectedElement.phase}
-            </p>
-
-            <p className="bg-white py-0.5 px-3 rounded-full shadow-sm">
-              <strong className="text-secondary">Density:</strong>{" "}
-              {selectedElement.density}
-              {selectedElement.density ? " g/cm³" : " N/A"}
-            </p>
-
-            <p className="bg-white py-0.5 px-3 rounded-full shadow-sm">
-              <strong className="text-secondary">Melting Point:</strong>{" "}
-              {selectedElement.meltingPoint}
-              {selectedElement.meltingPoint ? " K" : " N/A"}
-            </p>
-
-            <p className="bg-white py-0.5 px-3 rounded-full shadow-sm">
-              <strong className="text-secondary">Boiling Point:</strong>{" "}
-              {selectedElement.boilingPoint}
-              {selectedElement.boilingPoint ? " K" : " N/A"}
-            </p>
-          </div>
-        </div>
-      )}
-    </div>
-  );
+// Category Colors
+const categoryColors = {
+  "Nonmetal": "bg-blue-100 text-blue-800",
+  "Noble Gas": "bg-purple-100 text-purple-800",
+  "Alkali Metal": "bg-red-100 text-red-800",
+  "Alkaline Earth": "bg-orange-100 text-orange-800",
+  "Metalloid": "bg-green-100 text-green-800",
+  "Halogen": "bg-yellow-100 text-yellow-800",
+  "Post-transition Metal": "bg-teal-100 text-teal-800",
+  "Transition Metal": "bg-indigo-100 text-indigo-800",
+  "Lanthanide": "bg-pink-100 text-pink-800",
+  "Actinide": "bg-gray-100 text-gray-800",
 };
 
-export default PeriodicTableExplorer;
+const PeriodicTableExplorer = () => {
+  const [selectedElement, setSelectedElement] = useState(null);
+  const [filterCategory, setFilterCategory] = useState("All");
+  const [searchTerm, setSearchTerm] = useState("");
+  const [sortBy, setSortBy] = useState("number");
+  const [sortOrder, setSortOrder] = useState("asc");
+  const [tempUnit, setTempUnit] = useState("K");
+
+  const filteredElements = periodicTable
+    .filter((element) =>
+      filterCategory === "All" ? true : element.category === filterCategory
+    )
+    .filter((element) =>
+      `${element.name} ${element.symbol} ${element.number}`
+        .toLowerCase()
+        .includes(searchTerm.toLowerCase())
+    )
+    .sort((a, b) => {
+      const valueA = a[sortBy] || 0;
+      const valueB = b[sortBy] || 0;
+      return sortOrder === "asc" ? valueA - valueB : valueB - valueA;
+    });
+
+  const convertTemp = (kelvin, unit) => {
+    if (!kelvin) return "N/A";
+    switch (unit) {
+      case "C":
+        return (kelvin - 273.15).toFixed(2);
+      case "F":
+        return ((kelvin - 273.15) * 9/5 + 32).toFixed(2);
+      default:
+        return kelvin.toFixed(2);
+    }
+  };
+
+  const downloadJSON = () => {
+    const data = selectedElement ? [selectedElement] : filteredElements;
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = `periodic-table-${Date.now()}.json`;
+    link.click();
+  };
+
+  const copyToClipboard = () => {
+    if (!selectedElement) return;
+    const text = Object.entries(selectedElement)
+      .map(([key, value]) => `${key}: ${value}`)
+      .join("\n");
+    navigator.clipboard.writeText(text);
+    alert("Element details copied to clipboard!");
+  };
+
+  const reset = () => {
+    setFilterCategory("All");
+    setSearchTerm("");
+    setSortBy("number");
+    setSortOrder("asc");
+    setTempUnit("K");
+    setSelectedElement(null);
+  };
+  return (
+    <div className="min-h-screen  flex items-center justify-center ">
+      <div className="w-full  bg-white rounded-xl shadow-lg p-6 sm:p-8">
+        <h1 className="text-2xl sm:text-3xl font-bold text-center mb-6 text-gray-800">
+          Periodic Table Explorer
+        </h1>
+  
+        <div className="space-y-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Filter by Category
+              </label>
+              <select
+                value={filterCategory}
+                onChange={(e) => setFilterCategory(e.target.value)}
+                className="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="All">All</option>
+                {Object.keys(categoryColors).map((cat) => (
+                  <option key={cat} value={cat}>{cat}</option>
+                ))}
+              </select>
+            </div>
+  
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Search
+              </label>
+              <div className="relative">
+                <FaSearch className="absolute top-1/2 left-3 transform -translate-y-1/2 text-gray-400" />
+                <input
+                  type="text"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  placeholder="Search by name, symbol, or number"
+                  className="w-full pl-10 p-2 border rounded-md focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+            </div>
+  
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Sort By
+              </label>
+              <select
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value)}
+                className="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="number">Atomic Number</option>
+                <option value="atomicMass">Atomic Mass</option>
+                <option value="name">Name</option>
+                <option value="density">Density</option>
+              </select>
+              <select
+                value={sortOrder}
+                onChange={(e) => setSortOrder(e.target.value)}
+                className="mt-1 w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="asc">Ascending</option>
+                <option value="desc">Descending</option>
+              </select>
+            </div>
+  
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Temperature Unit
+              </label>
+              <select
+                value={tempUnit}
+                onChange={(e) => setTempUnit(e.target.value)}
+                className="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="K">Kelvin (K)</option>
+                <option value="C">Celsius (°C)</option>
+                <option value="F">Fahrenheit (°F)</option>
+              </select>
+            </div>
+          </div>
+  
+          <div className="flex flex-col sm:flex-row gap-4">
+            <button
+              onClick={downloadJSON}
+              className="flex-1 py-2 px-4 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors flex items-center justify-center"
+            >
+              <FaDownload className="mr-2" /> Download
+            </button>
+            <button
+              onClick={copyToClipboard}
+              disabled={!selectedElement}
+              className="flex-1 py-2 px-4 bg-gray-600 text-white rounded-md hover:bg-gray-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors flex items-center justify-center"
+            >
+              <FaCopy className="mr-2" /> Copy Details
+            </button>
+            <button
+              onClick={reset}
+              className="flex-1 py-2 px-4 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors flex items-center justify-center"
+            >
+              <FaSync className="mr-2" /> Reset
+            </button>
+          </div>
+        </div>
+  
+        {/* Grid Display of Elements */}
+        <div className="mt-6 grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-10 gap-3">
+          {filteredElements.map((element) => (
+            <button
+              key={element.number}
+              onClick={() => setSelectedElement(element)}
+              className={`p-2 rounded-lg shadow-md transition duration-200 transform hover:scale-105 ${
+                categoryColors[element.category]
+              } ${selectedElement?.number === element.number ? "ring-2 ring-blue-500" : ""}`}
+            >
+              <div className="text-lg font-bold">{element.symbol}</div>
+              <div className="text-xs">{element.number}</div>
+              <div className="text-xs truncate">{element.name}</div>
+            </button>
+          ))}
+        </div>
+  
+        {/* Selected Element Details */}
+        {selectedElement && (
+          <div className="mt-6 p-4 border rounded-lg bg-gray-50">
+            <h3 className="text-lg font-semibold text-gray-800">
+              {selectedElement.name} ({selectedElement.symbol})
+            </h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 mt-2">
+              {[
+                { label: "Atomic Number", value: selectedElement.number },
+                { label: "Atomic Mass", value: selectedElement.atomicMass },
+                { label: "Category", value: selectedElement.category },
+                { label: "Electron Config", value: selectedElement.electronConfig },
+                { label: "Group", value: selectedElement.group || "N/A" },
+                { label: "Period", value: selectedElement.period },
+                { label: "Block", value: selectedElement.block },
+                { label: "Phase", value: selectedElement.phase },
+                { label: "Density", value: selectedElement.density ? `${selectedElement.density} g/cm³` : "N/A" },
+                { label: "Melting Point", value: `${convertTemp(selectedElement.meltingPoint, tempUnit)} ${tempUnit}` },
+                { label: "Boiling Point", value: `${convertTemp(selectedElement.boilingPoint, tempUnit)} ${tempUnit}` },
+                { label: "Electronegativity", value: selectedElement.electronegativity || "N/A" },
+                { label: "Ionization Energy", value: selectedElement.ionizationEnergy ? `${selectedElement.ionizationEnergy} kJ/mol` : "N/A" },
+              ].map(({ label, value }) => (
+                <div key={label} className="bg-white py-1 px-3 rounded-full shadow-sm">
+                  <strong className="text-gray-700">{label}:</strong> {value}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+  
+        {/* Features */}
+        <div className="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
+          <h3 className="font-semibold text-blue-700 mb-2">Features</h3>
+          <ul className="list-disc list-inside text-blue-600 text-sm space-y-1">
+            <li>Filter by category with color-coded elements</li>
+            <li>Search by name, symbol, or atomic number</li>
+            <li>Sort by number, mass, name, or density</li>
+            <li>Temperature unit conversion (K, °C, °F)</li>
+            <li>Download as JSON or copy details to clipboard</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  );}
+
+  export default PeriodicTableExplorer

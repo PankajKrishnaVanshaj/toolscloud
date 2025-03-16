@@ -1,56 +1,54 @@
-'use client'
-import React, { useState } from 'react';
+"use client";
+import React, { useState, useCallback } from "react";
+import { FaSync, FaCalculator, FaInfoCircle } from "react-icons/fa";
 
 const MolarityCalculator = () => {
-  const [calculateFor, setCalculateFor] = useState('molarity'); // molarity, moles, volume
-  const [molarity, setMolarity] = useState('');
-  const [moles, setMoles] = useState('');
-  const [volume, setVolume] = useState('');
-  const [unit, setUnit] = useState('L'); // L, mL
+  const [calculateFor, setCalculateFor] = useState("molarity");
+  const [molarity, setMolarity] = useState("");
+  const [moles, setMoles] = useState("");
+  const [volume, setVolume] = useState("");
+  const [unit, setUnit] = useState("L");
   const [result, setResult] = useState(null);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
+  const [history, setHistory] = useState([]);
+  const [precision, setPrecision] = useState(3);
 
-  const calculateMolarityValues = () => {
-    setError('');
+  const calculateMolarityValues = useCallback(() => {
+    setError("");
     setResult(null);
 
-    // Convert volume to liters if in mL
-    const volumeInLiters = unit === 'mL' ? parseFloat(volume) / 1000 : parseFloat(volume);
-
-    // Validate inputs based on what we're calculating
+    const volumeInLiters = unit === "mL" ? parseFloat(volume) / 1000 : parseFloat(volume);
     const inputs = {
       molarity: parseFloat(molarity),
       moles: parseFloat(moles),
       volume: volumeInLiters,
     };
 
-    if (calculateFor === 'molarity') {
-      if (!moles || !volume || isNaN(inputs.moles) || isNaN(inputs.volume)) {
-        setError('Please enter valid moles and volume');
-        return;
+    // Validation
+    const validateInputs = () => {
+      if (calculateFor === "molarity") {
+        if (!moles || !volume || isNaN(inputs.moles) || isNaN(inputs.volume))
+          return "Please enter valid moles and volume";
+        if (inputs.moles < 0 || inputs.volume <= 0)
+          return "Moles must be non-negative, volume must be positive";
+      } else if (calculateFor === "moles") {
+        if (!molarity || !volume || isNaN(inputs.molarity) || isNaN(inputs.volume))
+          return "Please enter valid molarity and volume";
+        if (inputs.molarity < 0 || inputs.volume <= 0)
+          return "Molarity must be non-negative, volume must be positive";
+      } else {
+        if (!molarity || !moles || isNaN(inputs.molarity) || isNaN(inputs.moles))
+          return "Please enter valid molarity and moles";
+        if (inputs.molarity < 0 || inputs.moles < 0)
+          return "Molarity and moles must be non-negative";
       }
-      if (inputs.moles < 0 || inputs.volume <= 0) {
-        setError('Moles must be non-negative, volume must be positive');
-        return;
-      }
-    } else if (calculateFor === 'moles') {
-      if (!molarity || !volume || isNaN(inputs.molarity) || isNaN(inputs.volume)) {
-        setError('Please enter valid molarity and volume');
-        return;
-      }
-      if (inputs.molarity < 0 || inputs.volume <= 0) {
-        setError('Molarity must be non-negative, volume must be positive');
-        return;
-      }
-    } else {
-      if (!molarity || !moles || isNaN(inputs.molarity) || isNaN(inputs.moles)) {
-        setError('Please enter valid molarity and moles');
-        return;
-      }
-      if (inputs.molarity < 0 || inputs.moles < 0) {
-        setError('Molarity and moles must be non-negative');
-        return;
-      }
+      return "";
+    };
+
+    const errorMsg = validateInputs();
+    if (errorMsg) {
+      setError(errorMsg);
+      return;
     }
 
     try {
@@ -58,66 +56,67 @@ const MolarityCalculator = () => {
       let displayUnit = unit;
 
       switch (calculateFor) {
-        case 'molarity':
+        case "molarity":
           calculatedValue = inputs.moles / inputs.volume;
           setResult({
             molarity: calculatedValue,
             moles: inputs.moles,
             volume: inputs.volume,
             displayVolume: parseFloat(volume),
-            unit: 'M',
+            unit: "M",
           });
           break;
-
-        case 'moles':
+        case "moles":
           calculatedValue = inputs.molarity * inputs.volume;
           setResult({
             molarity: inputs.molarity,
             moles: calculatedValue,
             volume: inputs.volume,
             displayVolume: parseFloat(volume),
-            unit: 'mol',
+            unit: "mol",
           });
           break;
-
-        case 'volume':
+        case "volume":
           calculatedValue = inputs.moles / inputs.molarity;
-          displayUnit = unit; // Keep input unit for display
+          displayUnit = unit;
           setResult({
             molarity: inputs.molarity,
             moles: inputs.moles,
             volume: calculatedValue,
-            displayVolume: unit === 'mL' ? calculatedValue * 1000 : calculatedValue,
+            displayVolume: unit === "mL" ? calculatedValue * 1000 : calculatedValue,
             unit: displayUnit,
           });
           break;
-
         default:
-          throw new Error('Invalid calculation type');
+          throw new Error("Invalid calculation type");
       }
-    } catch (err) {
-      setError('Calculation error: ' + err.message);
-    }
-  };
 
-  const formatNumber = (num, digits = 3) => {
-    if (num < 1e-6 || num > 1e6) {
-      return num.toExponential(digits);
+      setHistory((prev) => [
+        ...prev,
+        { calculateFor, ...inputs, result: calculatedValue, unit: displayUnit },
+      ].slice(-10)); // Keep last 10 calculations
+    } catch (err) {
+      setError("Calculation error: " + err.message);
     }
-    return num.toLocaleString('en-US', { maximumFractionDigits: digits });
-  };
+  }, [calculateFor, molarity, moles, volume, unit]);
+
+  const formatNumber = (num) =>
+    num < 1e-6 || num > 1e6
+      ? num.toExponential(precision)
+      : num.toLocaleString("en-US", { maximumFractionDigits: precision });
 
   const resetInputs = () => {
-    setMolarity('');
-    setMoles('');
-    setVolume('');
+    setMolarity("");
+    setMoles("");
+    setVolume("");
     setResult(null);
+    setError("");
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4">
-      <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-md">
-        <h1 className="text-2xl font-bold text-center mb-6 text-gray-800">
+    <div className="min-h-screen  flex items-center justify-center ">
+      <div className="w-full  bg-white rounded-xl shadow-lg p-6 sm:p-8">
+        <h1 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-6 text-center">
           Molarity Calculator
         </h1>
 
@@ -133,7 +132,7 @@ const MolarityCalculator = () => {
                 setCalculateFor(e.target.value);
                 resetInputs();
               }}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500"
             >
               <option value="molarity">Molarity (M)</option>
               <option value="moles">Moles (n)</option>
@@ -142,8 +141,8 @@ const MolarityCalculator = () => {
           </div>
 
           {/* Inputs */}
-          <div className="space-y-4">
-            {calculateFor !== 'molarity' && (
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {calculateFor !== "molarity" && (
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Molarity (mol/L)
@@ -153,11 +152,12 @@ const MolarityCalculator = () => {
                   value={molarity}
                   onChange={(e) => setMolarity(e.target.value)}
                   placeholder="e.g., 0.1"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500"
+                  step="any"
                 />
               </div>
             )}
-            {calculateFor !== 'moles' && (
+            {calculateFor !== "moles" && (
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Moles (mol)
@@ -167,12 +167,13 @@ const MolarityCalculator = () => {
                   value={moles}
                   onChange={(e) => setMoles(e.target.value)}
                   placeholder="e.g., 0.05"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500"
+                  step="any"
                 />
               </div>
             )}
-            {calculateFor !== 'volume' && (
-              <div>
+            {calculateFor !== "volume" && (
+              <div className="sm:col-span-2">
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Volume
                 </label>
@@ -181,16 +182,17 @@ const MolarityCalculator = () => {
                     type="number"
                     value={volume}
                     onChange={(e) => setVolume(e.target.value)}
-                    placeholder={`e.g., ${unit === 'L' ? '1' : '1000'}`}
-                    className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder={`e.g., ${unit === "L" ? "1" : "1000"}`}
+                    className="flex-1 p-2 border rounded-md focus:ring-2 focus:ring-blue-500"
+                    step="any"
                   />
                   <select
                     value={unit}
                     onChange={(e) => {
                       setUnit(e.target.value);
-                      setVolume('');
+                      setVolume("");
                     }}
-                    className="w-20 px-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-24 p-2 border rounded-md focus:ring-2 focus:ring-blue-500"
                   >
                     <option value="L">L</option>
                     <option value="mL">mL</option>
@@ -200,18 +202,41 @@ const MolarityCalculator = () => {
             )}
           </div>
 
-          {/* Calculate Button */}
-          <button
-            onClick={calculateMolarityValues}
-            className="w-full px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"
-          >
-            Calculate
-          </button>
+          {/* Precision Control */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Decimal Precision ({precision})
+            </label>
+            <input
+              type="range"
+              min="1"
+              max="6"
+              value={precision}
+              onChange={(e) => setPrecision(parseInt(e.target.value))}
+              className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-500"
+            />
+          </div>
+
+          {/* Action Buttons */}
+          <div className="flex flex-col sm:flex-row gap-4">
+            <button
+              onClick={calculateMolarityValues}
+              className="flex-1 py-2 px-4 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors flex items-center justify-center"
+            >
+              <FaCalculator className="mr-2" /> Calculate
+            </button>
+            <button
+              onClick={resetInputs}
+              className="flex-1 py-2 px-4 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors flex items-center justify-center"
+            >
+              <FaSync className="mr-2" /> Reset
+            </button>
+          </div>
 
           {/* Results */}
           {result && (
-            <div className="p-4 bg-gray-50 rounded-md">
-              <h2 className="text-lg font-semibold mb-2">Results:</h2>
+            <div className="p-4 bg-gray-50 rounded-lg">
+              <h2 className="text-lg font-semibold text-gray-700 mb-2">Results:</h2>
               <p>Molarity: {formatNumber(result.molarity)} M</p>
               <p>Moles: {formatNumber(result.moles)} mol</p>
               <p>Volume: {formatNumber(result.displayVolume)} {result.unit}</p>
@@ -220,8 +245,26 @@ const MolarityCalculator = () => {
 
           {/* Error */}
           {error && (
-            <div className="p-4 bg-red-50 rounded-md text-red-700">
+            <div className="p-4 bg-red-50 rounded-lg text-red-700">
               <p>{error}</p>
+            </div>
+          )}
+
+          {/* Calculation History */}
+          {history.length > 0 && (
+            <div className="p-4 bg-blue-50 rounded-lg">
+              <h3 className="text-lg font-semibold text-blue-700 mb-2">History</h3>
+              <ul className="text-sm text-blue-600 space-y-1 max-h-40 overflow-y-auto">
+                {history.slice().reverse().map((entry, index) => (
+                  <li key={index}>
+                    Calculated {entry.calculateFor}: {formatNumber(entry.result)}{" "}
+                    {entry.unit === "M" ? "M" : entry.unit} (
+                    M: {formatNumber(entry.molarity)}, n: {formatNumber(entry.moles)}, V:{" "}
+                    {formatNumber(entry.volume * (entry.unit === "mL" ? 1000 : 1))}{" "}
+                    {entry.unit})
+                  </li>
+                ))}
+              </ul>
             </div>
           )}
 
@@ -230,57 +273,46 @@ const MolarityCalculator = () => {
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Presets
             </label>
-            <div className="flex gap-2 flex-wrap">
-              <button
-                onClick={() => {
-                  setCalculateFor('molarity');
-                  setMoles(0.1);
-                  setVolume(1);
-                  setUnit('L');
-                }}
-                className="px-3 py-1 bg-gray-200 rounded hover:bg-gray-300 text-sm"
-              >
-                0.1 M (1 L)
-              </button>
-              <button
-                onClick={() => {
-                  setCalculateFor('moles');
-                  setMolarity(0.5);
-                  setVolume(500);
-                  setUnit('mL');
-                }}
-                className="px-3 py-1 bg-gray-200 rounded hover:bg-gray-300 text-sm"
-              >
-                0.5 M (500 mL)
-              </button>
-              <button
-                onClick={() => {
-                  setCalculateFor('volume');
-                  setMolarity(0.2);
-                  setMoles(0.05);
-                  setUnit('L');
-                }}
-                className="px-3 py-1 bg-gray-200 rounded hover:bg-gray-300 text-sm"
-              >
-                0.2 M (0.05 mol)
-              </button>
+            <div className="flex flex-wrap gap-2">
+              {[
+                { for: "molarity", moles: 0.1, volume: 1, unit: "L" },
+                { for: "moles", molarity: 0.5, volume: 500, unit: "mL" },
+                { for: "volume", molarity: 0.2, moles: 0.05, unit: "L" },
+              ].map((preset, idx) => (
+                <button
+                  key={idx}
+                  onClick={() => {
+                    setCalculateFor(preset.for);
+                    setMolarity(preset.molarity || "");
+                    setMoles(preset.moles || "");
+                    setVolume(preset.volume || "");
+                    setUnit(preset.unit);
+                  }}
+                  className="px-3 py-1 bg-gray-200 rounded-md hover:bg-gray-300 text-sm transition-colors"
+                >
+                  {preset.for === "molarity"
+                    ? "0.1 M (1 L)"
+                    : preset.for === "moles"
+                    ? "0.5 M (500 mL)"
+                    : "0.2 M (0.05 mol)"}
+                </button>
+              ))}
             </div>
           </div>
 
           {/* Info */}
-          <div className="text-sm text-gray-600">
-            <details>
-              <summary className="cursor-pointer font-medium">About</summary>
-              <div className="mt-2 space-y-2">
-                <p>Calculates molarity using:</p>
-                <p>M = n / V</p>
-                <ul className="list-disc list-inside">
-                  <li>M = Molarity (mol/L)</li>
-                  <li>n = Moles of solute (mol)</li>
-                  <li>V = Volume of solution (L or mL)</li>
-                </ul>
-              </div>
-            </details>
+          <div className="p-4 bg-green-50 rounded-lg border border-green-200">
+            <h3 className="font-semibold text-green-700 mb-2 flex items-center">
+              <FaInfoCircle className="mr-2" /> About
+            </h3>
+            <div className="text-sm text-green-600 space-y-1">
+              <p>Formula: M = n / V</p>
+              <ul className="list-disc list-inside">
+                <li>M = Molarity (mol/L)</li>
+                <li>n = Moles of solute (mol)</li>
+                <li>V = Volume of solution (L or mL)</li>
+              </ul>
+            </div>
           </div>
         </div>
       </div>

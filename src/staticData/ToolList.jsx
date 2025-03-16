@@ -4329,7 +4329,6 @@ const ToolList = [
         desc: "Explore detailed information about elements in the periodic table.",
         code: "PeriodicTableExplorer",
        },
-      // New 50 Science Tools
       {
         name: "Chemical Equation Balancer",
         slug: "chemical-equation-balancer",

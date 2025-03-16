@@ -1,26 +1,28 @@
-'use client'
-import React, { useState } from 'react';
+"use client";
+import React, { useState, useCallback } from "react";
+import { FaCalculator, FaSync, FaInfoCircle } from "react-icons/fa";
 
 const AccelerationCalculator = () => {
-  const [mode, setMode] = useState('velocity'); // velocity, force, distance
+  const [mode, setMode] = useState("velocity");
   const [inputs, setInputs] = useState({
-    initialVelocity: '', // m/s
-    finalVelocity: '',   // m/s
-    time: '',            // s
-    force: '',           // N
-    mass: '',            // kg
-    distance: '',        // m
+    initialVelocity: "",
+    finalVelocity: "",
+    time: "",
+    force: "",
+    mass: "",
+    distance: "",
   });
-  const [unit, setUnit] = useState('m/s²'); // m/s², ft/s², g
+  const [unit, setUnit] = useState("m/s²");
   const [result, setResult] = useState(null);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
+  const [history, setHistory] = useState([]);
 
   // Conversion factors
   const g = 9.80665; // Standard gravity (m/s²)
   const mToFt = 3.28084; // Meters to feet
 
-  const calculateAcceleration = () => {
-    setError('');
+  const calculateAcceleration = useCallback(() => {
+    setError("");
     setResult(null);
 
     const values = Object.fromEntries(
@@ -31,84 +33,82 @@ const AccelerationCalculator = () => {
 
     try {
       switch (mode) {
-        case 'velocity':
-          if (!values.time || values.time <= 0) {
-            setError('Time must be positive');
-            return;
-          }
+        case "velocity":
+          if (!values.time || values.time <= 0) throw new Error("Time must be positive");
           acceleration = (values.finalVelocity - values.initialVelocity) / values.time;
           break;
-        case 'force':
-          if (!values.mass || values.mass <= 0) {
-            setError('Mass must be positive');
-            return;
-          }
+        case "force":
+          if (!values.mass || values.mass <= 0) throw new Error("Mass must be positive");
           acceleration = values.force / values.mass;
           break;
-        case 'distance':
-          if (!values.time || values.time <= 0) {
-            setError('Time must be positive');
-            return;
-          }
-          // Using v = at (assuming initial velocity = 0) and s = ½at²
+        case "distance":
+          if (!values.time || values.time <= 0) throw new Error("Time must be positive");
           acceleration = (2 * values.distance) / (values.time * values.time);
           break;
         default:
-          throw new Error('Invalid mode');
+          throw new Error("Invalid mode");
       }
 
-      // Convert to selected unit
       let convertedAcceleration;
       switch (unit) {
-        case 'm/s²':
+        case "m/s²":
           convertedAcceleration = acceleration;
           break;
-        case 'ft/s²':
+        case "ft/s²":
           convertedAcceleration = acceleration * mToFt;
           break;
-        case 'g':
+        case "g":
           convertedAcceleration = acceleration / g;
           break;
         default:
-          throw new Error('Invalid unit');
+          throw new Error("Invalid unit");
       }
 
-      setResult({
+      const newResult = {
         acceleration,
         convertedAcceleration,
         unit,
         method: mode,
-      });
+        inputs: { ...values },
+      };
+      setResult(newResult);
+      setHistory((prev) => [...prev, newResult].slice(-5)); // Keep last 5 calculations
     } catch (err) {
-      setError('Calculation error: ' + err.message);
+      setError("Calculation error: " + err.message);
     }
-  };
+  }, [inputs, mode, unit]);
 
   const handleInputChange = (field, value) => {
-    setInputs(prev => ({ ...prev, [field]: value }));
+    setInputs((prev) => ({ ...prev, [field]: value }));
   };
 
   const resetInputs = () => {
     setInputs({
-      initialVelocity: '',
-      finalVelocity: '',
-      time: '',
-      force: '',
-      mass: '',
-      distance: '',
+      initialVelocity: "",
+      finalVelocity: "",
+      time: "",
+      force: "",
+      mass: "",
+      distance: "",
     });
     setResult(null);
+    setError("");
   };
 
-  const formatNumber = (num, digits = 2) => {
-    return num.toLocaleString('en-US', { maximumFractionDigits: digits });
+  const formatNumber = (num, digits = 2) =>
+    num.toLocaleString("en-US", { maximumFractionDigits: digits });
+
+  const applyPreset = (preset) => {
+    setMode(preset.mode);
+    setInputs(preset.inputs);
+    setUnit(preset.unit || "m/s²");
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4">
-      <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-md">
-        <h1 className="text-2xl font-bold text-center mb-6 text-gray-800">
-          Acceleration Calculator
+    <div className="min-h-screen  flex items-center justify-center ">
+      <div className="w-full  bg-white rounded-xl shadow-xl p-6 sm:p-8">
+        <h1 className="text-2xl sm:text-3xl font-bold text-center mb-6 text-gray-800 flex items-center justify-center gap-2">
+          <FaCalculator /> Acceleration Calculator
         </h1>
 
         <div className="space-y-6">
@@ -133,102 +133,66 @@ const AccelerationCalculator = () => {
 
           {/* Inputs */}
           <div className="space-y-4">
-            {mode === 'velocity' && (
+            {mode === "velocity" && (
               <>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Initial Velocity (m/s)
-                  </label>
-                  <input
-                    type="number"
-                    value={inputs.initialVelocity}
-                    onChange={(e) => handleInputChange('initialVelocity', e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Final Velocity (m/s)
-                  </label>
-                  <input
-                    type="number"
-                    value={inputs.finalVelocity}
-                    onChange={(e) => handleInputChange('finalVelocity', e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Time (s)
-                  </label>
-                  <input
-                    type="number"
-                    value={inputs.time}
-                    onChange={(e) => handleInputChange('time', e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
+                {["initialVelocity", "finalVelocity", "time"].map((field) => (
+                  <div key={field}>
+                    <label className="block text-sm font-medium text-gray-700 mb-1 capitalize">
+                      {field.replace(/([A-Z])/g, " $1")} (
+                      {field === "time" ? "s" : "m/s"})
+                    </label>
+                    <input
+                      type="number"
+                      step="any"
+                      value={inputs[field]}
+                      onChange={(e) => handleInputChange(field, e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+                ))}
               </>
             )}
-            {mode === 'force' && (
+            {mode === "force" && (
               <>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Force (N)
-                  </label>
-                  <input
-                    type="number"
-                    value={inputs.force}
-                    onChange={(e) => handleInputChange('force', e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Mass (kg)
-                  </label>
-                  <input
-                    type="number"
-                    value={inputs.mass}
-                    onChange={(e) => handleInputChange('mass', e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
+                {["force", "mass"].map((field) => (
+                  <div key={field}>
+                    <label className="block text-sm font-medium text-gray-700 mb-1 capitalize">
+                      {field} ({field === "force" ? "N" : "kg"})
+                    </label>
+                    <input
+                      type="number"
+                      step="any"
+                      value={inputs[field]}
+                      onChange={(e) => handleInputChange(field, e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+                ))}
               </>
             )}
-            {mode === 'distance' && (
+            {mode === "distance" && (
               <>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Distance (m)
-                  </label>
-                  <input
-                    type="number"
-                    value={inputs.distance}
-                    onChange={(e) => handleInputChange('distance', e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Time (s)
-                  </label>
-                  <input
-                    type="number"
-                    value={inputs.time}
-                    onChange={(e) => handleInputChange('time', e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
+                {["distance", "time"].map((field) => (
+                  <div key={field}>
+                    <label className="block text-sm font-medium text-gray-700 mb-1 capitalize">
+                      {field} ({field === "distance" ? "m" : "s"})
+                    </label>
+                    <input
+                      type="number"
+                      step="any"
+                      value={inputs[field]}
+                      onChange={(e) => handleInputChange(field, e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+                ))}
               </>
             )}
           </div>
 
           {/* Unit Selection */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Unit
-            </label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Unit</label>
             <select
               value={unit}
               onChange={(e) => setUnit(e.target.value)}
@@ -240,76 +204,112 @@ const AccelerationCalculator = () => {
             </select>
           </div>
 
-          {/* Calculate Button */}
-          <button
-            onClick={calculateAcceleration}
-            className="w-full px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"
-          >
-            Calculate
-          </button>
+          {/* Action Buttons */}
+          <div className="flex flex-col sm:flex-row gap-4">
+            <button
+              onClick={calculateAcceleration}
+              className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors flex items-center justify-center"
+            >
+              <FaCalculator className="mr-2" /> Calculate
+            </button>
+            <button
+              onClick={resetInputs}
+              className="flex-1 px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors flex items-center justify-center"
+            >
+              <FaSync className="mr-2" /> Reset
+            </button>
+          </div>
 
           {/* Results */}
           {result && (
-            <div className="p-4 bg-gray-50 rounded-md">
-              <h2 className="text-lg font-semibold mb-2">Acceleration:</h2>
-              <p>{formatNumber(result.convertedAcceleration)} {unit}</p>
-              {unit !== 'm/s²' && (
-                <p>{formatNumber(result.acceleration)} m/s²</p>
+            <div className="p-4 bg-green-50 rounded-lg border border-green-200">
+              <h2 className="text-lg font-semibold mb-2 text-green-700">Acceleration:</h2>
+              <p className="text-lg">
+                {formatNumber(result.convertedAcceleration)} {unit}
+              </p>
+              {unit !== "m/s²" && (
+                <p className="text-sm text-gray-600">
+                  ({formatNumber(result.acceleration)} m/s²)
+                </p>
               )}
-              <p className="text-sm text-gray-600 mt-2">
-                Method: {result.method === 'velocity' ? 'Δv/t' : result.method === 'force' ? 'F/m' : '2s/t²'}
+              <p className="text-sm text-gray-600 mt-1">
+                Method: {result.method === "velocity" ? "Δv/t" : result.method === "force" ? "F/m" : "2s/t²"}
               </p>
             </div>
           )}
 
           {/* Error */}
           {error && (
-            <div className="p-4 bg-red-50 rounded-md text-red-700">
+            <div className="p-4 bg-red-50 rounded-lg border border-red-200 text-red-700">
               <p>{error}</p>
             </div>
           )}
 
           {/* Presets */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Presets
-            </label>
-            <div className="flex gap-2">
-              <button
-                onClick={() => {
-                  setMode('velocity');
-                  setInputs({ initialVelocity: '0', finalVelocity: '10', time: '2', force: '', mass: '', distance: '' });
-                }}
-                className="px-3 py-1 bg-gray-200 rounded hover:bg-gray-300 text-sm"
-              >
-                Car (0-10 m/s in 2s)
-              </button>
-              <button
-                onClick={() => {
-                  setMode('force');
-                  setInputs({ initialVelocity: '', finalVelocity: '', time: '', force: '100', mass: '2', distance: '' });
-                }}
-                className="px-3 py-1 bg-gray-200 rounded hover:bg-gray-300 text-sm"
-              >
-                Push (100N, 2kg)
-              </button>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Presets</label>
+            <div className="flex flex-wrap gap-2">
+              {[
+                {
+                  label: "Car (0-10 m/s in 2s)",
+                  mode: "velocity",
+                  inputs: { initialVelocity: "0", finalVelocity: "10", time: "2", force: "", mass: "", distance: "" },
+                },
+                {
+                  label: "Push (100N, 2kg)",
+                  mode: "force",
+                  inputs: { initialVelocity: "", finalVelocity: "", time: "", force: "100", mass: "2", distance: "" },
+                },
+                {
+                  label: "Fall (9.8m in 1s)",
+                  mode: "distance",
+                  inputs: { initialVelocity: "", finalVelocity: "", time: "1", force: "", mass: "", distance: "9.8" },
+                },
+              ].map((preset, index) => (
+                <button
+                  key={index}
+                  onClick={() => applyPreset(preset)}
+                  className="px-3 py-1 bg-gray-200 rounded-md hover:bg-gray-300 text-sm transition-colors"
+                >
+                  {preset.label}
+                </button>
+              ))}
             </div>
           </div>
 
+          {/* History */}
+          {history.length > 0 && (
+            <div className="p-4 bg-gray-50 rounded-lg">
+              <h3 className="font-semibold text-gray-700 mb-2">Calculation History</h3>
+              <ul className="text-sm text-gray-600 space-y-1 max-h-40 overflow-y-auto">
+                {history.slice().reverse().map((item, index) => (
+                  <li key={index}>
+                    {formatNumber(item.convertedAcceleration)} {item.unit} (
+                    {item.method}:{" "}
+                    {Object.entries(item.inputs)
+                      .filter(([_, v]) => v !== 0)
+                      .map(([k, v]) => `${k}: ${v}`)
+                      .join(", ")})
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
           {/* Info */}
-          <div className="text-sm text-gray-600">
-            <details>
-              <summary className="cursor-pointer font-medium">About</summary>
-              <div className="mt-2 space-y-2">
-                <p>Calculates acceleration using different methods:</p>
-                <ul className="list-disc list-inside">
-                  <li>Δv/t: a = (v_f - v_i) / t</li>
-                  <li>F/m: a = F / m (Newton's 2nd Law)</li>
-                  <li>2s/t²: a = 2s / t² (assuming v_i = 0)</li>
-                </ul>
-                <p>Supports unit conversions to ft/s² and g.</p>
-              </div>
-            </details>
+          <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
+            <h3 className="font-semibold text-blue-700 mb-2 flex items-center gap-1">
+              <FaInfoCircle /> About
+            </h3>
+            <div className="text-sm text-blue-600 space-y-1">
+              <p>Calculates acceleration using:</p>
+              <ul className="list-disc list-inside">
+                <li>Δv/t: a = (v_f - v_i) / t</li>
+                <li>F/m: a = F / m (Newton's 2nd Law)</li>
+                <li>2s/t²: a = 2s / t² (v_i = 0)</li>
+              </ul>
+              <p>Supports units: m/s², ft/s², g (9.80665 m/s²).</p>
+            </div>
           </div>
         </div>
       </div>

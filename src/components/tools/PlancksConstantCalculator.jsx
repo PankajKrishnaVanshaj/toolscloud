@@ -1,12 +1,15 @@
-'use client'
-import React, { useState } from 'react';
+"use client";
+import React, { useState, useCallback } from "react";
+import { FaCalculator, FaSync, FaQuestionCircle } from "react-icons/fa";
 
 const PlancksConstantCalculator = () => {
-  const [calculationType, setCalculationType] = useState('energy'); // energy, frequency, wavelength
-  const [inputValue, setInputValue] = useState('');
-  const [unit, setUnit] = useState('Hz'); // Default unit based on frequency
+  const [calculationType, setCalculationType] = useState("energy");
+  const [inputValue, setInputValue] = useState("");
+  const [unit, setUnit] = useState("Hz");
   const [result, setResult] = useState(null);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
+  const [significantDigits, setSignificantDigits] = useState(4);
+  const [history, setHistory] = useState([]);
 
   // Constants
   const h = 6.62607015e-34; // Planck's constant (J·s)
@@ -14,35 +17,17 @@ const PlancksConstantCalculator = () => {
   const eV = 1.60217662e-19; // Joules per eV
 
   // Unit conversion factors
-  const frequencyUnits = {
-    Hz: 1,
-    kHz: 1e3,
-    MHz: 1e6,
-    GHz: 1e9,
-    THz: 1e12,
-  };
+  const frequencyUnits = { Hz: 1, kHz: 1e3, MHz: 1e6, GHz: 1e9, THz: 1e12 };
+  const wavelengthUnits = { m: 1, cm: 1e-2, mm: 1e-3, μm: 1e-6, nm: 1e-9, Å: 1e-10 };
+  const energyUnits = { J: 1, eV: eV, keV: eV * 1e3, MeV: eV * 1e6, GeV: eV * 1e9 };
 
-  const wavelengthUnits = {
-    m: 1,
-    nm: 1e-9,
-    μm: 1e-6,
-    mm: 1e-3,
-    cm: 1e-2,
-  };
-
-  const energyUnits = {
-    J: 1,
-    eV: eV,
-    keV: eV * 1e3,
-    MeV: eV * 1e6,
-  };
-
-  const calculateWithPlanck = () => {
-    setError('');
+  // Calculation function
+  const calculateWithPlanck = useCallback(() => {
+    setError("");
     setResult(null);
 
     if (!inputValue || isNaN(inputValue) || inputValue <= 0) {
-      setError('Please enter a valid positive value');
+      setError("Please enter a valid positive value");
       return;
     }
 
@@ -51,46 +36,57 @@ const PlancksConstantCalculator = () => {
 
     try {
       switch (calculationType) {
-        case 'energy':
+        case "energy":
           frequency = value * frequencyUnits[unit];
           energy = h * frequency;
           wavelength = c / frequency;
           break;
-        case 'frequency':
+        case "frequency":
           energy = value * energyUnits[unit];
           frequency = energy / h;
           wavelength = c / frequency;
           break;
-        case 'wavelength':
+        case "wavelength":
           wavelength = value * wavelengthUnits[unit];
           frequency = c / wavelength;
           energy = h * frequency;
           break;
         default:
-          throw new Error('Invalid calculation type');
+          throw new Error("Invalid calculation type");
       }
 
-      setResult({
-        energy,
-        frequency,
-        wavelength,
-      });
+      const newResult = { energy, frequency, wavelength };
+      setResult(newResult);
+      setHistory((prev) => [
+        { input: `${value} ${unit}`, type: calculationType, ...newResult },
+        ...prev.slice(0, 9), // Keep last 10 entries
+      ]);
     } catch (err) {
-      setError('Calculation error: ' + err.message);
+      setError("Calculation error: " + err.message);
     }
+  }, [inputValue, unit, calculationType]);
+
+  // Format numbers with significant digits
+  const formatNumber = (num) => {
+    if (num === 0) return "0";
+    if (Math.abs(num) < 1e-6 || Math.abs(num) > 1e6) {
+      return num.toExponential(significantDigits - 1);
+    }
+    return num.toLocaleString("en-US", { maximumSignificantDigits: significantDigits });
   };
 
-  const formatNumber = (num, digits = 4) => {
-    if (num < 1e-6 || num > 1e6) {
-      return num.toExponential(digits);
-    }
-    return num.toLocaleString('en-US', { maximumFractionDigits: digits });
+  // Reset function
+  const reset = () => {
+    setInputValue("");
+    setUnit(calculationType === "energy" ? "Hz" : calculationType === "frequency" ? "J" : "m");
+    setResult(null);
+    setError("");
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4">
-      <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-md">
-        <h1 className="text-2xl font-bold text-center mb-6 text-gray-800">
+    <div className="min-h-screen  flex items-center justify-center ">
+      <div className="w-full  bg-white rounded-xl shadow-xl p-6 sm:p-8">
+        <h1 className="text-2xl sm:text-3xl font-bold text-center mb-6 text-gray-800">
           Planck's Constant Calculator
         </h1>
 
@@ -104,13 +100,12 @@ const PlancksConstantCalculator = () => {
               value={calculationType}
               onChange={(e) => {
                 setCalculationType(e.target.value);
-                setInputValue('');
+                setInputValue("");
                 setUnit(
-                  e.target.value === 'energy' ? 'Hz' :
-                  e.target.value === 'frequency' ? 'J' :
-                  'm'
+                  e.target.value === "energy" ? "Hz" : e.target.value === "frequency" ? "J" : "m"
                 );
                 setResult(null);
+                setError("");
               }}
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
@@ -120,12 +115,10 @@ const PlancksConstantCalculator = () => {
             </select>
           </div>
 
-          {/* Input Value and Unit */}
-          <div className="flex gap-4">
-            <div className="flex-1">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Input Value
-              </label>
+          {/* Input and Unit */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div className="sm:col-span-2">
+              <label className="block text-sm font-medium text-gray-700 mb-1">Input Value</label>
               <input
                 type="number"
                 value={inputValue}
@@ -134,101 +127,148 @@ const PlancksConstantCalculator = () => {
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
-            <div className="w-32">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Unit
-              </label>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Unit</label>
               <select
                 value={unit}
                 onChange={(e) => setUnit(e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 {Object.keys(
-                  calculationType === 'energy' ? frequencyUnits :
-                  calculationType === 'frequency' ? energyUnits :
-                  wavelengthUnits
-                ).map(u => (
-                  <option key={u} value={u}>{u}</option>
+                  calculationType === "energy"
+                    ? frequencyUnits
+                    : calculationType === "frequency"
+                    ? energyUnits
+                    : wavelengthUnits
+                ).map((u) => (
+                  <option key={u} value={u}>
+                    {u}
+                  </option>
                 ))}
               </select>
             </div>
           </div>
 
-          {/* Calculate Button */}
-          <button
-            onClick={calculateWithPlanck}
-            className="w-full px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"
-          >
-            Calculate
-          </button>
+          {/* Significant Digits */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Significant Digits ({significantDigits})
+            </label>
+            <input
+              type="range"
+              min="2"
+              max="8"
+              value={significantDigits}
+              onChange={(e) => setSignificantDigits(parseInt(e.target.value))}
+              className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-500"
+            />
+          </div>
+
+          {/* Action Buttons */}
+          <div className="flex flex-col sm:flex-row gap-4">
+            <button
+              onClick={calculateWithPlanck}
+              className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors flex items-center justify-center"
+            >
+              <FaCalculator className="mr-2" /> Calculate
+            </button>
+            <button
+              onClick={reset}
+              className="flex-1 px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors flex items-center justify-center"
+            >
+              <FaSync className="mr-2" /> Reset
+            </button>
+          </div>
 
           {/* Results */}
           {result && (
             <div className="p-4 bg-gray-50 rounded-md">
-              <h2 className="text-lg font-semibold mb-2">Results:</h2>
-              <p>Energy: {formatNumber(result.energy)} J ({formatNumber(result.energy / eV)} eV)</p>
-              <p>Frequency: {formatNumber(result.frequency)} Hz ({formatNumber(result.frequency / 1e12)} THz)</p>
-              <p>Wavelength: {formatNumber(result.wavelength)} m ({formatNumber(result.wavelength / 1e-9)} nm)</p>
+              <h2 className="text-lg font-semibold mb-2 text-gray-700">Results:</h2>
+              <ul className="space-y-1 text-sm text-gray-600">
+                <li>
+                  Energy: {formatNumber(result.energy)} J ({formatNumber(result.energy / eV)} eV)
+                </li>
+                <li>
+                  Frequency: {formatNumber(result.frequency)} Hz (
+                  {formatNumber(result.frequency / 1e12)} THz)
+                </li>
+                <li>
+                  Wavelength: {formatNumber(result.wavelength)} m (
+                  {formatNumber(result.wavelength / 1e-9)} nm)
+                </li>
+              </ul>
             </div>
           )}
 
           {/* Error */}
           {error && (
-            <div className="p-4 bg-red-50 rounded-md text-red-700">
-              <p>{error}</p>
-            </div>
+            <div className="p-4 bg-red-50 rounded-md text-red-700 text-sm">{error}</div>
           )}
 
           {/* Presets */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Presets
-            </label>
-            <div className="flex gap-2 flex-wrap">
-              <button
-                onClick={() => {
-                  setCalculationType('energy');
-                  setInputValue(5e14);
-                  setUnit('Hz');
-                }}
-                className="px-3 py-1 bg-gray-200 rounded hover:bg-gray-300 text-sm"
-              >
-                Visible Light (500 THz)
-              </button>
-              <button
-                onClick={() => {
-                  setCalculationType('wavelength');
-                  setInputValue(550);
-                  setUnit('nm');
-                }}
-                className="px-3 py-1 bg-gray-200 rounded hover:bg-gray-300 text-sm"
-              >
-                Green Light (550 nm)
-              </button>
-              <button
-                onClick={() => {
-                  setCalculationType('frequency');
-                  setInputValue(2);
-                  setUnit('eV');
-                }}
-                className="px-3 py-1 bg-gray-200 rounded hover:bg-gray-300 text-sm"
-              >
-                UV Photon (2 eV)
-              </button>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Presets</label>
+            <div className="flex flex-wrap gap-2">
+              {[
+                { type: "energy", value: 5e14, unit: "Hz", label: "Visible Light (500 THz)" },
+                { type: "wavelength", value: 550, unit: "nm", label: "Green Light (550 nm)" },
+                { type: "frequency", value: 2, unit: "eV", label: "UV Photon (2 eV)" },
+                { type: "wavelength", value: 0.1, unit: "nm", label: "X-Ray (0.1 nm)" },
+              ].map((preset, idx) => (
+                <button
+                  key={idx}
+                  onClick={() => {
+                    setCalculationType(preset.type);
+                    setInputValue(preset.value);
+                    setUnit(preset.unit);
+                    setResult(null);
+                    setError("");
+                  }}
+                  className="px-3 py-1 bg-gray-200 rounded-md hover:bg-gray-300 text-sm transition-colors"
+                >
+                  {preset.label}
+                </button>
+              ))}
             </div>
           </div>
 
+          {/* Calculation History */}
+          {history.length > 0 && (
+            <div className="p-4 bg-blue-50 rounded-md">
+              <h2 className="text-lg font-semibold mb-2 text-blue-700">History</h2>
+              <ul className="space-y-2 text-sm text-blue-600 max-h-40 overflow-y-auto">
+                {history.map((entry, idx) => (
+                  <li
+                    key={idx}
+                    className="cursor-pointer hover:bg-blue-100 p-1 rounded"
+                    onClick={() => {
+                      setCalculationType(entry.type);
+                      setInputValue(entry.input.split(" ")[0]);
+                      setUnit(entry.input.split(" ")[1]);
+                      setResult({ energy: entry.energy, frequency: entry.frequency, wavelength: entry.wavelength });
+                      setError("");
+                    }}
+                  >
+                    {entry.type === "energy" ? "Freq" : entry.type === "frequency" ? "Energy" : "Wavelength"}: {entry.input} → E: {formatNumber(entry.energy)} J, ν: {formatNumber(entry.frequency)} Hz, λ: {formatNumber(entry.wavelength)} m
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
           {/* Info */}
-          <div className="text-sm text-gray-600">
+          <div className="p-4 bg-gray-50 rounded-md text-sm text-gray-600">
             <details>
-              <summary className="cursor-pointer font-medium">About</summary>
+              <summary className="cursor-pointer font-medium flex items-center gap-2">
+                <FaQuestionCircle /> About Planck's Constant
+              </summary>
               <div className="mt-2 space-y-2">
-                <p>Uses Planck's constant (h = 6.62607015 × 10⁻³⁴ J·s) to relate photon properties:</p>
+                <p>Planck's constant (h = 6.62607015 × 10⁻³⁴ J·s) relates photon properties:</p>
                 <ul className="list-disc list-inside">
                   <li>E = hν (Energy = Planck's constant × frequency)</li>
                   <li>ν = c/λ (Frequency = speed of light / wavelength)</li>
                 </ul>
-                <p>Useful for quantum mechanics and photon energy calculations.</p>
+                <p>Useful in quantum mechanics for calculating photon energy, frequency, and wavelength.</p>
               </div>
             </details>
           </div>
