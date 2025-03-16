@@ -1,46 +1,48 @@
-// components/ChecksumVerifier.js
-'use client';
-
-import React, { useState } from 'react';
-import { MD5, SHA1, SHA256 } from 'crypto-js';
+"use client";
+import React, { useState, useCallback, useRef } from "react";
+import { MD5, SHA1, SHA256, SHA512 } from "crypto-js"; // Added SHA-512
+import { FaCopy, FaSync, FaDownload } from "react-icons/fa";
 
 const ChecksumVerifier = () => {
-  const [inputType, setInputType] = useState('text'); // text, file
-  const [textInput, setTextInput] = useState('');
+  const [inputType, setInputType] = useState("text"); // text, file
+  const [textInput, setTextInput] = useState("");
   const [file, setFile] = useState(null);
-  const [algorithm, setAlgorithm] = useState('sha256');
-  const [providedChecksum, setProvidedChecksum] = useState('');
-  const [computedChecksum, setComputedChecksum] = useState('');
+  const [algorithm, setAlgorithm] = useState("sha256");
+  const [providedChecksum, setProvidedChecksum] = useState("");
+  const [computedChecksum, setComputedChecksum] = useState("");
   const [verificationResult, setVerificationResult] = useState(null);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [caseSensitive, setCaseSensitive] = useState(false); // New option
+  const fileInputRef = useRef(null);
 
   const hashFunctions = {
     md5: MD5,
     sha1: SHA1,
-    sha256: SHA256
+    sha256: SHA256,
+    sha512: SHA512, // Added SHA-512
   };
 
   // Compute checksum from text
-  const computeTextChecksum = () => {
+  const computeTextChecksum = useCallback(() => {
     try {
       if (!textInput) {
-        setError('Please enter text to compute checksum');
+        setError("Please enter text to compute checksum");
         return false;
       }
       const checksum = hashFunctions[algorithm](textInput).toString();
       setComputedChecksum(checksum);
       return true;
     } catch (err) {
-      setError('Checksum computation failed: ' + err.message);
+      setError("Checksum computation failed: " + err.message);
       return false;
     }
-  };
+  }, [textInput, algorithm]);
 
   // Compute checksum from file
-  const computeFileChecksum = async () => {
+  const computeFileChecksum = useCallback(async () => {
     if (!file) {
-      setError('Please select a file');
+      setError("Please select a file");
       return false;
     }
 
@@ -49,39 +51,44 @@ const ChecksumVerifier = () => {
       const reader = new FileReader();
       const result = await new Promise((resolve, reject) => {
         reader.onload = () => resolve(reader.result);
-        reader.onerror = () => reject(new Error('Failed to read file'));
-        reader.readAsText(file); // Treat file as text for simplicity
+        reader.onerror = () => reject(new Error("Failed to read file"));
+        reader.readAsArrayBuffer(file); // Use ArrayBuffer for binary accuracy
       });
 
-      const checksum = hashFunctions[algorithm](result).toString();
+      const wordArray = hashFunctions[algorithm].lib.WordArray.create(result);
+      const checksum = hashFunctions[algorithm](wordArray).toString();
       setComputedChecksum(checksum);
       return true;
     } catch (err) {
-      setError('File checksum computation failed: ' + err.message);
+      setError("File checksum computation failed: " + err.message);
       return false;
     } finally {
       setLoading(false);
     }
-  };
+  }, [file, algorithm]);
 
   // Verify checksum
-  const verifyChecksum = () => {
+  const verifyChecksum = useCallback(() => {
     if (!providedChecksum || !computedChecksum) {
       setVerificationResult(null);
       return;
     }
-    const isValid = computedChecksum.toLowerCase() === providedChecksum.toLowerCase().trim();
+    const computed = caseSensitive ? computedChecksum : computedChecksum.toLowerCase();
+    const provided = caseSensitive
+      ? providedChecksum.trim()
+      : providedChecksum.toLowerCase().trim();
+    const isValid = computed === provided;
     setVerificationResult(isValid);
-  };
+  }, [providedChecksum, computedChecksum, caseSensitive]);
 
   // Handle form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError('');
-    setComputedChecksum('');
+    setError("");
+    setComputedChecksum("");
     setVerificationResult(null);
 
-    const success = inputType === 'text' ? computeTextChecksum() : await computeFileChecksum();
+    const success = inputType === "text" ? computeTextChecksum() : await computeFileChecksum();
     if (success) {
       verifyChecksum();
     }
@@ -91,9 +98,9 @@ const ChecksumVerifier = () => {
   const handleFileChange = (e) => {
     const selectedFile = e.target.files[0];
     setFile(selectedFile);
-    setComputedChecksum('');
+    setComputedChecksum("");
     setVerificationResult(null);
-    setError('');
+    setError("");
   };
 
   // Copy computed checksum to clipboard
@@ -103,58 +110,73 @@ const ChecksumVerifier = () => {
     }
   };
 
-  // Clear all
-  const clearAll = () => {
-    setTextInput('');
-    setFile(null);
-    setProvidedChecksum('');
-    setComputedChecksum('');
-    setVerificationResult(null);
-    setError('');
-    if (document.getElementById('fileInput')) {
-      document.getElementById('fileInput').value = '';
+  // Download checksum as text file
+  const downloadChecksum = () => {
+    if (computedChecksum) {
+      const blob = new Blob([computedChecksum], { type: "text/plain" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `${algorithm}-checksum-${Date.now()}.txt`;
+      link.click();
+      URL.revokeObjectURL(url);
     }
   };
 
-  return (
-    <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4">
-      <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-2xl">
-        <h1 className="text-2xl font-bold text-center mb-6">Checksum Verifier</h1>
-        
-        <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Input Type Selection */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Input Type
-            </label>
-            <select
-              value={inputType}
-              onChange={(e) => setInputType(e.target.value)}
-              className="w-full p-2 border rounded focus:ring focus:ring-blue-200"
-            >
-              <option value="text">Text</option>
-              <option value="file">File</option>
-            </select>
-          </div>
+  // Clear all
+  const clearAll = () => {
+    setTextInput("");
+    setFile(null);
+    setProvidedChecksum("");
+    setComputedChecksum("");
+    setVerificationResult(null);
+    setError("");
+    setCaseSensitive(false);
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  };
 
-          {/* Algorithm Selection */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Algorithm
-            </label>
-            <select
-              value={algorithm}
-              onChange={(e) => setAlgorithm(e.target.value)}
-              className="w-full p-2 border rounded focus:ring focus:ring-blue-200"
-            >
-              <option value="md5">MD5</option>
-              <option value="sha1">SHA-1</option>
-              <option value="sha256">SHA-256</option>
-            </select>
+  return (
+    <div className="min-h-screen  flex items-center justify-center ">
+      <div className="w-full  bg-white rounded-xl shadow-lg p-6 sm:p-8">
+        <h1 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-6 text-center">
+          Checksum Verifier
+        </h1>
+
+        <form onSubmit={handleSubmit} className="space-y-6">
+          {/* Input Type and Algorithm Selection */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Input Type
+              </label>
+              <select
+                value={inputType}
+                onChange={(e) => setInputType(e.target.value)}
+                className="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="text">Text</option>
+                <option value="file">File</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Algorithm
+              </label>
+              <select
+                value={algorithm}
+                onChange={(e) => setAlgorithm(e.target.value)}
+                className="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="md5">MD5</option>
+                <option value="sha1">SHA-1</option>
+                <option value="sha256">SHA-256</option>
+                <option value="sha512">SHA-512</option>
+              </select>
+            </div>
           </div>
 
           {/* Input */}
-          {inputType === 'text' ? (
+          {inputType === "text" ? (
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Text Input
@@ -162,8 +184,9 @@ const ChecksumVerifier = () => {
               <textarea
                 value={textInput}
                 onChange={(e) => setTextInput(e.target.value)}
-                className="w-full p-2 border rounded focus:ring focus:ring-blue-200 h-24"
+                className="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500 h-32 resize-y"
                 placeholder="Enter text to compute checksum"
+                disabled={loading}
               />
             </div>
           ) : (
@@ -174,8 +197,10 @@ const ChecksumVerifier = () => {
               <input
                 id="fileInput"
                 type="file"
+                ref={fileInputRef}
                 onChange={handleFileChange}
-                className="w-full p-2 border rounded focus:ring focus:ring-blue-200"
+                className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                disabled={loading}
               />
               {file && (
                 <p className="text-sm text-gray-600 mt-1">
@@ -185,68 +210,110 @@ const ChecksumVerifier = () => {
             </div>
           )}
 
-          {/* Provided Checksum */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Provided Checksum (for Verification)
-            </label>
-            <input
-              type="text"
-              value={providedChecksum}
-              onChange={(e) => setProvidedChecksum(e.target.value)}
-              className="w-full p-2 border rounded focus:ring focus:ring-blue-200 font-mono"
-              placeholder="Enter checksum to verify against"
-            />
+          {/* Provided Checksum and Options */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Provided Checksum
+              </label>
+              <input
+                type="text"
+                value={providedChecksum}
+                onChange={(e) => setProvidedChecksum(e.target.value)}
+                className="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500 font-mono"
+                placeholder="Enter checksum to verify against"
+                disabled={loading}
+              />
+            </div>
+            <div className="flex items-center">
+              <label className="flex items-center">
+                <input
+                  type="checkbox"
+                  checked={caseSensitive}
+                  onChange={(e) => setCaseSensitive(e.target.checked)}
+                  className="mr-2 accent-blue-500"
+                  disabled={loading}
+                />
+                <span className="text-sm text-gray-700">Case Sensitive Verification</span>
+              </label>
+            </div>
           </div>
 
           {/* Action Buttons */}
-          <div className="flex justify-between">
+          <div className="flex flex-col sm:flex-row gap-4">
             <button
               type="submit"
               disabled={loading}
-              className="px-6 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:bg-blue-400"
+              className="flex-1 py-2 px-4 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
             >
-              {loading ? 'Computing...' : 'Compute & Verify'}
+              {loading ? "Computing..." : "Compute & Verify"}
             </button>
             <button
               type="button"
               onClick={clearAll}
-              className="px-6 py-2 bg-gray-600 text-white rounded hover:bg-gray-700"
+              disabled={loading}
+              className="flex-1 py-2 px-4 bg-red-600 text-white rounded-md hover:bg-red-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors flex items-center justify-center"
             >
-              Clear
+              <FaSync className="mr-2" /> Clear
             </button>
           </div>
         </form>
 
         {/* Error Message */}
         {error && (
-          <div className="text-red-500 text-sm text-center mt-4">{error}</div>
+          <div className="mt-4 p-3 bg-red-50 text-red-700 rounded-md text-sm text-center">
+            {error}
+          </div>
         )}
 
         {/* Results */}
         {computedChecksum && (
-          <div className="mt-6">
-            <h2 className="text-lg font-semibold mb-2">Checksum Results</h2>
-            <div className="bg-gray-50 p-4 rounded border">
-              <div className="flex justify-between items-center mb-2">
-                <p className="text-sm">
+          <div className="mt-6 p-4 bg-gray-50 rounded-lg border">
+            <h2 className="text-lg font-semibold text-gray-800 mb-2">Checksum Results</h2>
+            <div className="space-y-2">
+              <div className="flex flex-col sm:flex-row justify-between items-center gap-2">
+                <p className="text-sm break-all">
                   <strong>Computed Checksum:</strong> {computedChecksum}
                 </p>
-                <button
-                  onClick={copyToClipboard}
-                  className="px-2 py-1 bg-blue-600 text-white rounded text-sm hover:bg-blue-700"
-                >
-                  Copy
-                </button>
+                <div className="flex gap-2">
+                  <button
+                    onClick={copyToClipboard}
+                    className="px-3 py-1 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors flex items-center"
+                  >
+                    <FaCopy className="mr-1" /> Copy
+                  </button>
+                  <button
+                    onClick={downloadChecksum}
+                    className="px-3 py-1 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors flex items-center"
+                  >
+                    <FaDownload className="mr-1" /> Download
+                  </button>
+                </div>
               </div>
               {verificationResult !== null && (
-                <p className={`text-sm ${verificationResult ? 'text-green-600' : 'text-red-600'}`}>
-                  {verificationResult ? '✓ Checksum matches' : '✗ Checksum does not match'}
+                <p
+                  className={`text-sm font-medium ${
+                    verificationResult ? "text-green-600" : "text-red-600"
+                  }`}
+                >
+                  {verificationResult ? "✓ Checksum matches" : "✗ Checksum does not match"}
                 </p>
               )}
             </div>
           </div>
         )}
+
+        {/* Features */}
+        <div className="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
+          <h3 className="font-semibold text-blue-700 mb-2">Features</h3>
+          <ul className="list-disc list-inside text-blue-600 text-sm space-y-1">
+            <li>Support for MD5, SHA-1, SHA-256, and SHA-512 algorithms</li>
+            <li>Text or file input options</li>
+            <li>Case-sensitive verification toggle</li>
+            <li>Copy checksum to clipboard</li>
+            <li>Download checksum as text file</li>
+          </ul>
+        </div>
       </div>
     </div>
   );

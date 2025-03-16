@@ -1,67 +1,90 @@
-// components/SecureRandomNumberGenerator.js
-'use client';
-
-import React, { useState } from 'react';
+"use client";
+import React, { useState, useCallback } from "react";
+import { FaCopy, FaDownload, FaSync, FaRandom } from "react-icons/fa";
 
 const SecureRandomNumberGenerator = () => {
   const [min, setMin] = useState(1);
   const [max, setMax] = useState(100);
   const [count, setCount] = useState(1);
-  const [format, setFormat] = useState('decimal'); // decimal, hex, binary
+  const [format, setFormat] = useState("decimal");
+  const [unique, setUnique] = useState(false); // New: Ensure unique numbers
   const [numbers, setNumbers] = useState([]);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
+  const [isGenerating, setIsGenerating] = useState(false);
 
   // Generate secure random numbers
-  const generateNumbers = () => {
-    setError('');
+  const generateNumbers = useCallback(() => {
+    setError("");
     setNumbers([]);
+    setIsGenerating(true);
 
     // Input validation
     if (isNaN(min) || isNaN(max) || min >= max) {
-      setError('Minimum must be less than Maximum');
+      setError("Minimum must be less than Maximum");
+      setIsGenerating(false);
       return;
     }
-    if (isNaN(count) || count < 1 || count > 100) {
-      setError('Count must be between 1 and 100');
+    if (isNaN(count) || count < 1 || count > 1000) {
+      setError("Count must be between 1 and 1000");
+      setIsGenerating(false);
       return;
     }
-    if (max - min > 2 ** 32) { // Limit range to 32-bit unsigned int for simplicity
-      setError('Range too large (max - min must be ≤ 4,294,967,295)');
+    const range = max - min + 1;
+    if (range > 2 ** 32) {
+      setError("Range too large (max - min must be ≤ 4,294,967,295)");
+      setIsGenerating(false);
+      return;
+    }
+    if (unique && count > range) {
+      setError("Count exceeds possible unique values in range");
+      setIsGenerating(false);
       return;
     }
 
     try {
-      const range = max - min + 1;
-      const results = [];
+      const results = new Set(unique ? [] : null); // Use Set for uniqueness
+      const array = new Uint32Array(count);
+      window.crypto.getRandomValues(array);
 
       for (let i = 0; i < count; i++) {
-        // Use Web Crypto API for secure randomness
-        const array = new Uint32Array(1);
-        window.crypto.getRandomValues(array);
-        const randomValue = array[0] % range + min; // Scale to [min, max]
+        let randomValue = array[i] % range + min;
+        if (unique) {
+          while (results.has(randomValue) && results.size < count) {
+            const newArray = new Uint32Array(1);
+            window.crypto.getRandomValues(newArray);
+            randomValue = newArray[0] % range + min;
+          }
+          if (results.size >= range) break;
+          results.add(randomValue);
+        }
 
         let formattedValue;
         switch (format) {
-          case 'hex':
-            formattedValue = randomValue.toString(16).toUpperCase();
+          case "hex":
+            formattedValue = randomValue.toString(16).toUpperCase().padStart(2, "0");
             break;
-          case 'binary':
-            formattedValue = randomValue.toString(2);
+          case "binary":
+            formattedValue = randomValue.toString(2).padStart(8, "0");
             break;
-          case 'decimal':
+          case "octal":
+            formattedValue = randomValue.toString(8).padStart(3, "0");
+            break;
+          case "decimal":
           default:
             formattedValue = randomValue.toString(10);
             break;
         }
 
-        results.push(formattedValue);
+        if (!unique) results.push(formattedValue);
       }
 
-      setNumbers(results);
+      setNumbers(unique ? Array.from(results) : results);
+      setIsGenerating(false);
     } catch (err) {
-      setError('Generation failed: ' + err.message);
+      setError("Generation failed: " + err.message);
+      setIsGenerating(false);
     }
-  };
+  }, [min, max, count, format, unique]);
 
   // Handle form submission
   const handleSubmit = (e) => {
@@ -69,22 +92,21 @@ const SecureRandomNumberGenerator = () => {
     generateNumbers();
   };
 
-  // Copy numbers to clipboard
+  // Copy to clipboard
   const copyToClipboard = () => {
     if (numbers.length > 0) {
-      const text = numbers.join('\n');
-      navigator.clipboard.writeText(text);
+      navigator.clipboard.writeText(numbers.join("\n"));
     }
   };
 
-  // Download numbers as a text file
+  // Download as file
   const downloadAsFile = () => {
     if (numbers.length > 0) {
-      const blob = new Blob([numbers.join('\n')], { type: 'text/plain' });
+      const blob = new Blob([numbers.join("\n")], { type: "text/plain" });
       const url = URL.createObjectURL(blob);
-      const link = document.createElement('a');
+      const link = document.createElement("a");
       link.href = url;
-      link.download = `random_numbers_${format}.txt`;
+      link.download = `random_numbers_${format}_${Date.now()}.txt`;
       link.click();
       URL.revokeObjectURL(url);
     }
@@ -95,136 +117,167 @@ const SecureRandomNumberGenerator = () => {
     setMin(1);
     setMax(100);
     setCount(1);
-    setFormat('decimal');
+    setFormat("decimal");
+    setUnique(false);
     setNumbers([]);
-    setError('');
+    setError("");
+    setIsGenerating(false);
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4">
-      <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-2xl">
-        <h1 className="text-2xl font-bold text-center mb-6">Secure Random Number Generator</h1>
-        
+    <div className="min-h-screen  flex items-center justify-center ">
+      <div className="w-full  bg-white rounded-xl shadow-lg p-6 sm:p-8">
+        <h1 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-6 text-center">
+          Secure Random Number Generator
+        </h1>
+
         <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Minimum */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Minimum Value
-            </label>
-            <input
-              type="number"
-              value={min}
-              onChange={(e) => setMin(parseInt(e.target.value))}
-              className="w-full p-2 border rounded focus:ring focus:ring-blue-200"
-              placeholder="e.g., 1"
-            />
-          </div>
-
-          {/* Maximum */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Maximum Value
-            </label>
-            <input
-              type="number"
-              value={max}
-              onChange={(e) => setMax(parseInt(e.target.value))}
-              className="w-full p-2 border rounded focus:ring focus:ring-blue-200"
-              placeholder="e.g., 100"
-            />
-          </div>
-
-          {/* Count */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Number of Values (1-100)
-            </label>
-            <input
-              type="number"
-              value={count}
-              onChange={(e) => setCount(parseInt(e.target.value))}
-              min={1}
-              max={100}
-              className="w-full p-2 border rounded focus:ring focus:ring-blue-200"
-            />
-          </div>
-
-          {/* Output Format */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Output Format
-            </label>
-            <select
-              value={format}
-              onChange={(e) => setFormat(e.target.value)}
-              className="w-full p-2 border rounded focus:ring focus:ring-blue-200"
-            >
-              <option value="decimal">Decimal</option>
-              <option value="hex">Hexadecimal</option>
-              <option value="binary">Binary</option>
-            </select>
+          {/* Inputs */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Minimum Value
+              </label>
+              <input
+                type="number"
+                value={min}
+                onChange={(e) => setMin(parseInt(e.target.value) || "")}
+                className="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500"
+                placeholder="e.g., 1"
+                disabled={isGenerating}
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Maximum Value
+              </label>
+              <input
+                type="number"
+                value={max}
+                onChange={(e) => setMax(parseInt(e.target.value) || "")}
+                className="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500"
+                placeholder="e.g., 100"
+                disabled={isGenerating}
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Count (1-1000)
+              </label>
+              <input
+                type="number"
+                value={count}
+                onChange={(e) => setCount(parseInt(e.target.value) || "")}
+                min={1}
+                max={1000}
+                className="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500"
+                disabled={isGenerating}
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Output Format
+              </label>
+              <select
+                value={format}
+                onChange={(e) => setFormat(e.target.value)}
+                className="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500"
+                disabled={isGenerating}
+              >
+                <option value="decimal">Decimal</option>
+                <option value="hex">Hexadecimal</option>
+                <option value="binary">Binary</option>
+                <option value="octal">Octal</option>
+              </select>
+            </div>
+            <div className="flex items-center">
+              <label className="flex items-center">
+                <input
+                  type="checkbox"
+                  checked={unique}
+                  onChange={(e) => setUnique(e.target.checked)}
+                  className="mr-2 accent-blue-500"
+                  disabled={isGenerating}
+                />
+                <span className="text-sm text-gray-700">Unique Numbers</span>
+              </label>
+            </div>
           </div>
 
           {/* Action Buttons */}
-          <div className="flex justify-between">
+          <div className="flex flex-col sm:flex-row gap-4">
             <button
               type="submit"
-              className="px-6 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+              disabled={isGenerating}
+              className="flex-1 py-2 px-4 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors flex items-center justify-center"
             >
-              Generate Numbers
+              <FaRandom className="mr-2" /> {isGenerating ? "Generating..." : "Generate"}
             </button>
             <button
               type="button"
               onClick={clearAll}
-              className="px-6 py-2 bg-gray-600 text-white rounded hover:bg-gray-700"
+              disabled={isGenerating}
+              className="flex-1 py-2 px-4 bg-red-600 text-white rounded-md hover:bg-red-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors flex items-center justify-center"
             >
-              Clear
+              <FaSync className="mr-2" /> Clear
             </button>
           </div>
         </form>
 
         {/* Error Message */}
         {error && (
-          <div className="text-red-500 text-sm text-center mt-4">{error}</div>
+          <div className="mt-4 p-4 bg-red-50 rounded-lg border border-red-200 text-red-700 text-sm">
+            {error}
+          </div>
         )}
 
         {/* Generated Numbers */}
         {numbers.length > 0 && (
           <div className="mt-6">
             <div className="flex justify-between items-center mb-2">
-              <h2 className="text-lg font-semibold">Generated Numbers</h2>
+              <h2 className="text-lg font-semibold text-gray-800">Generated Numbers</h2>
               <div className="flex gap-2">
                 <button
                   onClick={copyToClipboard}
-                  className="px-2 py-1 bg-blue-600 text-white rounded text-sm hover:bg-blue-700"
+                  className="flex items-center px-3 py-1 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
                 >
-                  Copy
+                  <FaCopy className="mr-2" /> Copy
                 </button>
                 <button
                   onClick={downloadAsFile}
-                  className="px-2 py-1 bg-green-600 text-white rounded text-sm hover:bg-green-700"
+                  className="flex items-center px-3 py-1 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors"
                 >
-                  Download
+                  <FaDownload className="mr-2" /> Download
                 </button>
               </div>
             </div>
-            <div className="bg-gray-50 p-4 rounded border max-h-64 overflow-y-auto">
-              <ul className="list-disc pl-5 font-mono text-sm">
+            <div className="bg-gray-50 p-4 rounded-lg border max-h-64 overflow-y-auto">
+              <ul className="list-none font-mono text-sm space-y-1">
                 {numbers.map((number, index) => (
                   <li key={index} className="py-1">{number}</li>
                 ))}
               </ul>
             </div>
             <p className="text-sm text-gray-600 mt-2">
-              Count: {numbers.length} | Format: {format.charAt(0).toUpperCase() + format.slice(1)}
+              Count: {numbers.length} | Format:{" "}
+              {format.charAt(0).toUpperCase() + format.slice(1)} | Unique: {unique ? "Yes" : "No"}
             </p>
           </div>
         )}
 
-        {/* Note */}
-        <p className="text-sm text-gray-600 mt-4">
-          <strong>Note:</strong> Uses Web Crypto API for cryptographically secure random numbers. Suitable for security-sensitive applications (e.g., tokens, keys).
-        </p>
+        {/* Features */}
+        <div className="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
+          <h3 className="font-semibold text-blue-700 mb-2">Features</h3>
+          <ul className="list-disc list-inside text-blue-600 text-sm space-y-1">
+            <li>Secure random numbers using Web Crypto API</li>
+            <li>Multiple formats: Decimal, Hexadecimal, Binary, Octal</li>
+            <li>Option for unique numbers</li>
+            <li>Customizable range and count (up to 1000)</li>
+            <li>Copy to clipboard and download as text file</li>
+          </ul>
+        </div>
+
+       
       </div>
     </div>
   );

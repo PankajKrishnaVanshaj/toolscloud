@@ -4708,7 +4708,6 @@ const ToolList = [
         desc: "Check if an email address is valid, properly formatted, and exists.",
         code: "EmailValidator",
        },
-      // New 50 Security Tools
       {
         name: "Password Generator",
         slug: "password-generator",

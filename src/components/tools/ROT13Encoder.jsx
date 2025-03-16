@@ -1,77 +1,87 @@
-// components/ROT13Encoder.js
-'use client';
-
-import React, { useState } from 'react';
+"use client";
+import React, { useState, useCallback } from "react";
+import { FaCopy, FaDownload, FaSync, FaExchangeAlt } from "react-icons/fa";
 
 const ROT13Encoder = () => {
-  const [inputText, setInputText] = useState('');
-  const [encodedText, setEncodedText] = useState('');
-  const [format, setFormat] = useState('plain'); // plain, url, html
-  const [error, setError] = useState('');
+  const [inputText, setInputText] = useState("");
+  const [encodedText, setEncodedText] = useState("");
+  const [format, setFormat] = useState("plain"); // plain, url, html, base64
+  const [shift, setShift] = useState(13); // Custom shift for ROT-n
+  const [error, setError] = useState("");
+  const [caseSensitive, setCaseSensitive] = useState(true); // Preserve case or not
+  const [direction, setDirection] = useState("encode"); // encode or decode
 
-  // ROT13 transformation function
-  const rot13 = (text) => {
-    return text.replace(/[A-Za-z]/g, (char) => {
-      const code = char.charCodeAt(0);
-      const base = code >= 97 ? 97 : 65; // Lowercase 'a' = 97, Uppercase 'A' = 65
-      return String.fromCharCode(((code - base + 13) % 26) + base);
-    });
-  };
+  // Generalized ROT-n transformation
+  const rotN = useCallback(
+    (text, shiftAmount, isDecoding = false) => {
+      const effectiveShift = isDecoding ? -shiftAmount : shiftAmount;
+      return text.replace(/[A-Za-z]/g, (char) => {
+        const code = char.charCodeAt(0);
+        const base = code >= 97 ? 97 : 65;
+        if (!caseSensitive && code >= 97) char = char.toUpperCase();
+        return String.fromCharCode(
+          ((code - base + effectiveShift + 26) % 26) + base
+        );
+      });
+    },
+    [caseSensitive]
+  );
 
-  // Encode text with selected format
-  const encodeText = () => {
-    setError('');
-    setEncodedText('');
+  // Encode/Decode text with selected format
+  const processText = useCallback(() => {
+    setError("");
+    setEncodedText("");
 
     if (!inputText.trim()) {
-      setError('Please enter text to encode');
+      setError("Please enter text to process");
       return;
     }
 
     try {
-      const baseEncoded = rot13(inputText);
-      let formattedOutput = baseEncoded;
+      const baseProcessed = rotN(inputText, parseInt(shift), direction === "decode");
+      let formattedOutput = baseProcessed;
 
       switch (format) {
-        case 'url':
-          formattedOutput = encodeURIComponent(baseEncoded);
+        case "url":
+          formattedOutput = encodeURIComponent(baseProcessed);
           break;
-        case 'html':
-          formattedOutput = `&quot;${baseEncoded}&quot;`; // HTML-encoded quotes
+        case "html":
+          formattedOutput = `"${baseProcessed}"`;
           break;
-        case 'plain':
+        case "base64":
+          formattedOutput = btoa(baseProcessed);
+          break;
+        case "plain":
         default:
-          formattedOutput = baseEncoded;
+          formattedOutput = baseProcessed;
           break;
       }
 
       setEncodedText(formattedOutput);
     } catch (err) {
-      setError('Encoding failed: ' + err.message);
+      setError("Processing failed: " + err.message);
     }
-  };
+  }, [inputText, shift, format, direction, rotN]);
 
   // Handle form submission
   const handleSubmit = (e) => {
     e.preventDefault();
-    encodeText();
+    processText();
   };
 
-  // Copy encoded text to clipboard
+  // Copy to clipboard
   const copyToClipboard = () => {
-    if (encodedText) {
-      navigator.clipboard.writeText(encodedText);
-    }
+    if (encodedText) navigator.clipboard.writeText(encodedText);
   };
 
-  // Download encoded text as a file
+  // Download as file
   const downloadAsFile = () => {
     if (encodedText) {
-      const blob = new Blob([encodedText], { type: 'text/plain' });
+      const blob = new Blob([encodedText], { type: "text/plain" });
       const url = URL.createObjectURL(blob);
-      const link = document.createElement('a');
+      const link = document.createElement("a");
       link.href = url;
-      link.download = 'rot13_encoded.txt';
+      link.download = `rot${shift}_${direction}d.txt`;
       link.click();
       URL.revokeObjectURL(url);
     }
@@ -79,17 +89,29 @@ const ROT13Encoder = () => {
 
   // Clear all
   const clearAll = () => {
-    setInputText('');
-    setEncodedText('');
-    setFormat('plain');
-    setError('');
+    setInputText("");
+    setEncodedText("");
+    setFormat("plain");
+    setShift(13);
+    setError("");
+    setCaseSensitive(true);
+    setDirection("encode");
+  };
+
+  // Swap input and output
+  const swapText = () => {
+    setInputText(encodedText);
+    setEncodedText("");
+    setDirection(direction === "encode" ? "decode" : "encode");
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4">
-      <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-2xl">
-        <h1 className="text-2xl font-bold text-center mb-6">ROT13 Encoder</h1>
-        
+    <div className="min-h-screen  flex items-center justify-center ">
+      <div className="w-full  bg-white rounded-xl shadow-lg p-6 sm:p-8">
+        <h1 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-6 text-center">
+          ROT13 Encoder/Decoder
+        </h1>
+
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Input Text */}
           <div>
@@ -99,88 +121,146 @@ const ROT13Encoder = () => {
             <textarea
               value={inputText}
               onChange={(e) => setInputText(e.target.value)}
-              className="w-full p-2 border rounded focus:ring focus:ring-blue-200 h-32"
-              placeholder="Enter text to encode"
+              className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 h-32 resize-y"
+              placeholder={`Enter text to ${direction}`}
             />
           </div>
 
-          {/* Output Format */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Output Format
-            </label>
-            <select
-              value={format}
-              onChange={(e) => setFormat(e.target.value)}
-              className="w-full p-2 border rounded focus:ring focus:ring-blue-200"
-            >
-              <option value="plain">Plain Text</option>
-              <option value="url">URL-Encoded</option>
-              <option value="html">HTML-Encoded</option>
-            </select>
-            <p className="text-xs text-gray-500 mt-1">
-              Choose how the encoded text is formatted (e.g., for URLs or HTML)
-            </p>
+          {/* Settings */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Mode
+              </label>
+              <select
+                value={direction}
+                onChange={(e) => setDirection(e.target.value)}
+                className="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="encode">Encode</option>
+                <option value="decode">Decode</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Shift ({shift})
+              </label>
+              <input
+                type="number"
+                min="1"
+                max="25"
+                value={shift}
+                onChange={(e) => setShift(Math.max(1, Math.min(25, e.target.value)))}
+                className="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Output Format
+              </label>
+              <select
+                value={format}
+                onChange={(e) => setFormat(e.target.value)}
+                className="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="plain">Plain Text</option>
+                <option value="url">URL-Encoded</option>
+                <option value="html">HTML-Encoded</option>
+                <option value="base64">Base64</option>
+              </select>
+            </div>
+            <div className="flex items-center">
+              <label className="flex items-center">
+                <input
+                  type="checkbox"
+                  checked={caseSensitive}
+                  onChange={(e) => setCaseSensitive(e.target.checked)}
+                  className="mr-2 accent-blue-500"
+                />
+                <span className="text-sm text-gray-700">Case Sensitive</span>
+              </label>
+            </div>
           </div>
 
           {/* Action Buttons */}
-          <div className="flex justify-between">
+          <div className="flex flex-col sm:flex-row gap-4">
             <button
               type="submit"
-              className="px-6 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+              className="flex-1 py-2 px-4 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
             >
-              Encode
+              {direction === "encode" ? "Encode" : "Decode"}
+            </button>
+            <button
+              type="button"
+              onClick={swapText}
+              disabled={!encodedText}
+              className="flex-1 py-2 px-4 bg-gray-600 text-white rounded-md hover:bg-gray-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors flex items-center justify-center"
+            >
+              <FaExchangeAlt className="mr-2" /> Swap
             </button>
             <button
               type="button"
               onClick={clearAll}
-              className="px-6 py-2 bg-gray-600 text-white rounded hover:bg-gray-700"
+              className="flex-1 py-2 px-4 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors flex items-center justify-center"
             >
-              Clear
+              <FaSync className="mr-2" /> Clear
             </button>
           </div>
         </form>
 
         {/* Error Message */}
         {error && (
-          <div className="text-red-500 text-sm text-center mt-4">{error}</div>
+          <div className="mt-4 p-3 bg-red-50 text-red-700 rounded-lg text-sm text-center">
+            {error}
+          </div>
         )}
 
-        {/* Encoded Output */}
+        {/* Encoded/Decoded Output */}
         {encodedText && (
           <div className="mt-6">
             <div className="flex justify-between items-center mb-2">
-              <h2 className="text-lg font-semibold">Encoded Text</h2>
+              <h2 className="text-lg font-semibold text-gray-800">
+                {direction === "encode" ? "Encoded" : "Decoded"} Text
+              </h2>
               <div className="flex gap-2">
                 <button
                   onClick={copyToClipboard}
-                  className="px-2 py-1 bg-blue-600 text-white rounded text-sm hover:bg-blue-700"
+                  className="flex items-center px-3 py-1 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
                 >
-                  Copy
+                  <FaCopy className="mr-2" /> Copy
                 </button>
                 <button
                   onClick={downloadAsFile}
-                  className="px-2 py-1 bg-green-600 text-white rounded text-sm hover:bg-green-700"
+                  className="flex items-center px-3 py-1 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors"
                 >
-                  Download
+                  <FaDownload className="mr-2" /> Download
                 </button>
               </div>
             </div>
             <textarea
               value={encodedText}
               readOnly
-              className="w-full p-2 border rounded bg-gray-50 h-32 font-mono text-sm"
+              className="w-full p-3 border rounded-lg bg-gray-50 h-32 font-mono text-sm resize-y"
             />
             <p className="text-sm text-gray-600 mt-2">
-              Format: {format === 'plain' ? 'Plain Text' : format === 'url' ? 'URL-Encoded' : 'HTML-Encoded'}
+              Format: {format.toUpperCase()} | Shift: ROT-{shift}
             </p>
           </div>
         )}
 
-        {/* Note */}
-        <p className="text-sm text-gray-600 mt-4">
-          <strong>Note:</strong> ROT13 shifts each letter by 13 positions (A-Z, a-z). This tool encodes text into ROT13 with options for formatting. Use the ROT13 Decoder to reverse it.
-        </p>
+        {/* Features */}
+        <div className="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
+          <h3 className="font-semibold text-blue-700 mb-2">Features</h3>
+          <ul className="list-disc list-inside text-blue-600 text-sm space-y-1">
+            <li>Encode and decode with custom ROT-n shifts (1-25)</li>
+            <li>Multiple output formats: Plain, URL, HTML, Base64</li>
+            <li>Case sensitivity toggle</li>
+            <li>Swap input and output</li>
+            <li>Copy to clipboard and download as file</li>
+          </ul>
+        </div>
+
+       
       </div>
     </div>
   );
