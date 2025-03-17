@@ -1,51 +1,53 @@
-'use client'
-import React, { useState } from 'react';
+"use client";
+import React, { useState, useCallback } from "react";
+import { FaCalculator, FaSync, FaDownload } from "react-icons/fa";
 
 const SalaryCalculator = () => {
-  const [mode, setMode] = useState('hourlyToAnnual'); // hourlyToAnnual, annualToHourly
-  const [hourlyRate, setHourlyRate] = useState('');
-  const [hoursPerWeek, setHoursPerWeek] = useState('40');
-  const [annualSalary, setAnnualSalary] = useState('');
-  const [taxRate, setTaxRate] = useState(''); // Percentage
+  const [mode, setMode] = useState("hourlyToAnnual");
+  const [hourlyRate, setHourlyRate] = useState("");
+  const [hoursPerWeek, setHoursPerWeek] = useState("40");
+  const [weeksPerYear, setWeeksPerYear] = useState("52");
+  const [annualSalary, setAnnualSalary] = useState("");
+  const [taxRate, setTaxRate] = useState("");
+  const [bonus, setBonus] = useState(""); // New: Annual bonus
   const [result, setResult] = useState(null);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
   const [showDetails, setShowDetails] = useState(false);
+  const [currency, setCurrency] = useState("USD"); // New: Currency selection
 
-  // Constants
-  const WEEKS_PER_YEAR = 52;
-
-  // Calculate salary based on mode
-  const calculateSalary = () => {
-    setError('');
+  // Calculate salary
+  const calculateSalary = useCallback(() => {
+    setError("");
     setResult(null);
 
-    const hourlyNum = parseFloat(hourlyRate);
-    const hoursNum = parseFloat(hoursPerWeek);
-    const annualNum = parseFloat(annualSalary);
+    const hourlyNum = parseFloat(hourlyRate) || 0;
+    const hoursNum = parseFloat(hoursPerWeek) || 0;
+    const weeksNum = parseFloat(weeksPerYear) || 0;
+    const annualNum = parseFloat(annualSalary) || 0;
     const taxNum = parseFloat(taxRate) || 0;
+    const bonusNum = parseFloat(bonus) || 0;
 
-    if (taxNum < 0 || taxNum > 100) {
-      return { error: 'Tax rate must be between 0 and 100%' };
-    }
+    // Validation
+    if (taxNum < 0 || taxNum > 100) return { error: "Tax rate must be between 0 and 100%" };
+    if (hoursNum <= 0) return { error: "Hours per week must be positive" };
+    if (weeksNum <= 0 || weeksNum > 52) return { error: "Weeks per year must be between 1 and 52" };
+    if (bonusNum < 0) return { error: "Bonus cannot be negative" };
 
-    if (mode === 'hourlyToAnnual') {
-      if (isNaN(hourlyNum) || isNaN(hoursNum)) {
-        return { error: 'Please enter valid hourly rate and hours per week' };
-      }
-      if (hourlyNum < 0 || hoursNum <= 0) {
-        return { error: 'Hourly rate must be non-negative, hours per week must be positive' };
-      }
+    let calcResult = {};
 
+    if (mode === "hourlyToAnnual") {
+      if (!hourlyNum) return { error: "Please enter a valid hourly rate" };
       const weeklyGross = hourlyNum * hoursNum;
-      const annualGross = weeklyGross * WEEKS_PER_YEAR;
+      const annualGross = weeklyGross * weeksNum + bonusNum;
       const monthlyGross = annualGross / 12;
       const taxAmount = annualGross * (taxNum / 100);
       const annualNet = annualGross - taxAmount;
       const monthlyNet = annualNet / 12;
 
-      return {
+      calcResult = {
         hourlyRate: hourlyNum.toFixed(2),
         hoursPerWeek: hoursNum.toFixed(1),
+        weeksPerYear: weeksNum.toFixed(1),
         weeklyGross: weeklyGross.toFixed(2),
         monthlyGross: monthlyGross.toFixed(2),
         annualGross: annualGross.toFixed(2),
@@ -53,221 +55,334 @@ const SalaryCalculator = () => {
         taxAmount: taxAmount.toFixed(2),
         monthlyNet: monthlyNet.toFixed(2),
         annualNet: annualNet.toFixed(2),
-        type: 'hourlyToAnnual'
+        bonus: bonusNum.toFixed(2),
+        type: "hourlyToAnnual",
       };
-    } else if (mode === 'annualToHourly') {
-      if (isNaN(annualNum) || isNaN(hoursNum)) {
-        return { error: 'Please enter valid annual salary and hours per week' };
-      }
-      if (annualNum < 0 || hoursNum <= 0) {
-        return { error: 'Annual salary must be non-negative, hours per week must be positive' };
-      }
-
-      const weeklyGross = annualNum / WEEKS_PER_YEAR;
+    } else if (mode === "annualToHourly") {
+      if (!annualNum) return { error: "Please enter a valid annual salary" };
+      const totalAnnual = annualNum + bonusNum;
+      const weeklyGross = totalAnnual / weeksNum;
       const hourlyRateCalc = weeklyGross / hoursNum;
-      const monthlyGross = annualNum / 12;
-      const taxAmount = annualNum * (taxNum / 100);
-      const annualNet = annualNum - taxAmount;
+      const monthlyGross = totalAnnual / 12;
+      const taxAmount = totalAnnual * (taxNum / 100);
+      const annualNet = totalAnnual - taxAmount;
       const monthlyNet = annualNet / 12;
 
-      return {
+      calcResult = {
         hourlyRate: hourlyRateCalc.toFixed(2),
         hoursPerWeek: hoursNum.toFixed(1),
+        weeksPerYear: weeksNum.toFixed(1),
         weeklyGross: weeklyGross.toFixed(2),
         monthlyGross: monthlyGross.toFixed(2),
-        annualGross: annualNum.toFixed(2),
+        annualGross: totalAnnual.toFixed(2),
         taxRate: taxNum.toFixed(2),
         taxAmount: taxAmount.toFixed(2),
         monthlyNet: monthlyNet.toFixed(2),
         annualNet: annualNet.toFixed(2),
-        type: 'annualToHourly'
+        bonus: bonusNum.toFixed(2),
+        type: "annualToHourly",
       };
     }
-    return null;
-  };
+
+    return calcResult.error ? calcResult : { ...calcResult, currency };
+  }, [mode, hourlyRate, hoursPerWeek, weeksPerYear, annualSalary, taxRate, bonus, currency]);
 
   const calculate = () => {
-    if ((mode === 'hourlyToAnnual' && (!hourlyRate || !hoursPerWeek)) ||
-        (mode === 'annualToHourly' && (!annualSalary || !hoursPerWeek))) {
-      setError('Please fill in all required fields');
+    const requiredFields =
+      mode === "hourlyToAnnual" ? [!hourlyRate, !hoursPerWeek] : [!annualSalary, !hoursPerWeek];
+    if (requiredFields.some((field) => field)) {
+      setError("Please fill in all required fields");
       return;
     }
 
     const calcResult = calculateSalary();
-    if (calcResult && calcResult.error) {
+    if (calcResult.error) {
       setError(calcResult.error);
-      return;
+    } else {
+      setResult(calcResult);
     }
-    setResult(calcResult);
   };
 
   const reset = () => {
-    setMode('hourlyToAnnual');
-    setHourlyRate('');
-    setHoursPerWeek('40');
-    setAnnualSalary('');
-    setTaxRate('');
+    setMode("hourlyToAnnual");
+    setHourlyRate("");
+    setHoursPerWeek("40");
+    setWeeksPerYear("52");
+    setAnnualSalary("");
+    setTaxRate("");
+    setBonus("");
     setResult(null);
-    setError('');
+    setError("");
     setShowDetails(false);
+    setCurrency("USD");
+  };
+
+  const downloadResult = () => {
+    if (!result) return;
+    const text = `
+      Salary Calculation Result (${result.type === "hourlyToAnnual" ? "Hourly to Annual" : "Annual to Hourly"})
+      Currency: ${currency}
+      Hourly Rate: ${currency} ${result.hourlyRate}
+      Hours/Week: ${result.hoursPerWeek}
+      Weeks/Year: ${result.weeksPerYear}
+      Weekly Gross: ${currency} ${result.weeklyGross}
+      Monthly Gross: ${currency} ${result.monthlyGross}
+      Annual Gross: ${currency} ${result.annualGross}
+      ${result.bonus > 0 ? `Bonus: ${currency} ${result.bonus}` : ""}
+      ${result.taxRate > 0 ? `Tax Rate: ${result.taxRate}%` : ""}
+      ${result.taxRate > 0 ? `Tax Amount: ${currency} ${result.taxAmount}` : ""}
+      ${result.taxRate > 0 ? `Monthly Net: ${currency} ${result.monthlyNet}` : ""}
+      ${result.taxRate > 0 ? `Annual Net: ${currency} ${result.annualNet}` : ""}
+    `.trim();
+    const blob = new Blob([text], { type: "text/plain" });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = `salary-calculation-${Date.now()}.txt`;
+    link.click();
+  };
+
+  const currencySymbols = {
+    USD: "$",
+    EUR: "€",
+    GBP: "£",
+    JPY: "¥",
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-orange-50 to-gray-100 flex items-center justify-center p-4">
-      <div className="bg-white p-6 rounded-xl shadow-2xl w-full max-w-lg">
-        <h1 className="text-3xl font-bold mb-6 text-center text-gray-800">
+    <div className="min-h-screen  flex items-center justify-center ">
+      <div className="bg-white p-6 sm:p-8 rounded-xl shadow-2xl w-full ">
+        <h1 className="text-2xl sm:text-3xl font-bold mb-6 text-center text-gray-800">
           Salary Calculator
         </h1>
 
-        {/* Mode Selection */}
-        <div className="flex justify-center gap-4 mb-6">
-          <button
-            onClick={() => setMode('hourlyToAnnual')}
-            className={`px-3 py-1 rounded-lg ${mode === 'hourlyToAnnual' ? 'bg-orange-600 text-white' : 'bg-gray-200 hover:bg-gray-300'}`}
-          >
-            Hourly to Annual
-          </button>
-          <button
-            onClick={() => setMode('annualToHourly')}
-            className={`px-3 py-1 rounded-lg ${mode === 'annualToHourly' ? 'bg-orange-600 text-white' : 'bg-gray-200 hover:bg-gray-300'}`}
-          >
-            Annual to Hourly
-          </button>
+        {/* Mode and Currency Selection */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Mode</label>
+            <select
+              value={mode}
+              onChange={(e) => setMode(e.target.value)}
+              className="w-full p-2 border rounded-md focus:ring-2 focus:ring-orange-500"
+            >
+              <option value="hourlyToAnnual">Hourly to Annual</option>
+              <option value="annualToHourly">Annual to Hourly</option>
+            </select>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Currency</label>
+            <select
+              value={currency}
+              onChange={(e) => setCurrency(e.target.value)}
+              className="w-full p-2 border rounded-md focus:ring-2 focus:ring-orange-500"
+            >
+              {Object.keys(currencySymbols).map((curr) => (
+                <option key={curr} value={curr}>
+                  {curr} ({currencySymbols[curr]})
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
 
         {/* Input Section */}
-        <div className="space-y-6">
-          <div className="space-y-4">
-            {mode === 'hourlyToAnnual' && (
-              <div className="flex items-center gap-2">
-                <label className="w-32 text-gray-700">Hourly Rate ($):</label>
-                <input
-                  type="number"
-                  step="0.01"
-                  value={hourlyRate}
-                  onChange={(e) => setHourlyRate(e.target.value)}
-                  className="flex-1 p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
-                  placeholder="e.g., 20"
-                />
-              </div>
-            )}
-            {(mode === 'hourlyToAnnual' || mode === 'annualToHourly') && (
-              <div className="flex items-center gap-2">
-                <label className="w-32 text-gray-700">Hours/Week:</label>
-                <input
-                  type="number"
-                  step="0.1"
-                  value={hoursPerWeek}
-                  onChange={(e) => setHoursPerWeek(e.target.value)}
-                  className="flex-1 p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
-                  placeholder="e.g., 40"
-                />
-              </div>
-            )}
-            {mode === 'annualToHourly' && (
-              <div className="flex items-center gap-2">
-                <label className="w-32 text-gray-700">Annual Salary ($):</label>
-                <input
-                  type="number"
-                  step="0.01"
-                  value={annualSalary}
-                  onChange={(e) => setAnnualSalary(e.target.value)}
-                  className="flex-1 p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
-                  placeholder="e.g., 41600"
-                />
-              </div>
-            )}
+        <div className="space-y-4 mb-6">
+          {mode === "hourlyToAnnual" && (
             <div className="flex items-center gap-2">
-              <label className="w-32 text-gray-700">Tax Rate (%):</label>
+              <label className="w-32 text-gray-700 text-sm">Hourly Rate:</label>
               <input
                 type="number"
                 step="0.01"
-                value={taxRate}
-                onChange={(e) => setTaxRate(e.target.value)}
-                className="flex-1 p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
-                placeholder="e.g., 20 (optional)"
+                value={hourlyRate}
+                onChange={(e) => setHourlyRate(e.target.value)}
+                className="flex-1 p-2 border rounded-md focus:ring-2 focus:ring-orange-500"
+                placeholder={`e.g., 20 (${currencySymbols[currency]})`}
               />
             </div>
+          )}
+          <div className="flex items-center gap-2">
+            <label className="w-32 text-gray-700 text-sm">Hours/Week:</label>
+            <input
+              type="number"
+              step="0.1"
+              value={hoursPerWeek}
+              onChange={(e) => setHoursPerWeek(e.target.value)}
+              className="flex-1 p-2 border rounded-md focus:ring-2 focus:ring-orange-500"
+              placeholder="e.g., 40"
+            />
           </div>
+          <div className="flex items-center gap-2">
+            <label className="w-32 text-gray-700 text-sm">Weeks/Year:</label>
+            <input
+              type="number"
+              step="1"
+              value={weeksPerYear}
+              onChange={(e) => setWeeksPerYear(e.target.value)}
+              className="flex-1 p-2 border rounded-md focus:ring-2 focus:ring-orange-500"
+              placeholder="e.g., 52"
+            />
+          </div>
+          {mode === "annualToHourly" && (
+            <div className="flex items-center gap-2">
+              <label className="w-32 text-gray-700 text-sm">Annual Salary:</label>
+              <input
+                type="number"
+                step="0.01"
+                value={annualSalary}
+                onChange={(e) => setAnnualSalary(e.target.value)}
+                className="flex-1 p-2 border rounded-md focus:ring-2 focus:ring-orange-500"
+                placeholder={`e.g., 41600 (${currencySymbols[currency]})`}
+              />
+            </div>
+          )}
+          <div className="flex items-center gap-2">
+            <label className="w-32 text-gray-700 text-sm">Annual Bonus:</label>
+            <input
+              type="number"
+              step="0.01"
+              value={bonus}
+              onChange={(e) => setBonus(e.target.value)}
+              className="flex-1 p-2 border rounded-md focus:ring-2 focus:ring-orange-500"
+              placeholder={`e.g., 5000 (${currencySymbols[currency]}, optional)`}
+            />
+          </div>
+          <div className="flex items-center gap-2">
+            <label className="w-32 text-gray-700 text-sm">Tax Rate (%):</label>
+            <input
+              type="number"
+              step="0.01"
+              value={taxRate}
+              onChange={(e) => setTaxRate(e.target.value)}
+              className="flex-1 p-2 border rounded-md focus:ring-2 focus:ring-orange-500"
+              placeholder="e.g., 20 (optional)"
+            />
+          </div>
+        </div>
 
-          {/* Controls */}
-          <div className="flex gap-4">
-            <button
-              onClick={calculate}
-              className="flex-1 bg-orange-600 text-white py-2 rounded-lg hover:bg-orange-700 transition-all font-semibold"
-            >
-              Calculate
-            </button>
-            <button
-              onClick={reset}
-              className="flex-1 bg-gray-600 text-white py-2 rounded-lg hover:bg-gray-700 transition-all font-semibold"
-            >
-              Reset
-            </button>
-          </div>
+        {/* Controls */}
+        <div className="flex flex-col sm:flex-row gap-4">
+          <button
+            onClick={calculate}
+            className="flex-1 bg-orange-600 text-white py-2 rounded-md hover:bg-orange-700 transition-colors flex items-center justify-center"
+          >
+            <FaCalculator className="mr-2" /> Calculate
+          </button>
+          <button
+            onClick={downloadResult}
+            disabled={!result}
+            className="flex-1 bg-green-600 text-white py-2 rounded-md hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors flex items-center justify-center"
+          >
+            <FaDownload className="mr-2" /> Download
+          </button>
+          <button
+            onClick={reset}
+            className="flex-1 bg-gray-600 text-white py-2 rounded-md hover:bg-gray-700 transition-colors flex items-center justify-center"
+          >
+            <FaSync className="mr-2" /> Reset
+          </button>
         </div>
 
         {/* Error Display */}
         {error && (
-          <div className="mt-4 p-3 bg-red-100 text-red-700 rounded-lg text-center">
+          <div className="mt-4 p-3 bg-red-100 text-red-700 rounded-md text-center">
             {error}
           </div>
         )}
 
         {/* Result Display */}
         {result && (
-          <div className="mt-6 p-4 bg-orange-50 rounded-lg">
-            <h2 className="text-lg font-semibold text-gray-700 text-center">Salary Results:</h2>
-            <div className="mt-2 space-y-2">
-              <p className="text-center">Hourly Rate: ${result.hourlyRate}</p>
-              <p className="text-center">Weekly Gross: ${result.weeklyGross}</p>
-              <p className="text-center">Monthly Gross: ${result.monthlyGross}</p>
-              <p className="text-center">Annual Gross: ${result.annualGross}</p>
+          <div className="mt-6 p-4 bg-orange-50 rounded-md">
+            <h2 className="text-lg font-semibold text-gray-700 text-center">
+              Salary Results ({currency})
+            </h2>
+            <div className="mt-2 space-y-2 text-center">
+              <p>Hourly Rate: {currencySymbols[currency]}{result.hourlyRate}</p>
+              <p>Weekly Gross: {currencySymbols[currency]}{result.weeklyGross}</p>
+              <p>Monthly Gross: {currencySymbols[currency]}{result.monthlyGross}</p>
+              <p>Annual Gross: {currencySymbols[currency]}{result.annualGross}</p>
+              {result.bonus > 0 && (
+                <p>Bonus: {currencySymbols[currency]}{result.bonus}</p>
+              )}
               {result.taxRate > 0 && (
                 <>
-                  <p className="text-center">Tax Amount: ${result.taxAmount}</p>
-                  <p className="text-center">Monthly Net: ${result.monthlyNet}</p>
-                  <p className="text-center">Annual Net: ${result.annualNet}</p>
+                  <p>Tax Amount: {currencySymbols[currency]}{result.taxAmount}</p>
+                  <p>Monthly Net: {currencySymbols[currency]}{result.monthlyNet}</p>
+                  <p>Annual Net: {currencySymbols[currency]}{result.annualNet}</p>
                 </>
               )}
-
-              {/* Details Toggle */}
-              <div className="text-center">
-                <button
-                  onClick={() => setShowDetails(!showDetails)}
-                  className="text-sm text-orange-600 hover:underline"
-                >
-                  {showDetails ? 'Hide Details' : 'Show Details'}
-                </button>
-              </div>
-
+              <button
+                onClick={() => setShowDetails(!showDetails)}
+                className="mt-2 text-sm text-orange-600 hover:underline"
+              >
+                {showDetails ? "Hide Details" : "Show Details"}
+              </button>
               {showDetails && (
-                <div className="text-sm space-y-2">
+                <div className="mt-2 text-sm space-y-2 text-left">
                   <p>Calculation Details:</p>
                   <ul className="list-disc list-inside">
-                    <li>Hours per Week: {result.hoursPerWeek}</li>
-                    {result.type === 'hourlyToAnnual' && (
+                    <li>Hours/Week: {result.hoursPerWeek}</li>
+                    <li>Weeks/Year: {result.weeksPerYear}</li>
+                    {result.type === "hourlyToAnnual" && (
                       <>
-                        <li>Hourly Rate: ${result.hourlyRate}</li>
-                        <li>Weekly Gross = Hourly × Hours = {result.hourlyRate} × {result.hoursPerWeek} = ${result.weeklyGross}</li>
-                        <li>Annual Gross = Weekly × {WEEKS_PER_YEAR} = {result.weeklyGross} × {WEEKS_PER_YEAR} = ${result.annualGross}</li>
-                        <li>Monthly Gross = Annual / 12 = {result.annualGross} / 12 = ${result.monthlyGross}</li>
+                        <li>Hourly Rate: {currencySymbols[currency]}{result.hourlyRate}</li>
+                        <li>
+                          Weekly Gross = Hourly × Hours = {result.hourlyRate} ×{" "}
+                          {result.hoursPerWeek} = {currencySymbols[currency]}
+                          {result.weeklyGross}
+                        </li>
+                        <li>
+                          Annual Gross = (Weekly × Weeks) + Bonus = ({result.weeklyGross} ×{" "}
+                          {result.weeksPerYear}) + {result.bonus} = {currencySymbols[currency]}
+                          {result.annualGross}
+                        </li>
+                        <li>
+                          Monthly Gross = Annual / 12 = {result.annualGross} / 12 ={" "}
+                          {currencySymbols[currency]}
+                          {result.monthlyGross}
+                        </li>
                       </>
                     )}
-                    {result.type === 'annualToHourly' && (
+                    {result.type === "annualToHourly" && (
                       <>
-                        <li>Annual Gross: ${result.annualGross}</li>
-                        <li>Weekly Gross = Annual / {WEEKS_PER_YEAR} = {result.annualGross} / {WEEKS_PER_YEAR} = ${result.weeklyGross}</li>
-                        <li>Hourly Rate = Weekly / Hours = {result.weeklyGross} / {result.hoursPerWeek} = ${result.hourlyRate}</li>
-                        <li>Monthly Gross = Annual / 12 = {result.annualGross} / 12 = ${result.monthlyGross}</li>
+                        <li>
+                          Annual Gross = Salary + Bonus = {annualSalary} + {result.bonus} ={" "}
+                          {currencySymbols[currency]}
+                          {result.annualGross}
+                        </li>
+                        <li>
+                          Weekly Gross = Annual / Weeks = {result.annualGross} /{" "}
+                          {result.weeksPerYear} = {currencySymbols[currency]}
+                          {result.weeklyGross}
+                        </li>
+                        <li>
+                          Hourly Rate = Weekly / Hours = {result.weeklyGross} /{" "}
+                          {result.hoursPerWeek} = {currencySymbols[currency]}
+                          {result.hourlyRate}
+                        </li>
+                        <li>
+                          Monthly Gross = Annual / 12 = {result.annualGross} / 12 ={" "}
+                          {currencySymbols[currency]}
+                          {result.monthlyGross}
+                        </li>
                       </>
                     )}
                     {result.taxRate > 0 && (
                       <>
                         <li>Tax Rate: {result.taxRate}%</li>
-                        <li>Tax Amount = Annual Gross × (Tax Rate / 100) = {result.annualGross} × ({result.taxRate} / 100) = ${result.taxAmount}</li>
-                        <li>Annual Net = Annual Gross - Tax = {result.annualGross} - {result.taxAmount} = ${result.annualNet}</li>
-                        <li>Monthly Net = Annual Net / 12 = {result.annualNet} / 12 = ${result.monthlyNet}</li>
+                        <li>
+                          Tax Amount = Annual Gross × (Tax Rate / 100) = {result.annualGross} × (
+                          {result.taxRate} / 100) = {currencySymbols[currency]}
+                          {result.taxAmount}
+                        </li>
+                        <li>
+                          Annual Net = Annual Gross - Tax = {result.annualGross} -{" "}
+                          {result.taxAmount} = {currencySymbols[currency]}
+                          {result.annualNet}
+                        </li>
+                        <li>
+                          Monthly Net = Annual Net / 12 = {result.annualNet} / 12 ={" "}
+                          {currencySymbols[currency]}
+                          {result.monthlyNet}
+                        </li>
                       </>
                     )}
                   </ul>
@@ -276,6 +391,20 @@ const SalaryCalculator = () => {
             </div>
           </div>
         )}
+
+        {/* Features */}
+        <div className="mt-6 p-4 bg-blue-50 rounded-md border border-blue-200">
+          <h3 className="font-semibold text-blue-700 mb-2">Features</h3>
+          <ul className="list-disc list-inside text-blue-600 text-sm space-y-1">
+            <li>Convert between hourly and annual salary</li>
+            <li>Customizable weeks per year</li>
+            <li>Optional tax rate calculation</li>
+            <li>Annual bonus inclusion</li>
+            <li>Multiple currency support</li>
+            <li>Detailed breakdown with toggle</li>
+            <li>Download results as text file</li>
+          </ul>
+        </div>
       </div>
     </div>
   );

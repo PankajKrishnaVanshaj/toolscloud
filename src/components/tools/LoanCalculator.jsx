@@ -1,80 +1,96 @@
-'use client'
-import React, { useState } from 'react';
+"use client";
+import React, { useState, useCallback } from "react";
+import { FaCalculator, FaSync, FaDownload } from "react-icons/fa";
+import html2canvas from "html2canvas"; // For downloading results
 
 const LoanCalculator = () => {
-  const [principal, setPrincipal] = useState(''); // Loan amount
-  const [interestRate, setInterestRate] = useState(''); // Annual interest rate (%)
-  const [loanTerm, setLoanTerm] = useState(''); // Term in years
+  const [principal, setPrincipal] = useState("");
+  const [interestRate, setInterestRate] = useState("");
+  const [loanTerm, setLoanTerm] = useState("");
+  const [extraPayment, setExtraPayment] = useState(""); // New: Extra monthly payment
   const [result, setResult] = useState(null);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
   const [showDetails, setShowDetails] = useState(false);
+  const resultRef = React.useRef(null);
 
   // Calculate loan details
-  const calculateLoan = (principalAmt, rate, termYears) => {
+  const calculateLoan = useCallback((principalAmt, rate, termYears, extra = 0) => {
     const principalNum = parseFloat(principalAmt);
     const annualRateNum = parseFloat(rate);
     const yearsNum = parseInt(termYears);
+    const extraNum = parseFloat(extra) || 0;
 
     if (isNaN(principalNum) || isNaN(annualRateNum) || isNaN(yearsNum)) {
-      return { error: 'Please enter valid numbers' };
+      return { error: "Please enter valid numbers" };
     }
-    if (principalNum <= 0 || annualRateNum < 0 || yearsNum <= 0) {
-      return { error: 'Principal and term must be positive, interest rate cannot be negative' };
+    if (principalNum <= 0 || annualRateNum < 0 || yearsNum <= 0 || extraNum < 0) {
+      return { error: "Principal and term must be positive, rates and extra payment cannot be negative" };
     }
 
     const monthlyRate = annualRateNum / 100 / 12;
     const totalPayments = yearsNum * 12;
+    const monthlyPaymentBase = principalNum * (monthlyRate * Math.pow(1 + monthlyRate, totalPayments)) /
+                              (Math.pow(1 + monthlyRate, totalPayments) - 1);
 
-    // Monthly payment formula: P * [r(1+r)^n] / [(1+r)^n - 1]
-    const monthlyPayment = principalNum * (monthlyRate * Math.pow(1 + monthlyRate, totalPayments)) /
-                          (Math.pow(1 + monthlyRate, totalPayments) - 1);
-
-    if (!isFinite(monthlyPayment) || monthlyPayment <= 0) {
-      return { error: 'Invalid calculation - check your inputs (rate may be too high)' };
+    if (!isFinite(monthlyPaymentBase) || monthlyPaymentBase <= 0) {
+      return { error: "Invalid calculation - check your inputs (rate may be too high)" };
     }
 
-    const totalPaid = monthlyPayment * totalPayments;
-    const totalInterest = totalPaid - principalNum;
-
-    // Amortization schedule
+    // Amortization with extra payments
     const amortization = [];
     let remainingBalance = principalNum;
-    for (let month = 1; month <= totalPayments && remainingBalance > 0; month++) {
+    let totalInterest = 0;
+    let totalPaid = 0;
+    let months = 0;
+
+    while (remainingBalance > 0 && months < totalPayments) {
+      months++;
       const interestPayment = remainingBalance * monthlyRate;
-      const principalPayment = monthlyPayment - interestPayment;
+      const totalPayment = Math.min(monthlyPaymentBase + extraNum, remainingBalance + interestPayment);
+      const principalPayment = totalPayment - interestPayment;
+
       remainingBalance -= principalPayment;
+      totalInterest += interestPayment;
+      totalPaid += totalPayment;
+
       if (remainingBalance < 0) remainingBalance = 0;
 
       amortization.push({
-        month,
-        monthlyPayment: monthlyPayment.toFixed(2),
+        month: months,
+        monthlyPayment: totalPayment.toFixed(2),
         principalPayment: principalPayment.toFixed(2),
         interestPayment: interestPayment.toFixed(2),
-        remainingBalance: remainingBalance.toFixed(2)
+        remainingBalance: remainingBalance.toFixed(2),
       });
     }
+
+    const totalPaidBase = monthlyPaymentBase * totalPayments;
+    const totalInterestBase = totalPaidBase - principalNum;
 
     return {
       principal: principalNum.toFixed(2),
       interestRate: annualRateNum.toFixed(2),
       loanTerm: yearsNum,
-      monthlyPayment: monthlyPayment.toFixed(2),
+      monthlyPaymentBase: monthlyPaymentBase.toFixed(2),
+      totalPaidBase: totalPaidBase.toFixed(2),
+      totalInterestBase: totalInterestBase.toFixed(2),
       totalPaid: totalPaid.toFixed(2),
       totalInterest: totalInterest.toFixed(2),
-      amortization
+      monthsSaved: totalPayments - months,
+      amortization,
     };
-  };
+  }, []);
 
   const calculate = () => {
-    setError('');
+    setError("");
     setResult(null);
 
     if (!principal || !interestRate || !loanTerm) {
-      setError('Please fill in all required fields');
+      setError("Please fill in all required fields");
       return;
     }
 
-    const calcResult = calculateLoan(principal, interestRate, loanTerm);
+    const calcResult = calculateLoan(principal, interestRate, loanTerm, extraPayment);
     if (calcResult.error) {
       setError(calcResult.error);
       return;
@@ -84,140 +100,223 @@ const LoanCalculator = () => {
   };
 
   const reset = () => {
-    setPrincipal('');
-    setInterestRate('');
-    setLoanTerm('');
+    setPrincipal("");
+    setInterestRate("");
+    setLoanTerm("");
+    setExtraPayment("");
     setResult(null);
-    setError('');
+    setError("");
     setShowDetails(false);
   };
 
+  const downloadResults = () => {
+    if (resultRef.current) {
+      html2canvas(resultRef.current).then((canvas) => {
+        const link = document.createElement("a");
+        link.download = `loan-calculation-${Date.now()}.png`;
+        link.href = canvas.toDataURL("image/png");
+        link.click();
+      });
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-gray-100 flex items-center justify-center p-4">
-      <div className="bg-white p-6 rounded-xl shadow-2xl w-full max-w-lg">
-        <h1 className="text-3xl font-bold mb-6 text-center text-gray-800">
+    <div className="min-h-screen  flex items-center justify-center ">
+      <div className="w-full  bg-white rounded-xl shadow-lg p-6 sm:p-8">
+        <h1 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-6 text-center">
           Loan Calculator
         </h1>
 
         {/* Input Section */}
         <div className="space-y-6">
-          <div className="space-y-4">
-            <div className="flex items-center gap-2">
-              <label className="w-32 text-gray-700">Loan Amount ($):</label>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Loan Amount ($)
+              </label>
               <input
                 type="number"
                 step="0.01"
                 value={principal}
                 onChange={(e) => setPrincipal(e.target.value)}
-                className="flex-1 p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                className="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500"
                 placeholder="e.g., 10000"
               />
             </div>
-            <div className="flex items-center gap-2">
-              <label className="w-32 text-gray-700">Interest Rate (%):</label>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Interest Rate (%)
+              </label>
               <input
                 type="number"
                 step="0.01"
                 value={interestRate}
                 onChange={(e) => setInterestRate(e.target.value)}
-                className="flex-1 p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                className="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500"
                 placeholder="e.g., 5"
               />
             </div>
-            <div className="flex items-center gap-2">
-              <label className="w-32 text-gray-700">Loan Term (years):</label>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Loan Term (years)
+              </label>
               <input
                 type="number"
                 value={loanTerm}
                 onChange={(e) => setLoanTerm(e.target.value)}
-                className="flex-1 p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                className="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500"
                 placeholder="e.g., 5"
                 min="1"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Extra Payment ($)
+              </label>
+              <input
+                type="number"
+                step="0.01"
+                value={extraPayment}
+                onChange={(e) => setExtraPayment(e.target.value)}
+                className="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500"
+                placeholder="e.g., 50"
               />
             </div>
           </div>
 
           {/* Controls */}
-          <div className="flex gap-4">
+          <div className="flex flex-col sm:flex-row gap-4">
             <button
               onClick={calculate}
-              className="flex-1 bg-purple-600 text-white py-2 rounded-lg hover:bg-purple-700 transition-all font-semibold"
+              className="flex-1 py-2 px-4 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors flex items-center justify-center"
             >
-              Calculate
+              <FaCalculator className="mr-2" /> Calculate
             </button>
             <button
               onClick={reset}
-              className="flex-1 bg-gray-600 text-white py-2 rounded-lg hover:bg-gray-700 transition-all font-semibold"
+              className="flex-1 py-2 px-4 bg-gray-600 text-white rounded-md hover:bg-gray-700 transition-colors flex items-center justify-center"
             >
-              Reset
+              <FaSync className="mr-2" /> Reset
             </button>
+            {result && (
+              <button
+                onClick={downloadResults}
+                className="flex-1 py-2 px-4 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors flex items-center justify-center"
+              >
+                <FaDownload className="mr-2" /> Download
+              </button>
+            )}
           </div>
         </div>
 
         {/* Error Display */}
         {error && (
-          <div className="mt-4 p-3 bg-red-100 text-red-700 rounded-lg text-center">
+          <div className="mt-4 p-4 bg-red-50 text-red-700 rounded-lg text-center">
             {error}
           </div>
         )}
 
         {/* Result Display */}
         {result && (
-          <div className="mt-6 p-4 bg-purple-50 rounded-lg">
-            <h2 className="text-lg font-semibold text-gray-700 text-center">Loan Results:</h2>
-            <div className="mt-2 space-y-2">
-              <p className="text-center text-xl">Monthly Payment: ${result.monthlyPayment}</p>
-              <p className="text-center">Total Interest: ${result.totalInterest}</p>
-              <p className="text-center">Total Paid: ${result.totalPaid}</p>
+          <div ref={resultRef} className="mt-6 p-4 bg-blue-50 rounded-lg">
+            <h2 className="text-lg font-semibold text-gray-700 text-center">Loan Results</h2>
+            <div className="mt-4 space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <p className="text-sm text-gray-600">Monthly Payment (Base):</p>
+                  <p className="text-xl font-bold">${result.monthlyPaymentBase}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-600">Total Paid (Base):</p>
+                  <p className="text-xl font-bold">${result.totalPaidBase}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-600">Total Interest (Base):</p>
+                  <p className="text-xl font-bold">${result.totalInterestBase}</p>
+                </div>
+                {extraPayment && (
+                  <>
+                    <div>
+                      <p className="text-sm text-gray-600">Total Paid (with Extra):</p>
+                      <p className="text-xl font-bold">${result.totalPaid}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-600">Total Interest (with Extra):</p>
+                      <p className="text-xl font-bold">${result.totalInterest}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-600">Months Saved:</p>
+                      <p className="text-xl font-bold">{result.monthsSaved}</p>
+                    </div>
+                  </>
+                )}
+              </div>
 
               {/* Details Toggle */}
               <div className="text-center">
                 <button
                   onClick={() => setShowDetails(!showDetails)}
-                  className="text-sm text-purple-600 hover:underline"
+                  className="text-sm text-blue-600 hover:underline"
                 >
-                  {showDetails ? 'Hide Amortization Schedule' : 'Show Amortization Schedule'}
+                  {showDetails ? "Hide Amortization Schedule" : "Show Amortization Schedule"}
                 </button>
               </div>
 
               {showDetails && (
-                <div className="text-sm space-y-2">
-                  <p>Loan Details:</p>
-                  <ul className="list-disc list-inside">
-                    <li>Principal: ${result.principal}</li>
-                    <li>Annual Interest Rate: {result.interestRate}%</li>
-                    <li>Loan Term: {result.loanTerm} years ({result.loanTerm * 12} months)</li>
-                  </ul>
-                  <p className="mt-2">Amortization Schedule:</p>
-                  <div className="max-h-64 overflow-y-auto">
-                    <table className="w-full border-collapse">
-                      <thead>
-                        <tr className="bg-gray-100">
-                          <th className="p-2 border">Month</th>
-                          <th className="p-2 border">Payment</th>
-                          <th className="p-2 border">Principal</th>
-                          <th className="p-2 border">Interest</th>
-                          <th className="p-2 border">Balance</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {result.amortization.map((monthData) => (
-                          <tr key={monthData.month}>
-                            <td className="p-2 border text-center">{monthData.month}</td>
-                            <td className="p-2 border text-center">${monthData.monthlyPayment}</td>
-                            <td className="p-2 border text-center">${monthData.principalPayment}</td>
-                            <td className="p-2 border text-center">${monthData.interestPayment}</td>
-                            <td className="p-2 border text-center">${monthData.remainingBalance}</td>
+                <div className="text-sm space-y-4">
+                  <div>
+                    <p className="font-semibold">Loan Details:</p>
+                    <ul className="list-disc list-inside text-gray-600">
+                      <li>Principal: ${result.principal}</li>
+                      <li>Annual Interest Rate: {result.interestRate}%</li>
+                      <li>Loan Term: {result.loanTerm} years ({result.loanTerm * 12} months)</li>
+                      {extraPayment && <li>Extra Monthly Payment: ${extraPayment}</li>}
+                    </ul>
+                  </div>
+                  <div>
+                    <p className="font-semibold">Amortization Schedule:</p>
+                    <div className="max-h-64 overflow-y-auto rounded-lg border">
+                      <table className="w-full border-collapse">
+                        <thead className="sticky top-0 bg-gray-100">
+                          <tr>
+                            <th className="p-2 border text-center">Month</th>
+                            <th className="p-2 border text-center">Payment</th>
+                            <th className="p-2 border text-center">Principal</th>
+                            <th className="p-2 border text-center">Interest</th>
+                            <th className="p-2 border text-center">Balance</th>
                           </tr>
-                        ))}
-                      </tbody>
-                    </table>
+                        </thead>
+                        <tbody>
+                          {result.amortization.map((monthData) => (
+                            <tr key={monthData.month} className="hover:bg-gray-50">
+                              <td className="p-2 border text-center">{monthData.month}</td>
+                              <td className="p-2 border text-center">${monthData.monthlyPayment}</td>
+                              <td className="p-2 border text-center">${monthData.principalPayment}</td>
+                              <td className="p-2 border text-center">${monthData.interestPayment}</td>
+                              <td className="p-2 border text-center">${monthData.remainingBalance}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
                   </div>
                 </div>
               )}
             </div>
           </div>
         )}
+
+        {/* Features */}
+        <div className="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
+          <h3 className="font-semibold text-blue-700 mb-2">Features</h3>
+          <ul className="list-disc list-inside text-blue-600 text-sm space-y-1">
+            <li>Calculate monthly payments and total interest</li>
+            <li>Optional extra payments to see savings</li>
+            <li>Detailed amortization schedule</li>
+            <li>Download results as PNG</li>
+            <li>Real-time input validation</li>
+          </ul>
+        </div>
       </div>
     </div>
   );
