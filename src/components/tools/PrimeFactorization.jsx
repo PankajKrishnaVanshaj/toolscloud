@@ -1,11 +1,15 @@
-'use client';
-import React, { useState, useCallback, useMemo } from 'react';
+"use client";
+import React, { useState, useCallback, useMemo } from "react";
+import { FaCalculator, FaSync, FaDownload, FaEye, FaEyeSlash } from "react-icons/fa";
+import html2canvas from "html2canvas"; // For downloading result
 
 const PrimeFactorization = () => {
-  const [number, setNumber] = useState('');
+  const [number, setNumber] = useState("");
   const [result, setResult] = useState(null);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
   const [showSteps, setShowSteps] = useState(false);
+  const [format, setFormat] = useState("multiplication"); // multiplication or exponential
+  const resultRef = React.useRef(null);
 
   // Compute prime factorization
   const factorize = useCallback((num) => {
@@ -14,10 +18,10 @@ const PrimeFactorization = () => {
     const factors = {};
 
     if (isNaN(n) || n <= 0) {
-      return { error: 'Please enter a positive integer' };
+      return { error: "Please enter a positive integer" };
     }
     if (n === 1) {
-      steps.push('1 has no prime factors.');
+      steps.push("1 has no prime factors.");
       return { factors: {}, steps };
     }
 
@@ -39,39 +43,50 @@ const PrimeFactorization = () => {
       steps.push(`Remaining factor: ${n}`);
     }
 
-    // Construct factorization string
-    const factorization = Object.entries(factors)
+    // Construct factorization strings
+    const multiplication = Object.keys(factors)
+      .flatMap((factor) => Array(factors[factor]).fill(factor))
+      .join(" × ");
+    const exponential = Object.entries(factors)
       .map(([factor, count]) => (count > 1 ? `${factor}^${count}` : factor))
-      .join(' × ');
-    steps.push(`Prime factorization: ${factorization}`);
+      .join(" × ");
 
-    return { factors, steps, factorization };
+    steps.push(`Prime factorization (multiplication): ${multiplication}`);
+    steps.push(`Prime factorization (exponential): ${exponential}`);
+
+    return { factors, steps, multiplication, exponential };
   }, []);
 
   // Handle input change with validation
   const handleInputChange = (e) => {
     const value = e.target.value;
     setNumber(value);
-    setResult(null); // Reset result on change
-    setError('');
+    setResult(null);
+    setError("");
 
     if (value && (isNaN(parseInt(value)) || parseInt(value) <= 0 || !Number.isInteger(parseFloat(value)))) {
-      setError('Please enter a positive integer');
+      setError("Please enter a positive integer");
     }
   };
 
   // Check if input is valid
   const isValid = useMemo(() => {
-    return number && !isNaN(parseInt(number)) && parseInt(number) > 0 && Number.isInteger(parseFloat(number)) && !error;
+    return (
+      number &&
+      !isNaN(parseInt(number)) &&
+      parseInt(number) > 0 &&
+      Number.isInteger(parseFloat(number)) &&
+      !error
+    );
   }, [number, error]);
 
   // Perform factorization
   const calculate = () => {
-    setError('');
+    setError("");
     setResult(null);
 
     if (!isValid) {
-      setError('Please enter a valid positive integer');
+      setError("Please enter a valid positive integer");
       return;
     }
 
@@ -85,24 +100,37 @@ const PrimeFactorization = () => {
 
   // Reset state
   const reset = () => {
-    setNumber('');
+    setNumber("");
     setResult(null);
-    setError('');
+    setError("");
     setShowSteps(false);
+    setFormat("multiplication");
+  };
+
+  // Download result as image
+  const downloadResult = () => {
+    if (resultRef.current && result) {
+      html2canvas(resultRef.current).then((canvas) => {
+        const link = document.createElement("a");
+        link.download = `prime-factorization-${number}-${Date.now()}.png`;
+        link.href = canvas.toDataURL("image/png");
+        link.click();
+      });
+    }
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-gray-100 flex items-center justify-center p-4">
-      <div className="bg-white p-6 rounded-xl shadow-2xl w-full max-w-lg">
-        <h1 className="text-3xl font-bold mb-6 text-center text-gray-800">
-          Prime Factorization
+    <div className="min-h-screen flex items-center justify-center ">
+      <div className="bg-white p-6 sm:p-8 rounded-xl shadow-2xl w-full ">
+        <h1 className="text-2xl sm:text-3xl font-bold mb-6 text-center text-gray-800">
+          Prime Factorization Tool
         </h1>
 
         {/* Input Section */}
-        <div className="space-y-4 mb-6">
-          <div className="flex items-center gap-2">
-            <label className="w-32 text-gray-700">Number:</label>
-            <div className="flex-1">
+        <div className="space-y-6">
+          <div className="flex flex-col sm:flex-row items-center gap-2">
+            <label className="w-32 text-gray-700 font-medium">Number:</label>
+            <div className="flex-1 w-full">
               <input
                 type="number"
                 step="1"
@@ -115,47 +143,81 @@ const PrimeFactorization = () => {
               {error && <p className="text-red-600 text-sm mt-1">{error}</p>}
             </div>
           </div>
-        </div>
 
-        {/* Controls */}
-        <div className="flex gap-4">
-          <button
-            onClick={calculate}
-            disabled={!isValid}
-            className="flex-1 bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 disabled:bg-gray-400 transition-all font-semibold"
-          >
-            Factorize
-          </button>
-          <button
-            onClick={reset}
-            className="flex-1 bg-gray-600 text-white py-2 rounded-lg hover:bg-gray-700 transition-all font-semibold"
-          >
-            Reset
-          </button>
+          {/* Format Selection */}
+          <div className="flex flex-col sm:flex-row items-center gap-2">
+            <label className="w-32 text-gray-700 font-medium">Display Format:</label>
+            <select
+              value={format}
+              onChange={(e) => setFormat(e.target.value)}
+              className="w-full sm:flex-1 p-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="multiplication">Multiplication (2 × 2 × 3)</option>
+              <option value="exponential">Exponential (2² × 3)</option>
+            </select>
+          </div>
+
+          {/* Controls */}
+          <div className="flex flex-col sm:flex-row gap-4">
+            <button
+              onClick={calculate}
+              disabled={!isValid}
+              className="flex-1 bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 disabled:bg-gray-400 transition-all font-semibold flex items-center justify-center"
+            >
+              <FaCalculator className="mr-2" /> Factorize
+            </button>
+            <button
+              onClick={reset}
+              className="flex-1 bg-red-600 text-white py-2 rounded-lg hover:bg-red-700 transition-all font-semibold flex items-center justify-center"
+            >
+              <FaSync className="mr-2" /> Reset
+            </button>
+            {result && (
+              <button
+                onClick={downloadResult}
+                className="flex-1 bg-green-600 text-white py-2 rounded-lg hover:bg-green-700 transition-all font-semibold flex items-center justify-center"
+              >
+                <FaDownload className="mr-2" /> Download
+              </button>
+            )}
+          </div>
         </div>
 
         {/* Result Display */}
         {result && (
-          <div className="mt-6 p-4 bg-blue-50 rounded-lg transition-all">
+          <div ref={resultRef} className="mt-6 p-4 bg-blue-50 rounded-lg transition-all">
             <h2 className="text-lg font-semibold text-gray-700 text-center">Prime Factorization:</h2>
-            <p className="text-center text-xl">
-              {number} = {result.factorization || '1'}
+            <p className="text-center text-xl sm:text-2xl font-mono">
+              {number} = {format === "multiplication" ? result.multiplication || "1" : result.exponential || "1"}
             </p>
             <button
               onClick={() => setShowSteps(!showSteps)}
-              className="block mx-auto mt-2 text-sm text-blue-600 hover:underline"
+              className="block mx-auto mt-2 text-sm text-blue-600 hover:underline flex items-center gap-1"
             >
-              {showSteps ? 'Hide Steps' : 'Show Steps'}
+              {showSteps ? <FaEyeSlash /> : <FaEye />}
+              {showSteps ? "Hide Steps" : "Show Steps"}
             </button>
             {showSteps && (
-              <ul className="mt-2 text-sm list-disc list-inside transition-opacity">
+              <ul className="mt-2 text-sm list-disc list-inside text-gray-600 max-h-40 overflow-y-auto">
                 {result.steps.map((step, i) => (
-                  <li key={i}>{step}</li>
+                  <li key={i} className="py-1">{step}</li>
                 ))}
               </ul>
             )}
           </div>
         )}
+
+        {/* Features */}
+        <div className="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
+          <h3 className="font-semibold text-blue-700 mb-2">Features</h3>
+          <ul className="list-disc list-inside text-blue-600 text-sm space-y-1">
+            <li>Factorize positive integers into prime factors</li>
+            <li>Two display formats: multiplication and exponential</li>
+            <li>Step-by-step factorization process</li>
+            <li>Download result as PNG</li>
+            <li>Input validation and error handling</li>
+          </ul>
+        </div>
       </div>
     </div>
   );

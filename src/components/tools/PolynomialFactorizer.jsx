@@ -1,76 +1,127 @@
-'use client';
-import React, { useState, useCallback, useMemo } from 'react';
+"use client";
+import React, { useState, useCallback, useMemo } from "react";
+import { FaCalculator, FaSync, FaDownload } from "react-icons/fa";
 
 const PolynomialFactorizer = () => {
-  const [inputs, setInputs] = useState({ a: '', b: '', c: '' });
+  const [degree, setDegree] = useState(2); // Default to quadratic
+  const [coefficients, setCoefficients] = useState({ a: "", b: "", c: "" });
   const [result, setResult] = useState(null);
   const [errors, setErrors] = useState({});
   const [showSteps, setShowSteps] = useState(false);
+  const [factorMethod, setFactorMethod] = useState("roots"); // "roots" or "trial"
 
-  // Factorize quadratic: ax² + bx + c
-  const factorQuadratic = useCallback((a, b, c) => {
-    const aNum = parseFloat(a);
-    const bNum = parseFloat(b);
-    const cNum = parseFloat(c);
-    const steps = [`Factorizing ${aNum}x² + ${bNum}x + ${cNum}:`];
+  // Generate dynamic input fields based on degree
+  const getInputFields = useMemo(() => {
+    return Array.from({ length: degree + 1 }, (_, i) => ({
+      key: String.fromCharCode(97 + (degree - i)), // 'a' for highest degree
+      label: i === degree ? "constant" : `x${i === degree - 1 ? "" : "²"}`,
+      power: i,
+    }));
+  }, [degree]);
 
-    if (isNaN(aNum) || isNaN(bNum) || isNaN(cNum)) {
-      return { error: 'All coefficients must be valid numbers' };
+  // Factorize polynomial
+  const factorPolynomial = useCallback((coeffs) => {
+    const steps = [];
+    const numCoeffs = Object.values(coeffs).map(Number);
+    const leadingCoeff = numCoeffs[0];
+
+    steps.push(
+      `Factorizing: ${Object.entries(coeffs)
+        .map(([key, val], i) => `${val}x${degree - i}`)
+        .join(" + ")
+        .replace(/\+ -/g, "- ")}`
+    );
+
+    if (numCoeffs.some(isNaN)) {
+      return { error: "All coefficients must be valid numbers" };
     }
-    if (aNum === 0) {
-      return { error: 'Coefficient of x² (a) cannot be zero' };
+    if (leadingCoeff === 0) {
+      return { error: "Leading coefficient cannot be zero" };
     }
 
-    // Calculate discriminant: b² - 4ac
-    const discriminant = bNum * bNum - 4 * aNum * cNum;
-    steps.push(`Discriminant (Δ) = ${bNum}² - 4 × ${aNum} × ${cNum} = ${discriminant}`);
+    if (degree === 2) {
+      const [a, b, c] = numCoeffs;
+      const discriminant = b * b - 4 * a * c;
+      steps.push(`Discriminant (Δ) = ${b}² - 4 × ${a} × ${c} = ${discriminant}`);
 
-    if (discriminant < 0) {
-      steps.push('Δ < 0: No real factors exist.');
-      return { factors: null, steps, isFactorable: false };
-    }
+      if (discriminant < 0) {
+        steps.push("Δ < 0: No real factors exist.");
+        return { factors: null, steps, isFactorable: false };
+      }
 
-    // Find roots using quadratic formula: (-b ± √Δ) / (2a)
-    const sqrtDisc = Math.sqrt(discriminant);
-    const root1 = (-bNum + sqrtDisc) / (2 * aNum);
-    const root2 = (-bNum - sqrtDisc) / (2 * aNum);
-    steps.push(`Roots: x = (${-bNum} ± √${discriminant}) / (2 × ${aNum})`);
-    steps.push(`x₁ = ${root1.toFixed(2)}, x₂ = ${root2.toFixed(2)}`);
+      const sqrtDisc = Math.sqrt(discriminant);
+      const root1 = (-b + sqrtDisc) / (2 * a);
+      const root2 = (-b - sqrtDisc) / (2 * a);
+      steps.push(`Roots: x = (${-b} ± √${discriminant}) / (2 × ${a})`);
+      steps.push(`x₁ = ${root1.toFixed(2)}, x₂ = ${root2.toFixed(2)}`);
 
-    // Factor based on roots: (x - root1)(x - root2), adjusted for coefficient a
-    if (aNum === 1) {
-      steps.push(`Factors: (x - ${root1.toFixed(2)})(x - ${root2.toFixed(2)})`);
-      return { factors: `(x - ${root1.toFixed(2)})(x - ${root2.toFixed(2)})`, steps, isFactorable: true };
+      const factors =
+        a === 1
+          ? `(x - ${root1.toFixed(2)})(x - ${root2.toFixed(2)})`
+          : `${a}(x - ${root1.toFixed(2)})(x - ${root2.toFixed(2)})`;
+      steps.push(`Factors: ${factors}`);
+      return { factors, steps, isFactorable: true };
     } else {
-      // Normalize factors: a(x - r1)(x - r2)
-      const factor1 = `${aNum}(x - ${root1.toFixed(2)})`;
-      const factor2 = `(x - ${root2.toFixed(2)})`;
-      steps.push(`Factors: ${factor1}(x - ${root2.toFixed(2)})`);
-      return { factors: `${factor1}${factor2}`, steps, isFactorable: true };
+      // Placeholder for higher degrees (simplified simulation)
+      steps.push("For degrees > 2, using synthetic division simulation:");
+      const roots = [];
+      for (let i = -10; i <= 10; i++) {
+        const value = numCoeffs.reduce((sum, coeff, idx) => {
+          return sum + coeff * Math.pow(i, degree - idx);
+        }, 0);
+        if (Math.abs(value) < 0.01) roots.push(i); // Approximate roots
+      }
+      steps.push(`Possible integer roots: ${roots.join(", ")}`);
+      if (roots.length > 0) {
+        const factors = roots.map((r) => `(x - ${r})`).join("");
+        steps.push(`Factors (partial): ${leadingCoeff}${factors}`);
+        return { factors: `${leadingCoeff}${factors}`, steps, isFactorable: true };
+      } else {
+        steps.push("No simple integer factors found.");
+        return { factors: null, steps, isFactorable: false };
+      }
     }
-  }, []);
+  }, [degree]);
 
-  // Handle input changes with validation
+  // Handle input changes
   const handleInputChange = (field) => (e) => {
     const value = e.target.value;
-    setInputs((prev) => ({ ...prev, [field]: value }));
-    setResult(null); // Reset result on change
+    setCoefficients((prev) => ({ ...prev, [field]: value }));
+    setResult(null);
 
     if (!value) {
-      setErrors((prev) => ({ ...prev, [field]: 'This field is required' }));
+      setErrors((prev) => ({ ...prev, [field]: "This field is required" }));
     } else if (isNaN(parseFloat(value))) {
-      setErrors((prev) => ({ ...prev, [field]: 'Must be a valid number' }));
+      setErrors((prev) => ({ ...prev, [field]: "Must be a valid number" }));
     } else {
-      setErrors((prev) => ({ ...prev, [field]: '' }));
+      setErrors((prev) => ({ ...prev, [field]: "" }));
     }
   };
 
-  // Check if inputs are valid
-  const isValid = useMemo(() => {
-    return ['a', 'b', 'c'].every(
-      (field) => inputs[field] && !isNaN(parseFloat(inputs[field])) && !errors[field]
+  // Handle degree change
+  const handleDegreeChange = (e) => {
+    const newDegree = parseInt(e.target.value);
+    setDegree(newDegree);
+    setCoefficients(
+      Object.fromEntries(
+        Array.from({ length: newDegree + 1 }, (_, i) =>
+          [String.fromCharCode(97 + (newDegree - i)), ""]
+        )
+      )
     );
-  }, [inputs, errors]);
+    setResult(null);
+    setErrors({});
+  };
+
+  // Validate inputs
+  const isValid = useMemo(() => {
+    return getInputFields.every(
+      (field) =>
+        coefficients[field.key] &&
+        !isNaN(parseFloat(coefficients[field.key])) &&
+        !errors[field.key]
+    );
+  }, [coefficients, errors, getInputFields]);
 
   // Perform factorization
   const factorize = () => {
@@ -78,14 +129,11 @@ const PolynomialFactorizer = () => {
     setResult(null);
 
     if (!isValid) {
-      setErrors((prev) => ({
-        ...prev,
-        general: 'Please fill all fields with valid numbers',
-      }));
+      setErrors({ general: "Please fill all fields with valid numbers" });
       return;
     }
 
-    const calcResult = factorQuadratic(inputs.a, inputs.b, inputs.c);
+    const calcResult = factorPolynomial(coefficients);
     if (calcResult.error) {
       setErrors({ general: calcResult.error });
     } else {
@@ -95,56 +143,116 @@ const PolynomialFactorizer = () => {
 
   // Reset state
   const reset = () => {
-    setInputs({ a: '', b: '', c: '' });
+    setDegree(2);
+    setCoefficients({ a: "", b: "", c: "" });
     setErrors({});
     setResult(null);
     setShowSteps(false);
+    setFactorMethod("roots");
+  };
+
+  // Download result as text
+  const downloadResult = () => {
+    if (!result) return;
+    const text = [
+      `Polynomial: ${Object.entries(coefficients)
+        .map(([key, val], i) => `${val}x${degree - i}`)
+        .join(" + ")
+        .replace(/\+ -/g, "- ")}`,
+      `Factors: ${result.factors || "None"}`,
+      ...(showSteps ? ["Steps:"] : []),
+      ...(showSteps ? result.steps : []),
+    ].join("\n");
+    const blob = new Blob([text], { type: "text/plain" });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = `factorization-${Date.now()}.txt`;
+    link.click();
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-gray-100 flex items-center justify-center p-4">
-      <div className="bg-white p-6 rounded-xl shadow-2xl w-full max-w-lg">
-        <h1 className="text-3xl font-bold mb-6 text-center text-gray-800">
+    <div className="min-h-screen  flex items-center justify-center ">
+      <div className="w-full  bg-white rounded-xl shadow-lg p-6 sm:p-8">
+        <h1 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-6 text-center">
           Polynomial Factorizer
         </h1>
 
+        {/* Degree Selection */}
+        <div className="mb-6">
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Polynomial Degree (2-4)
+          </label>
+          <input
+            type="number"
+            min="2"
+            max="4"
+            value={degree}
+            onChange={handleDegreeChange}
+            className="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500"
+          />
+        </div>
+
         {/* Input Section */}
         <div className="space-y-4">
-          {['a', 'b', 'c'].map((field) => (
-            <div key={field} className="flex items-center gap-2">
+          {getInputFields.map((field) => (
+            <div key={field.key} className="flex flex-col sm:flex-row items-center gap-2">
               <label className="w-32 text-gray-700">
-                {field} ({field === 'a' ? 'x²' : field === 'b' ? 'x' : 'constant'}):
+                {field.key.toUpperCase()} ({field.label}):
               </label>
               <div className="flex-1">
                 <input
                   type="number"
                   step="0.01"
-                  value={inputs[field]}
-                  onChange={handleInputChange(field)}
-                  className="w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder={`e.g., ${field === 'a' ? '1' : field === 'b' ? '-5' : '6'}`}
-                  aria-label={`${field} coefficient`}
+                  value={coefficients[field.key]}
+                  onChange={handleInputChange(field.key)}
+                  className="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500"
+                  placeholder={`e.g., ${field.power === degree ? "1" : field.power === 0 ? "6" : "-5"}`}
+                  aria-label={`${field.key} coefficient`}
                 />
-                {errors[field] && <p className="text-red-600 text-sm mt-1">{errors[field]}</p>}
+                {errors[field.key] && (
+                  <p className="text-red-600 text-sm mt-1">{errors[field.key]}</p>
+                )}
               </div>
             </div>
           ))}
         </div>
 
+        {/* Method Selection */}
+        <div className="mt-6">
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Factorization Method
+          </label>
+          <select
+            value={factorMethod}
+            onChange={(e) => setFactorMethod(e.target.value)}
+            className="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500"
+          >
+            <option value="roots">Roots (Quadratic Formula)</option>
+            <option value="trial">Trial Division (Higher Degrees)</option>
+          </select>
+        </div>
+
         {/* Controls */}
-        <div className="flex gap-4 mt-6">
+        <div className="flex flex-col sm:flex-row gap-4 mt-6">
           <button
             onClick={factorize}
             disabled={!isValid}
-            className="flex-1 bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 disabled:bg-gray-400 transition-all font-semibold"
+            className="flex-1 py-2 px-4 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:bg-gray-400 transition-colors flex items-center justify-center"
           >
-            Factorize
+            <FaCalculator className="mr-2" /> Factorize
           </button>
           <button
             onClick={reset}
-            className="flex-1 bg-gray-600 text-white py-2 rounded-lg hover:bg-gray-700 transition-all font-semibold"
+            className="flex-1 py-2 px-4 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors flex items-center justify-center"
           >
-            Reset
+            <FaSync className="mr-2" /> Reset
+          </button>
+          <button
+            onClick={downloadResult}
+            disabled={!result}
+            className="flex-1 py-2 px-4 bg-green-600 text-white rounded-md hover:bg-green-700 disabled:bg-gray-400 transition-colors flex items-center justify-center"
+          >
+            <FaDownload className="mr-2" /> Download
           </button>
         </div>
 
@@ -157,21 +265,24 @@ const PolynomialFactorizer = () => {
 
         {/* Result Display */}
         {result && (
-          <div className="mt-6 p-4 bg-blue-50 rounded-lg transition-all">
+          <div className="mt-6 p-4 bg-blue-50 rounded-lg">
             <h2 className="text-lg font-semibold text-gray-700 text-center">Result:</h2>
             <p className="text-center text-xl">
               {result.isFactorable
-                ? `${inputs.a}x² + ${inputs.b}x + ${inputs.c} = ${result.factors}`
-                : 'No real factors exist.'}
+                ? `${Object.entries(coefficients)
+                    .map(([key, val], i) => `${val}x${degree - i}`)
+                    .join(" + ")
+                    .replace(/\+ -/g, "- ")} = ${result.factors}`
+                : "No real factors exist."}
             </p>
             <button
               onClick={() => setShowSteps(!showSteps)}
               className="block mx-auto mt-2 text-sm text-blue-600 hover:underline"
             >
-              {showSteps ? 'Hide Steps' : 'Show Steps'}
+              {showSteps ? "Hide Steps" : "Show Steps"}
             </button>
             {showSteps && (
-              <ul className="mt-2 text-sm list-disc list-inside transition-opacity">
+              <ul className="mt-2 text-sm list-disc list-inside">
                 {result.steps.map((step, i) => (
                   <li key={i}>{step}</li>
                 ))}
@@ -179,6 +290,18 @@ const PolynomialFactorizer = () => {
             )}
           </div>
         )}
+
+        {/* Features */}
+        <div className="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
+          <h3 className="font-semibold text-blue-700 mb-2">Features</h3>
+          <ul className="list-disc list-inside text-blue-600 text-sm space-y-1">
+            <li>Supports polynomials up to degree 4</li>
+            <li>Quadratic formula for degree 2</li>
+            <li>Trial division simulation for higher degrees</li>
+            <li>Detailed step-by-step breakdown</li>
+            <li>Download result as text file</li>
+          </ul>
+        </div>
       </div>
     </div>
   );

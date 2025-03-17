@@ -1,87 +1,115 @@
-'use client';
-import React, { useState, useCallback, useMemo } from 'react';
+"use client";
+import React, { useState, useCallback, useMemo } from "react";
+import { FaCalculator, FaSync, FaEye, FaEyeSlash } from "react-icons/fa";
 
 const PartialFractionDecomposer = () => {
-  const [numerator, setNumerator] = useState({ a: '', b: '' }); // ax + b
-  const [denominator, setDenominator] = useState({ c: '', d: '', e: '' }); // cx^2 + dx + e
+  const [numerator, setNumerator] = useState({ a: "", b: "" }); // ax + b
+  const [denominator, setDenominator] = useState({ c: "", d: "", e: "" }); // cx^2 + dx + e
   const [result, setResult] = useState(null);
   const [errors, setErrors] = useState({});
   const [showSteps, setShowSteps] = useState(false);
+  const [decimalPlaces, setDecimalPlaces] = useState(2); // New: control precision
+  const [simplifyFractions, setSimplifyFractions] = useState(true); // New: toggle fraction simplification
+
+  // Greatest Common Divisor for fraction simplification
+  const gcd = (a, b) => {
+    a = Math.abs(a);
+    b = Math.abs(b);
+    while (b) {
+      [a, b] = [b, a % b];
+    }
+    return a;
+  };
+
+  // Simplify a fraction
+  const simplifyFraction = (num, den) => {
+    const divisor = gcd(num, den);
+    return [num / divisor, den / divisor];
+  };
 
   // Decompose the rational function
   const decompose = useCallback(() => {
-    const steps = ['Decomposing the rational function into partial fractions:'];
-    const numA = parseFloat(numerator.a) || 0; // Coefficient of x in numerator
-    const numB = parseFloat(numerator.b) || 0; // Constant in numerator
-    const denC = parseFloat(denominator.c) || 0; // Coefficient of x^2
-    const denD = parseFloat(denominator.d) || 0; // Coefficient of x
-    const denE = parseFloat(denominator.e) || 0; // Constant in denominator
+    const steps = ["Decomposing the rational function into partial fractions:"];
+    const numA = parseFloat(numerator.a) || 0;
+    const numB = parseFloat(numerator.b) || 0;
+    const denC = parseFloat(denominator.c) || 0;
+    const denD = parseFloat(denominator.d) || 0;
+    const denE = parseFloat(denominator.e) || 0;
 
     // Validation
-    if (isNaN(denC) || isNaN(denD) || isNaN(denE) || denC === 0) {
-      return { error: 'Denominator must be a valid quadratic (x^2 term required)' };
-    }
-    if (isNaN(numA) || isNaN(numB)) {
-      return { error: 'Numerator coefficients must be valid numbers' };
+    if (denC === 0) {
+      return { error: "Denominator must be a valid quadratic (x² term required)" };
     }
 
-    steps.push(`Given: (${numA}x + ${numB}) / (${denC}x^2 + ${denD}x + ${denE})`);
+    steps.push(`Given: (${numA}x + ${numB}) / (${denC}x² + ${denD}x + ${denE})`);
 
-    // Factor the denominator: cx^2 + dx + e = c(x - r1)(x - r2)
+    // Factor the denominator: cx^2 + dx + e
     const discriminant = denD * denD - 4 * denC * denE;
-    steps.push(`Discriminant = ${denD}^2 - 4 * ${denC} * ${denE} = ${discriminant}`);
+    steps.push(`Discriminant = ${denD}² - 4 * ${denC} * ${denE} = ${discriminant}`);
 
     if (discriminant < 0) {
-      steps.push('Discriminant < 0: Denominator has no real linear factors.');
-      return { error: 'Denominator cannot be factored into real linear factors' };
+      // Irreducible quadratic case
+      steps.push("Discriminant < 0: Denominator is an irreducible quadratic.");
+      steps.push("Form: (Ax + B) / (cx² + dx + e)");
+      const A = numA / denC;
+      const B = numB / denC;
+      steps.push(`Equate: ${numA}x + ${numB} = A(${denC}x² + ${denD}x + ${denE}) + B`);
+      steps.push(`A = ${numA} / ${denC} = ${A.toFixed(decimalPlaces)}`);
+      steps.push(`B = ${numB} / ${denC} = ${B.toFixed(decimalPlaces)}`);
+      const decomposition = `(${A.toFixed(decimalPlaces)}x + ${B.toFixed(decimalPlaces)}) / (${denC}x² + ${denD}x + ${denE})`;
+      return { decomposition, steps };
     }
 
     const root1 = (-denD + Math.sqrt(discriminant)) / (2 * denC);
     const root2 = (-denD - Math.sqrt(discriminant)) / (2 * denC);
-    steps.push(`Roots: x = ${root1.toFixed(2)}, x = ${root2.toFixed(2)}`);
-    steps.push(`Denominator factors as ${denC} * (x - ${root1.toFixed(2)})(x - ${root2.toFixed(2)})`);
+    steps.push(`Roots: x = ${root1.toFixed(decimalPlaces)}, x = ${root2.toFixed(decimalPlaces)}`);
+    steps.push(`Denominator factors as ${denC} * (x - ${root1.toFixed(decimalPlaces)})(x - ${root2.toFixed(decimalPlaces)})`);
 
-    if (root1 === root2) {
-      // Repeated linear factor: (x - r)^2
-      steps.push('Repeated root detected.');
-      steps.push(`Form: A / (x - ${root1.toFixed(2)}) + B / (x - ${root1.toFixed(2)})^2`);
-
-      // Solve: (ax + b) / c(x - r)^2 = A / (x - r) + B / (x - r)^2
-      // Equate: ax + b = A(cx - cr) + B
+    if (Math.abs(root1 - root2) < 1e-6) {
+      // Repeated linear factor
+      steps.push("Repeated root detected.");
+      steps.push(`Form: A / (x - ${root1.toFixed(decimalPlaces)}) + B / (x - ${root1.toFixed(decimalPlaces)})²`);
       const r = root1;
-      const A = numB / (denC * r * r); // B term when x = 0
-      const B = numA - A * denC * r; // Solve for B using x coefficient
+      const A = numB / (denC * r * r);
+      const B = numA - A * denC * r;
 
       steps.push(`Equate: ${numA}x + ${numB} = A(${denC}x - ${denC * r}) + B`);
-      steps.push(`x^0: ${numB} = ${A.toFixed(2)} * ${-denC * r} + ${B.toFixed(2)}`);
-      steps.push(`x^1: ${numA} = ${A.toFixed(2)} * ${denC}`);
-      steps.push(`A = ${A.toFixed(2)}, B = ${B.toFixed(2)}`);
+      steps.push(`x⁰: ${numB} = ${A.toFixed(decimalPlaces)} * ${-denC * r} + ${B.toFixed(decimalPlaces)}`);
+      steps.push(`x¹: ${numA} = ${A.toFixed(decimalPlaces)} * ${denC}`);
+      steps.push(`A = ${A.toFixed(decimalPlaces)}, B = ${B.toFixed(decimalPlaces)}`);
 
-      const decomposition = `${A.toFixed(2)} / (x - ${r.toFixed(2)}) + ${B.toFixed(2)} / (x - ${r.toFixed(2)})^2`;
+      let decomposition = `${A.toFixed(decimalPlaces)} / (x - ${r.toFixed(decimalPlaces)}) + ${B.toFixed(decimalPlaces)} / (x - ${r.toFixed(decimalPlaces)})²`;
+      if (simplifyFractions) {
+        const [A_num, A_den] = simplifyFraction(A * 100, 100);
+        const [B_num, B_den] = simplifyFraction(B * 100, 100);
+        decomposition = `${A_num}/${A_den} / (x - ${r.toFixed(decimalPlaces)}) + ${B_num}/${B_den} / (x - ${r.toFixed(decimalPlaces)})²`;
+      }
       return { decomposition, steps };
     } else {
-      // Distinct linear factors: (x - r1)(x - r2)
-      steps.push(`Form: A / (x - ${root1.toFixed(2)}) + B / (x - ${root2.toFixed(2)})`);
-
-      // Solve: (ax + b) / c(x - r1)(x - r2) = A / (x - r1) + B / (x - r2)
-      // Equate: ax + b = A(x - r2) + B(x - r1)
+      // Distinct linear factors
+      steps.push(`Form: A / (x - ${root1.toFixed(decimalPlaces)}) + B / (x - ${root2.toFixed(decimalPlaces)})`);
       const A = (numA * root2 - numB) / (denC * (root2 - root1));
       const B = (numB - numA * root1) / (denC * (root2 - root1));
 
-      steps.push(`Equate: ${numA}x + ${numB} = A(x - ${root2.toFixed(2)}) + B(x - ${root1.toFixed(2)})`);
-      steps.push(`x^1: ${numA} = A + B`);
-      steps.push(`x^0: ${numB} = ${-A * root2} + ${-B * root1}`);
-      steps.push(`Solve: A = ${A.toFixed(2)}, B = ${B.toFixed(2)}`);
+      steps.push(`Equate: ${numA}x + ${numB} = A(x - ${root2.toFixed(decimalPlaces)}) + B(x - ${root1.toFixed(decimalPlaces)})`);
+      steps.push(`x¹: ${numA} = A + B`);
+      steps.push(`x⁰: ${numB} = ${-A * root2} + ${-B * root1}`);
+      steps.push(`Solve: A = ${A.toFixed(decimalPlaces)}, B = ${B.toFixed(decimalPlaces)}`);
 
-      const decomposition = `${A.toFixed(2)} / (x - ${root1.toFixed(2)}) + ${B.toFixed(2)} / (x - ${root2.toFixed(2)})`;
+      let decomposition = `${A.toFixed(decimalPlaces)} / (x - ${root1.toFixed(decimalPlaces)}) + ${B.toFixed(decimalPlaces)} / (x - ${root2.toFixed(decimalPlaces)})`;
+      if (simplifyFractions) {
+        const [A_num, A_den] = simplifyFraction(A * 100, 100);
+        const [B_num, B_den] = simplifyFraction(B * 100, 100);
+        decomposition = `${A_num}/${A_den} / (x - ${root1.toFixed(decimalPlaces)}) + ${B_num}/${B_den} / (x - ${root2.toFixed(decimalPlaces)})`;
+      }
       return { decomposition, steps };
     }
-  }, [numerator, denominator]);
+  }, [numerator, denominator, decimalPlaces, simplifyFractions]);
 
   // Handle input changes
   const handleInputChange = (type, field) => (e) => {
     const value = e.target.value;
-    if (type === 'numerator') {
+    if (type === "numerator") {
       setNumerator((prev) => ({ ...prev, [field]: value }));
     } else {
       setDenominator((prev) => ({ ...prev, [field]: value }));
@@ -89,13 +117,13 @@ const PartialFractionDecomposer = () => {
     setResult(null);
 
     if (value && isNaN(parseFloat(value))) {
-      setErrors((prev) => ({ ...prev, [`${type}${field}`]: 'Must be a number' }));
+      setErrors((prev) => ({ ...prev, [`${type}${field}`]: "Must be a number" }));
     } else {
-      setErrors((prev) => ({ ...prev, [`${type}${field}`]: '' }));
+      setErrors((prev) => ({ ...prev, [`${type}${field}`]: "" }));
     }
   };
 
-  // Check if inputs are valid
+  // Validate inputs
   const isValid = useMemo(() => {
     const numA = parseFloat(numerator.a) || 0;
     const numB = parseFloat(numerator.b) || 0;
@@ -104,10 +132,13 @@ const PartialFractionDecomposer = () => {
     const denE = parseFloat(denominator.e) || 0;
 
     return (
-      !isNaN(numA) && !isNaN(numB) &&
-      !isNaN(denC) && !isNaN(denD) && !isNaN(denE) &&
-      denC !== 0 && // Must be quadratic
-      Object.values(errors).every(err => !err)
+      !isNaN(numA) &&
+      !isNaN(numB) &&
+      !isNaN(denC) &&
+      !isNaN(denD) &&
+      !isNaN(denE) &&
+      denC !== 0 &&
+      Object.values(errors).every((err) => !err)
     );
   }, [numerator, denominator, errors]);
 
@@ -117,10 +148,7 @@ const PartialFractionDecomposer = () => {
     setResult(null);
 
     if (!isValid) {
-      setErrors((prev) => ({
-        ...prev,
-        general: 'Please provide valid coefficients (denominator must be quadratic)',
-      }));
+      setErrors({ general: "Please provide valid coefficients (denominator must be quadratic)" });
       return;
     }
 
@@ -134,147 +162,162 @@ const PartialFractionDecomposer = () => {
 
   // Reset state
   const reset = () => {
-    setNumerator({ a: '', b: '' });
-    setDenominator({ c: '', d: '', e: '' });
+    setNumerator({ a: "", b: "" });
+    setDenominator({ c: "", d: "", e: "" });
     setErrors({});
     setResult(null);
     setShowSteps(false);
+    setDecimalPlaces(2);
+    setSimplifyFractions(true);
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-gray-100 flex items-center justify-center p-4">
-      <div className="bg-white p-6 rounded-xl shadow-2xl w-full max-w-lg">
-        <h1 className="text-3xl font-bold mb-6 text-center text-gray-800">
+    <div className="min-h-screen  flex items-center justify-center ">
+      <div className="w-full  bg-white rounded-xl shadow-lg p-6 sm:p-8">
+        <h1 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-6 text-center">
           Partial Fraction Decomposer
         </h1>
 
-        {/* Numerator Input */}
-        <div className="space-y-4 mb-6">
-          <h3 className="text-lg font-semibold text-gray-700">Numerator (ax + b):</h3>
-          <div className="flex items-center gap-2">
-            <label className="w-32 text-gray-700">a (x):</label>
-            <div className="flex-1">
-              <input
-                type="number"
-                step="0.01"
-                value={numerator.a}
-                onChange={handleInputChange('numerator', 'a')}
-                className="w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="e.g., 1"
-                aria-label="Coefficient of x in numerator"
-              />
-              {errors.numeratora && <p className="text-red-600 text-sm mt-1">{errors.numeratora}</p>}
-            </div>
-          </div>
-          <div className="flex items-center gap-2">
-            <label className="w-32 text-gray-700">b (constant):</label>
-            <div className="flex-1">
-              <input
-                type="number"
-                step="0.01"
-                value={numerator.b}
-                onChange={handleInputChange('numerator', 'b')}
-                className="w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="e.g., 2"
-                aria-label="Constant in numerator"
-              />
-              {errors.numeratorb && <p className="text-red-600 text-sm mt-1">{errors.numeratorb}</p>}
+        {/* Input Section */}
+        <div className="space-y-6">
+          <div>
+            <h3 className="text-lg font-semibold text-gray-700 mb-2">Numerator (ax + b)</h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {["a", "b"].map((field) => (
+                <div key={field} className="flex flex-col">
+                  <label className="text-sm font-medium text-gray-700 mb-1">
+                    {field === "a" ? "a (x)" : "b (constant)"}
+                  </label>
+                  <input
+                    type="number"
+                    step="any"
+                    value={numerator[field]}
+                    onChange={handleInputChange("numerator", field)}
+                    className="p-2 border rounded-md focus:ring-2 focus:ring-blue-500"
+                    placeholder={field === "a" ? "e.g., 1" : "e.g., 2"}
+                    aria-label={`Coefficient of ${field === "a" ? "x" : "constant"} in numerator`}
+                  />
+                  {errors[`numerator${field}`] && (
+                    <p className="text-red-600 text-sm mt-1">{errors[`numerator${field}`]}</p>
+                  )}
+                </div>
+              ))}
             </div>
           </div>
 
-          {/* Denominator Input */}
-          <h3 className="text-lg font-semibold text-gray-700 mt-4">Denominator (cx² + dx + e):</h3>
-          <div className="flex items-center gap-2">
-            <label className="w-32 text-gray-700">c (x²):</label>
-            <div className="flex-1">
-              <input
-                type="number"
-                step="0.01"
-                value={denominator.c}
-                onChange={handleInputChange('denominator', 'c')}
-                className="w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="e.g., 1"
-                aria-label="Coefficient of x^2 in denominator"
-              />
-              {errors.denominatorc && <p className="text-red-600 text-sm mt-1">{errors.denominatorc}</p>}
+          <div>
+            <h3 className="text-lg font-semibold text-gray-700 mb-2">Denominator (cx² + dx + e)</h3>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              {["c", "d", "e"].map((field) => (
+                <div key={field} className="flex flex-col">
+                  <label className="text-sm font-medium text-gray-700 mb-1">
+                    {field === "c" ? "c (x²)" : field === "d" ? "d (x)" : "e (constant)"}
+                  </label>
+                  <input
+                    type="number"
+                    step="any"
+                    value={denominator[field]}
+                    onChange={handleInputChange("denominator", field)}
+                    className="p-2 border rounded-md focus:ring-2 focus:ring-blue-500"
+                    placeholder={field === "c" ? "e.g., 1" : field === "d" ? "e.g., -3" : "e.g., 2"}
+                    aria-label={`Coefficient of ${field === "c" ? "x²" : field === "d" ? "x" : "constant"} in denominator`}
+                  />
+                  {errors[`denominator${field}`] && (
+                    <p className="text-red-600 text-sm mt-1">{errors[`denominator${field}`]}</p>
+                  )}
+                </div>
+              ))}
             </div>
           </div>
-          <div className="flex items-center gap-2">
-            <label className="w-32 text-gray-700">d (x):</label>
-            <div className="flex-1">
+        </div>
+
+        {/* Options */}
+        <div className="mt-6 p-4 bg-gray-50 rounded-lg">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Decimal Places ({decimalPlaces})
+              </label>
               <input
-                type="number"
-                step="0.01"
-                value={denominator.d}
-                onChange={handleInputChange('denominator', 'd')}
-                className="w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="e.g., -3"
-                aria-label="Coefficient of x in denominator"
+                type="range"
+                min="1"
+                max="6"
+                value={decimalPlaces}
+                onChange={(e) => setDecimalPlaces(parseInt(e.target.value))}
+                className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-500"
               />
-              {errors.denominatord && <p className="text-red-600 text-sm mt-1">{errors.denominatord}</p>}
             </div>
-          </div>
-          <div className="flex items-center gap-2">
-            <label className="w-32 text-gray-700">e (constant):</label>
-            <div className="flex-1">
-              <input
-                type="number"
-                step="0.01"
-                value={denominator.e}
-                onChange={handleInputChange('denominator', 'e')}
-                className="w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="e.g., 2"
-                aria-label="Constant in denominator"
-              />
-              {errors.denominatore && <p className="text-red-600 text-sm mt-1">{errors.denominatore}</p>}
+            <div className="flex items-center">
+              <label className="flex items-center">
+                <input
+                  type="checkbox"
+                  checked={simplifyFractions}
+                  onChange={(e) => setSimplifyFractions(e.target.checked)}
+                  className="mr-2 accent-blue-500"
+                />
+                <span className="text-sm text-gray-700">Simplify Fractions</span>
+              </label>
             </div>
           </div>
         </div>
 
         {/* Controls */}
-        <div className="flex gap-4">
+        <div className="mt-6 flex flex-col sm:flex-row gap-4">
           <button
             onClick={decomposeFraction}
             disabled={!isValid}
-            className="flex-1 bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 disabled:bg-gray-400 transition-all font-semibold"
+            className="flex-1 py-2 px-4 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors flex items-center justify-center"
           >
-            Decompose
+            <FaCalculator className="mr-2" /> Decompose
           </button>
           <button
             onClick={reset}
-            className="flex-1 bg-gray-600 text-white py-2 rounded-lg hover:bg-gray-700 transition-all font-semibold"
+            className="flex-1 py-2 px-4 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors flex items-center justify-center"
           >
-            Reset
+            <FaSync className="mr-2" /> Reset
           </button>
         </div>
 
         {/* General Error */}
         {errors.general && (
-          <div className="mt-4 p-3 bg-red-100 text-red-700 rounded-lg text-center">
-            {errors.general}
+          <div className="mt-4 p-4 bg-red-50 rounded-lg border border-red-200">
+            <p className="text-red-700 text-center">{errors.general}</p>
           </div>
         )}
 
         {/* Result Display */}
         {result && (
-          <div className="mt-6 p-4 bg-blue-50 rounded-lg transition-all">
-            <h2 className="text-lg font-semibold text-gray-700 text-center">Partial Fractions:</h2>
-            <p className="text-center text-xl">{result.decomposition}</p>
+          <div className="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
+            <h2 className="text-lg font-semibold text-gray-700 text-center">Partial Fractions</h2>
+            <p className="text-center text-xl font-mono mt-2">{result.decomposition}</p>
             <button
               onClick={() => setShowSteps(!showSteps)}
-              className="block mx-auto mt-2 text-sm text-blue-600 hover:underline"
+              className="flex items-center mx-auto mt-2 text-blue-600 hover:underline"
             >
-              {showSteps ? 'Hide Steps' : 'Show Steps'}
+              {showSteps ? <FaEyeSlash className="mr-1" /> : <FaEye className="mr-1" />}
+              {showSteps ? "Hide Steps" : "Show Steps"}
             </button>
             {showSteps && (
-              <ul className="mt-2 text-sm list-disc list-inside transition-opacity">
+              <ul className="mt-4 text-sm list-disc list-inside bg-white p-4 rounded-md shadow-inner">
                 {result.steps.map((step, i) => (
-                  <li key={i}>{step}</li>
+                  <li key={i} className="mb-1">{step}</li>
                 ))}
               </ul>
             )}
           </div>
         )}
+
+        {/* Features */}
+        <div className="mt-6 p-4 bg-green-50 rounded-lg border border-green-200">
+          <h3 className="font-semibold text-green-700 mb-2">Features</h3>
+          <ul className="list-disc list-inside text-green-600 text-sm space-y-1">
+            <li>Decomposes linear/quadratic into partial fractions</li>
+            <li>Handles distinct, repeated, and irreducible factors</li>
+            <li>Customizable decimal precision</li>
+            <li>Optional fraction simplification</li>
+            <li>Detailed step-by-step solution</li>
+          </ul>
+        </div>
       </div>
     </div>
   );

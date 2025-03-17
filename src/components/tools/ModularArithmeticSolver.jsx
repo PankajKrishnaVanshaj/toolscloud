@@ -1,12 +1,14 @@
-'use client';
-import React, { useState, useCallback, useMemo } from 'react';
+"use client";
+import React, { useState, useCallback, useMemo } from "react";
+import { FaCalculator, FaSync, FaInfoCircle } from "react-icons/fa";
 
 const ModularArithmeticSolver = () => {
-  const [mode, setMode] = useState('basic'); // basic (a + b mod n), congruence (ax ≡ b mod n), inverse (a⁻¹ mod n)
-  const [inputs, setInputs] = useState({ a: '', b: '', n: '' });
+  const [mode, setMode] = useState("basic"); // basic, congruence, inverse, exponentiation
+  const [inputs, setInputs] = useState({ a: "", b: "", n: "", e: "" }); // Added e for exponentiation
   const [result, setResult] = useState(null);
   const [errors, setErrors] = useState({});
   const [showSteps, setShowSteps] = useState(false);
+  const [history, setHistory] = useState([]);
 
   // Extended Euclidean Algorithm for GCD and coefficients
   const extendedGCD = (a, b) => {
@@ -17,55 +19,74 @@ const ModularArithmeticSolver = () => {
     return [gcd, x, y];
   };
 
+  // Modular exponentiation (a^e mod n)
+  const modPow = (base, exponent, modulus) => {
+    if (modulus === 1) return 0;
+    let result = 1;
+    base = base % modulus;
+    const steps = [`Calculating ${base}^${exponent} mod ${modulus}:`];
+    while (exponent > 0) {
+      if (exponent % 2 === 1) {
+        result = (result * base) % modulus;
+        steps.push(`result = (${result} * ${base}) mod ${modulus} = ${result}`);
+      }
+      base = (base * base) % modulus;
+      exponent = Math.floor(exponent / 2);
+      steps.push(`base = (${base} * ${base}) mod ${modulus} = ${base}`);
+    }
+    return { result, steps };
+  };
+
   // Calculate modular solution
   const calculateMod = useCallback((mode, inputs) => {
-    const steps = [`Solving for ${mode === 'basic' ? 'modular arithmetic' : mode === 'congruence' ? 'congruence' : 'modular inverse'}:`];
+    const steps = [`Solving for ${mode}:`];
     const a = parseInt(inputs.a);
-    const b = mode === 'inverse' ? null : parseInt(inputs.b);
+    const b = mode === "inverse" ? null : parseInt(inputs.b);
     const n = parseInt(inputs.n);
+    const e = mode === "exponentiation" ? parseInt(inputs.e) : null;
 
     if (isNaN(n) || n <= 0) {
-      return { error: 'Modulus (n) must be a positive integer' };
+      return { error: "Modulus (n) must be a positive integer" };
     }
 
-    if (mode === 'basic') {
-      if (isNaN(a) || isNaN(b)) {
-        return { error: 'a and b must be integers' };
-      }
+    if (mode === "basic") {
+      if (isNaN(a) || isNaN(b)) return { error: "a and b must be integers" };
       const sum = a + b;
-      const result = ((sum % n) + n) % n; // Ensure positive result
+      const result = ((sum % n) + n) % n;
       steps.push(`(${a} + ${b}) = ${sum}`);
       steps.push(`${sum} mod ${n} = ${result}`);
       return { result, steps, label: `(${a} + ${b}) mod ${n}` };
-    } else if (mode === 'congruence') {
-      if (isNaN(a) || isNaN(b)) {
-        return { error: 'a and b must be integers' };
-      }
+    } else if (mode === "congruence") {
+      if (isNaN(a) || isNaN(b)) return { error: "a and b must be integers" };
       const [gcd, x0] = extendedGCD(a, n);
       if (b % gcd !== 0) {
         steps.push(`gcd(${a}, ${n}) = ${gcd}`);
         steps.push(`${b} is not divisible by ${gcd}: No solution exists`);
-        return { error: 'No solution exists (b not divisible by gcd)', steps };
+        return { error: "No solution exists (b not divisible by gcd)", steps };
       }
-      const x = ((x0 * (b / gcd)) % n + n) % n; // Ensure positive
+      const x = ((x0 * (b / gcd)) % n + n) % n;
       steps.push(`${a}x ≡ ${b} (mod ${n})`);
       steps.push(`gcd(${a}, ${n}) = ${gcd}`);
       steps.push(`x = (${x0} * (${b} / ${gcd})) mod ${n} = ${x}`);
-      return { result: x, steps, label: 'x' };
-    } else if (mode === 'inverse') {
-      if (isNaN(a)) {
-        return { error: 'a must be an integer' };
-      }
+      return { result: x, steps, label: "x" };
+    } else if (mode === "inverse") {
+      if (isNaN(a)) return { error: "a must be an integer" };
       const [gcd, x] = extendedGCD(a, n);
       if (gcd !== 1) {
         steps.push(`gcd(${a}, ${n}) = ${gcd} ≠ 1: No modular inverse exists`);
-        return { error: 'No modular inverse exists (gcd ≠ 1)', steps };
+        return { error: "No modular inverse exists (gcd ≠ 1)", steps };
       }
-      const inverse = (x % n + n) % n; // Ensure positive
+      const inverse = (x % n + n) % n;
       steps.push(`Find x such that ${a}x ≡ 1 (mod ${n})`);
       steps.push(`Using Extended Euclidean: gcd(${a}, ${n}) = ${gcd}`);
       steps.push(`Inverse = ${x} mod ${n} = ${inverse}`);
       return { result: inverse, steps, label: `${a}⁻¹ mod ${n}` };
+    } else if (mode === "exponentiation") {
+      if (isNaN(a) || isNaN(e)) return { error: "a and e must be integers" };
+      if (e < 0) return { error: "Exponent (e) must be non-negative" };
+      const { result, steps: powSteps } = modPow(a, e, n);
+      steps.push(...powSteps);
+      return { result, steps, label: `${a}^${e} mod ${n}` };
     }
   }, []);
 
@@ -73,41 +94,59 @@ const ModularArithmeticSolver = () => {
   const handleInputChange = (field) => (e) => {
     const value = e.target.value;
     setInputs((prev) => ({ ...prev, [field]: value }));
-    setResult(null); // Reset result on change
+    setResult(null);
 
     if (value && isNaN(parseInt(value))) {
-      setErrors((prev) => ({ ...prev, [field]: 'Must be an integer' }));
-    } else if (field === 'n' && value && parseInt(value) <= 0) {
-      setErrors((prev) => ({ ...prev, [field]: 'Must be positive' }));
+      setErrors((prev) => ({ ...prev, [field]: "Must be an integer" }));
+    } else if (field === "n" && value && parseInt(value) <= 0) {
+      setErrors((prev) => ({ ...prev, [field]: "Must be positive" }));
+    } else if (field === "e" && value && parseInt(value) < 0) {
+      setErrors((prev) => ({ ...prev, [field]: "Must be non-negative" }));
     } else {
-      setErrors((prev) => ({ ...prev, [field]: '' }));
+      setErrors((prev) => ({ ...prev, [field]: "" }));
     }
   };
 
-  // Check if inputs are valid based on mode
+  // Check input validity
   const isValid = useMemo(() => {
     const nValid = inputs.n && !isNaN(parseInt(inputs.n)) && parseInt(inputs.n) > 0;
     if (!nValid) return false;
 
-    if (mode === 'basic') {
-      return (
-        inputs.a && !isNaN(parseInt(inputs.a)) &&
-        inputs.b && !isNaN(parseInt(inputs.b)) &&
-        Object.values(errors).every(err => !err)
-      );
-    } else if (mode === 'congruence') {
-      return (
-        inputs.a && !isNaN(parseInt(inputs.a)) &&
-        inputs.b && !isNaN(parseInt(inputs.b)) &&
-        Object.values(errors).every(err => !err)
-      );
-    } else if (mode === 'inverse') {
-      return (
-        inputs.a && !isNaN(parseInt(inputs.a)) &&
-        Object.values(errors).every(err => !err)
-      );
+    switch (mode) {
+      case "basic":
+        return (
+          inputs.a &&
+          !isNaN(parseInt(inputs.a)) &&
+          inputs.b &&
+          !isNaN(parseInt(inputs.b)) &&
+          Object.values(errors).every((err) => !err)
+        );
+      case "congruence":
+        return (
+          inputs.a &&
+          !isNaN(parseInt(inputs.a)) &&
+          inputs.b &&
+          !isNaN(parseInt(inputs.b)) &&
+          Object.values(errors).every((err) => !err)
+        );
+      case "inverse":
+        return (
+          inputs.a &&
+          !isNaN(parseInt(inputs.a)) &&
+          Object.values(errors).every((err) => !err)
+        );
+      case "exponentiation":
+        return (
+          inputs.a &&
+          !isNaN(parseInt(inputs.a)) &&
+          inputs.e &&
+          !isNaN(parseInt(inputs.e)) &&
+          parseInt(inputs.e) >= 0 &&
+          Object.values(errors).every((err) => !err)
+        );
+      default:
+        return false;
     }
-    return false;
   }, [mode, inputs, errors]);
 
   // Perform calculation
@@ -116,10 +155,7 @@ const ModularArithmeticSolver = () => {
     setResult(null);
 
     if (!isValid) {
-      setErrors((prev) => ({
-        ...prev,
-        general: 'Please provide valid inputs for the selected mode',
-      }));
+      setErrors({ general: "Please provide valid inputs for the selected mode" });
       return;
     }
 
@@ -128,128 +164,133 @@ const ModularArithmeticSolver = () => {
       setErrors({ general: calcResult.error });
     } else {
       setResult(calcResult);
+      setHistory((prev) => [
+        ...prev,
+        { mode, inputs: { ...inputs }, result: calcResult.result },
+      ].slice(-5)); // Keep last 5 calculations
     }
   };
 
   // Reset state
   const reset = () => {
-    setMode('basic');
-    setInputs({ a: '', b: '', n: '' });
+    setMode("basic");
+    setInputs({ a: "", b: "", n: "", e: "" });
     setErrors({});
     setResult(null);
     setShowSteps(false);
+    setHistory([]);
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-gray-100 flex items-center justify-center p-4">
-      <div className="bg-white p-6 rounded-xl shadow-2xl w-full max-w-lg">
-        <h1 className="text-3xl font-bold mb-6 text-center text-gray-800">
+    <div className="min-h-screen  flex items-center justify-center ">
+      <div className="w-full  bg-white rounded-xl shadow-lg p-6 sm:p-8">
+        <h1 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-6 text-center">
           Modular Arithmetic Solver
         </h1>
 
         {/* Mode Selection */}
-        <div className="flex flex-wrap justify-center gap-2 mb-6">
-          {['basic', 'congruence', 'inverse'].map((m) => (
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-6">
+          {["basic", "congruence", "inverse", "exponentiation"].map((m) => (
             <button
               key={m}
               onClick={() => setMode(m)}
-              className={`px-3 py-1 rounded-lg transition-colors ${mode === m ? 'bg-blue-600 text-white' : 'bg-gray-200 hover:bg-gray-300'}`}
+              className={`py-2 px-3 rounded-md text-sm transition-colors ${
+                mode === m
+                  ? "bg-blue-600 text-white"
+                  : "bg-gray-200 hover:bg-gray-300 text-gray-700"
+              }`}
             >
-              {m === 'basic' ? 'Basic Mod' : m === 'congruence' ? 'Solve ax ≡ b' : 'Mod Inverse'}
+              {m === "basic"
+                ? "Basic Mod"
+                : m === "congruence"
+                ? "Solve ax ≡ b"
+                : m === "inverse"
+                ? "Mod Inverse"
+                : "Mod Power"}
             </button>
           ))}
         </div>
 
         {/* Input Section */}
         <div className="space-y-4 mb-6">
-          <div className="flex items-center gap-2">
-            <label className="w-32 text-gray-700">a:</label>
-            <div className="flex-1">
-              <input
-                type="number"
-                step="1"
-                value={inputs.a}
-                onChange={handleInputChange('a')}
-                className="w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder={mode === 'basic' ? 'e.g., 5' : mode === 'congruence' ? 'e.g., 3' : 'e.g., 7'}
-                aria-label="Value a"
-              />
-              {errors.a && <p className="text-red-600 text-sm mt-1">{errors.a}</p>}
-            </div>
-          </div>
-          {mode !== 'inverse' && (
-            <div className="flex items-center gap-2">
-              <label className="w-32 text-gray-700">b:</label>
-              <div className="flex-1">
-                <input
-                  type="number"
-                  step="1"
-                  value={inputs.b}
-                  onChange={handleInputChange('b')}
-                  className="w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder={mode === 'basic' ? 'e.g., 3' : 'e.g., 2'}
-                  aria-label="Value b"
-                />
-                {errors.b && <p className="text-red-600 text-sm mt-1">{errors.b}</p>}
+          {["a", mode !== "inverse" && "b", "n", mode === "exponentiation" && "e"]
+            .filter(Boolean)
+            .map((field) => (
+              <div key={field} className="flex flex-col sm:flex-row items-start sm:items-center gap-2">
+                <label className="w-28 text-sm font-medium text-gray-700">
+                  {field === "a"
+                    ? "a:"
+                    : field === "b"
+                    ? "b:"
+                    : field === "n"
+                    ? "Modulus (n):"
+                    : "Exponent (e):"}
+                </label>
+                <div className="flex-1 w-full">
+                  <input
+                    type="number"
+                    step="1"
+                    value={inputs[field]}
+                    onChange={handleInputChange(field)}
+                    className="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                    placeholder={
+                      field === "a"
+                        ? "e.g., 5"
+                        : field === "b"
+                        ? "e.g., 3"
+                        : field === "n"
+                        ? "e.g., 4"
+                        : "e.g., 2"
+                    }
+                    aria-label={`Value ${field}`}
+                  />
+                  {errors[field] && (
+                    <p className="text-red-600 text-xs mt-1">{errors[field]}</p>
+                  )}
+                </div>
               </div>
-            </div>
-          )}
-          <div className="flex items-center gap-2">
-            <label className="w-32 text-gray-700">Modulus (n):</label>
-            <div className="flex-1">
-              <input
-                type="number"
-                step="1"
-                value={inputs.n}
-                onChange={handleInputChange('n')}
-                className="w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="e.g., 4"
-                aria-label="Modulus n"
-              />
-              {errors.n && <p className="text-red-600 text-sm mt-1">{errors.n}</p>}
-            </div>
-          </div>
+            ))}
         </div>
 
         {/* Controls */}
-        <div className="flex gap-4">
+        <div className="flex flex-col sm:flex-row gap-4 mb-6">
           <button
             onClick={calculate}
             disabled={!isValid}
-            className="flex-1 bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 disabled:bg-gray-400 transition-all font-semibold"
+            className="flex-1 py-2 px-4 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors flex items-center justify-center"
           >
-            Calculate
+            <FaCalculator className="mr-2" /> Calculate
           </button>
           <button
             onClick={reset}
-            className="flex-1 bg-gray-600 text-white py-2 rounded-lg hover:bg-gray-700 transition-all font-semibold"
+            className="flex-1 py-2 px-4 bg-gray-600 text-white rounded-md hover:bg-gray-700 transition-colors flex items-center justify-center"
           >
-            Reset
+            <FaSync className="mr-2" /> Reset
           </button>
         </div>
 
         {/* General Error */}
         {errors.general && (
-          <div className="mt-4 p-3 bg-red-100 text-red-700 rounded-lg text-center">
+          <div className="mb-6 p-3 bg-red-50 border border-red-200 rounded-md text-red-700 text-center">
             {errors.general}
           </div>
         )}
 
         {/* Result Display */}
         {result && (
-          <div className="mt-6 p-4 bg-blue-50 rounded-lg transition-all">
-            <h2 className="text-lg font-semibold text-gray-700 text-center">Result:</h2>
-            <p className="text-center text-xl">
+          <div className="mb-6 p-4 bg-blue-50 rounded-md">
+            <h2 className="text-lg font-semibold text-gray-700 mb-2">Result:</h2>
+            <p className="text-center text-xl font-mono">
               {result.label} = {result.result}
             </p>
             <button
               onClick={() => setShowSteps(!showSteps)}
               className="block mx-auto mt-2 text-sm text-blue-600 hover:underline"
             >
-              {showSteps ? 'Hide Steps' : 'Show Steps'}
+              {showSteps ? "Hide Steps" : "Show Steps"}
             </button>
             {showSteps && (
-              <ul className="mt-2 text-sm list-disc list-inside transition-opacity">
+              <ul className="mt-2 text-sm text-gray-600 list-disc list-inside">
                 {result.steps.map((step, i) => (
                   <li key={i}>{step}</li>
                 ))}
@@ -257,6 +298,41 @@ const ModularArithmeticSolver = () => {
             )}
           </div>
         )}
+
+        {/* Calculation History */}
+        {history.length > 0 && (
+          <div className="mb-6 p-4 bg-gray-50 rounded-md">
+            <h3 className="text-md font-semibold text-gray-700 mb-2">Recent Calculations:</h3>
+            <ul className="text-sm text-gray-600 space-y-1 max-h-40 overflow-y-auto">
+              {history.slice().reverse().map((entry, index) => (
+                <li key={index}>
+                  {entry.mode === "basic"
+                    ? `(${entry.inputs.a} + ${entry.inputs.b}) mod ${entry.inputs.n} = ${entry.result}`
+                    : entry.mode === "congruence"
+                    ? `${entry.inputs.a}x ≡ ${entry.inputs.b} (mod ${entry.inputs.n}) → x = ${entry.result}`
+                    : entry.mode === "inverse"
+                    ? `${entry.inputs.a}⁻¹ mod ${entry.inputs.n} = ${entry.result}`
+                    : `${entry.inputs.a}^${entry.inputs.e} mod ${entry.inputs.n} = ${entry.result}`}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+
+        {/* Features and Info */}
+        <div className="p-4 bg-blue-50 rounded-md border border-blue-200">
+          <h3 className="font-semibold text-blue-700 mb-2 flex items-center">
+            <FaInfoCircle className="mr-2" /> Features
+          </h3>
+          <ul className="list-disc list-inside text-blue-600 text-sm space-y-1">
+            <li>Basic modular arithmetic (a + b mod n)</li>
+            <li>Linear congruence solver (ax ≡ b mod n)</li>
+            <li>Modular multiplicative inverse (a⁻¹ mod n)</li>
+            <li>Modular exponentiation (a^e mod n)</li>
+            <li>Step-by-step solutions</li>
+            <li>Calculation history (last 5)</li>
+          </ul>
+        </div>
       </div>
     </div>
   );
