@@ -5785,7 +5785,6 @@ const ToolList = [
         desc: "Generate harmonious color palettes for design projects.",
         code: "PaletteGenerator",
       },
-      // New 50 Color Tools
       {
         name: "RGB to Hex",
         slug: "rgb-to-hex",

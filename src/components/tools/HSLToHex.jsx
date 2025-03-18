@@ -1,18 +1,20 @@
-// app/components/HSLToHex.jsx
-'use client';
-
-import React, { useState, useEffect } from 'react';
+"use client";
+import React, { useState, useEffect, useCallback } from "react";
+import { FaCopy, FaSync, FaPalette } from "react-icons/fa";
 
 const HSLToHex = () => {
   const [hsl, setHsl] = useState({ h: 0, s: 100, l: 50 });
   const [rgb, setRgb] = useState({ r: 0, g: 0, b: 0 });
-  const [hex, setHex] = useState('#FF0000');
+  const [hex, setHex] = useState("#FF0000");
+  const [history, setHistory] = useState([]);
+  const [copied, setCopied] = useState({ hex: false, rgb: false });
 
   // Convert HSL to RGB
-  const hslToRgb = (h, s, l) => {
-    s /= 100; l /= 100;
+  const hslToRgb = useCallback((h, s, l) => {
+    s /= 100;
+    l /= 100;
     const c = (1 - Math.abs(2 * l - 1)) * s;
-    const x = c * (1 - Math.abs((h / 60) % 2 - 1));
+    const x = c * (1 - Math.abs(((h / 60) % 2) - 1));
     const m = l - c / 2;
     let r, g, b;
 
@@ -26,129 +28,180 @@ const HSLToHex = () => {
     return {
       r: Math.round((r + m) * 255),
       g: Math.round((g + m) * 255),
-      b: Math.round((b + m) * 255)
+      b: Math.round((b + m) * 255),
     };
-  };
+  }, []);
 
   // Convert RGB to HEX
-  const rgbToHex = (r, g, b) => {
-    return '#' + [r, g, b].map(x => {
-      const hex = x.toString(16);
-      return hex.length === 1 ? '0' + hex : hex;
-    }).join('').toUpperCase();
-  };
+  const rgbToHex = useCallback((r, g, b) => {
+    return (
+      "#" +
+      [r, g, b]
+        .map((x) => {
+          const hex = x.toString(16);
+          return hex.length === 1 ? "0" + hex : hex;
+        })
+        .join("")
+        .toUpperCase()
+    );
+  }, []);
 
-  // Update RGB and HEX when HSL changes
-  useEffect(() => {
-    const newRgb = hslToRgb(hsl.h, hsl.s, hsl.l);
+  // Update RGB, HEX, and history
+  const updateColor = useCallback((newHsl) => {
+    const newRgb = hslToRgb(newHsl.h, newHsl.s, newHsl.l);
+    const newHex = rgbToHex(newRgb.r, newRgb.g, newRgb.b);
     setRgb(newRgb);
-    setHex(rgbToHex(newRgb.r, newRgb.g, newRgb.b));
-  }, [hsl]);
+    setHex(newHex);
+    setHistory((prev) => {
+      const newEntry = { hsl: newHsl, hex: newHex };
+      return [newEntry, ...prev.filter((item) => item.hex !== newHex)].slice(0, 5); // Keep last 5 unique colors
+    });
+  }, [hslToRgb, rgbToHex]);
+
+  useEffect(() => {
+    updateColor(hsl);
+  }, [hsl, updateColor]);
 
   // Handle HSL input changes
-  const handleHslChange = (channel, value) => {
-    let numValue;
-    if (channel === 'h') {
-      numValue = Math.max(0, Math.min(360, parseInt(value) || 0));
-    } else {
-      numValue = Math.max(0, Math.min(100, parseInt(value) || 0));
-    }
-    setHsl(prev => ({ ...prev, [channel]: numValue }));
+  const handleHslChange = (channel) => (e) => {
+    const value = parseInt(e.target.value) || 0;
+    const numValue = channel === "h" ? Math.max(0, Math.min(360, value)) : Math.max(0, Math.min(100, value));
+    setHsl((prev) => ({ ...prev, [channel]: numValue }));
+  };
+
+  // Copy to clipboard
+  const copyToClipboard = (text, type) => {
+    navigator.clipboard.writeText(text);
+    setCopied((prev) => ({ ...prev, [type]: true }));
+    setTimeout(() => setCopied((prev) => ({ ...prev, [type]: false })), 1500);
+  };
+
+  // Reset to default
+  const reset = () => {
+    setHsl({ h: 0, s: 100, l: 50 });
+    setHistory([]);
+  };
+
+  // Select from history
+  const selectFromHistory = (color) => {
+    setHsl(color.hsl);
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 p-8">
-      <div className="max-w-4xl mx-auto bg-white rounded-lg shadow-lg p-6">
-        <h1 className="text-2xl font-bold mb-6 text-gray-800">
-          HSL to HEX Converter
+    <div className="min-h-screen  flex items-center justify-center ">
+      <div className="w-full  bg-white rounded-xl shadow-lg p-6 sm:p-8">
+        <h1 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-6 flex items-center">
+          <FaPalette className="mr-2" /> HSL to HEX Converter
         </h1>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* HSL Input */}
           <div className="space-y-6">
             <div>
-              <h2 className="text-lg font-semibold mb-2">HSL Values</h2>
-              <div className="grid grid-cols-3 gap-4">
-                <div>
-                  <label className="block text-sm text-gray-600">Hue (°)</label>
-                  <input
-                    type="number"
-                    min="0"
-                    max="360"
-                    value={hsl.h}
-                    onChange={(e) => handleHslChange('h', e.target.value)}
-                    className="w-full p-1 border rounded focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm text-gray-600">Saturation (%)</label>
-                  <input
-                    type="number"
-                    min="0"
-                    max="100"
-                    value={hsl.s}
-                    onChange={(e) => handleHslChange('s', e.target.value)}
-                    className="w-full p-1 border rounded focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm text-gray-600">Lightness (%)</label>
-                  <input
-                    type="number"
-                    min="0"
-                    max="100"
-                    value={hsl.l}
-                    onChange={(e) => handleHslChange('l', e.target.value)}
-                    className="w-full p-1 border rounded focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
+              <h2 className="text-lg font-semibold mb-2 text-gray-700">HSL Values</h2>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                {["h", "s", "l"].map((channel) => (
+                  <div key={channel}>
+                    <label className="block text-sm text-gray-600 capitalize">
+                      {channel === "h" ? "Hue (°)" : channel === "s" ? "Saturation (%)" : "Lightness (%)"}
+                    </label>
+                    <input
+                      type="number"
+                      min={channel === "h" ? 0 : 0}
+                      max={channel === "h" ? 360 : 100}
+                      value={hsl[channel]}
+                      onChange={handleHslChange(channel)}
+                      className="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500"
+                    />
+                    <input
+                      type="range"
+                      min={channel === "h" ? 0 : 0}
+                      max={channel === "h" ? 360 : 100}
+                      value={hsl[channel]}
+                      onChange={handleHslChange(channel)}
+                      className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-500 mt-2"
+                    />
+                  </div>
+                ))}
               </div>
             </div>
+
+            {/* History */}
+            {history.length > 0 && (
+              <div className="bg-gray-50 p-4 rounded-lg">
+                <h3 className="text-sm font-semibold text-gray-700 mb-2">Color History</h3>
+                <div className="flex flex-wrap gap-2">
+                  {history.map((color, index) => (
+                    <button
+                      key={index}
+                      onClick={() => selectFromHistory(color)}
+                      className="w-10 h-10 rounded-full shadow-sm hover:scale-110 transition-transform"
+                      style={{ backgroundColor: color.hex }}
+                      title={`HSL: ${color.hsl.h}, ${color.hsl.s}%, ${color.hsl.l}% - HEX: ${color.hex}`}
+                    />
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
 
           {/* HEX and RGB Output */}
           <div className="space-y-4">
             <div className="bg-gray-50 p-4 rounded-lg">
-              <h2 className="text-lg font-semibold mb-2">Converted Color</h2>
+              <h2 className="text-lg font-semibold mb-2 text-gray-700">Converted Color</h2>
               <div
-                className="w-full h-24 rounded-lg shadow-inner mb-2"
+                className="w-full h-32 rounded-lg shadow-inner mb-4 transition-colors"
                 style={{ backgroundColor: hex }}
               />
-              <div className="space-y-2 text-sm">
-                <p>
+              <div className="space-y-3 text-sm">
+                <p className="flex items-center">
                   HEX: {hex}
                   <button
-                    onClick={() => navigator.clipboard.writeText(hex)}
-                    className="ml-2 text-blue-500 hover:underline text-xs"
+                    onClick={() => copyToClipboard(hex, "hex")}
+                    className="ml-2 text-blue-500 hover:text-blue-700 transition-colors"
                   >
-                    Copy
+                    <FaCopy /> {copied.hex ? "Copied!" : "Copy"}
                   </button>
                 </p>
-                <p>
+                <p className="flex items-center">
                   RGB: {rgb.r}, {rgb.g}, {rgb.b}
                   <button
-                    onClick={() => navigator.clipboard.writeText(`${rgb.r}, ${rgb.g}, ${rgb.b}`)}
-                    className="ml-2 text-blue-500 hover:underline text-xs"
+                    onClick={() => copyToClipboard(`${rgb.r}, ${rgb.g}, ${rgb.b}`, "rgb")}
+                    className="ml-2 text-blue-500 hover:text-blue-700 transition-colors"
                   >
-                    Copy
+                    <FaCopy /> {copied.rgb ? "Copied!" : "Copy"}
                   </button>
                 </p>
               </div>
             </div>
+
+            {/* Reset Button */}
+            <button
+              onClick={reset}
+              className="w-full py-2 px-4 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors flex items-center justify-center"
+            >
+              <FaSync className="mr-2" /> Reset
+            </button>
           </div>
         </div>
 
-        {/* Info */}
-        <div className="mt-6 bg-gray-50 p-4 rounded-lg">
-          <h2 className="text-lg font-semibold mb-2">About HSL to HEX Conversion</h2>
-          <div className="text-sm text-gray-700">
-            <p>Converts HSL (perceptual color model) to HEX (web color format):</p>
-            <ul className="list-disc ml-5 mt-1">
-              <li>HSL: Hue (0-360°), Saturation (0-100%), Lightness (0-100%)</li>
-              <li>RGB: Red, Green, Blue (0-255)</li>
-              <li>HEX: 6-digit hexadecimal code</li>
+        {/* Info and Features */}
+        <div className="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
+          <h2 className="text-lg font-semibold text-blue-700 mb-2">About HSL to HEX Conversion</h2>
+          <div className="text-sm text-blue-600 space-y-2">
+            <p>Convert HSL (Hue, Saturation, Lightness) to HEX and RGB color formats:</p>
+            <ul className="list-disc ml-5">
+              <li>Hue: 0-360° (color wheel)</li>
+              <li>Saturation: 0-100% (color intensity)</li>
+              <li>Lightness: 0-100% (brightness)</li>
             </ul>
-            <p className="mt-1">Adjust HSL values to see the corresponding HEX and RGB output.</p>
+            <p>Features:</p>
+            <ul className="list-disc ml-5">
+              <li>Interactive sliders and number inputs</li>
+              <li>Real-time color preview</li>
+              <li>Copy HEX or RGB to clipboard</li>
+              <li>Color history (last 5 unique colors)</li>
+            </ul>
           </div>
         </div>
       </div>
