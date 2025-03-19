@@ -1,295 +1,387 @@
-'use client'
-import React, { useState, useCallback } from 'react'
-import { saveAs } from 'file-saver'
+"use client";
+import React, { useState, useCallback } from "react";
+import { saveAs } from "file-saver";
+import { FaDownload, FaCopy, FaSync, FaPlus, FaTrash } from "react-icons/fa";
 
 const GeoJSONDataGenerator = () => {
-  const [geojsonData, setGeoJsonData] = useState('')
-  const [count, setCount] = useState(5)
-  const [geometryType, setGeometryType] = useState('Point')
+  const [geojsonData, setGeoJsonData] = useState("");
+  const [count, setCount] = useState(5);
+  const [geometryType, setGeometryType] = useState("Point");
   const [properties, setProperties] = useState([
-    { name: 'id', type: 'number' },
-    { name: 'name', type: 'string' }
-  ])
-  const [isCopied, setIsCopied] = useState(false)
-  const [error, setError] = useState('')
+    { name: "id", type: "number" },
+    { name: "name", type: "string" },
+  ]);
+  const [coordinateRange, setCoordinateRange] = useState({ minLat: -90, maxLat: 90, minLon: -180, maxLon: 180 });
+  const [isCopied, setIsCopied] = useState(false);
+  const [error, setError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
-  const MAX_ITEMS = 1000
-  const GEOMETRY_TYPES = ['Point', 'LineString', 'Polygon']
-  const PROPERTY_TYPES = ['number', 'string', 'boolean']
+  const MAX_ITEMS = 1000;
+  const GEOMETRY_TYPES = ["Point", "LineString", "Polygon", "MultiPoint", "MultiLineString", "MultiPolygon"];
+  const PROPERTY_TYPES = ["number", "string", "boolean"];
 
-  // Generate random coordinates
+  // Generate random coordinates within range
   const generateCoordinates = useCallback((type) => {
-    const lat = () => (Math.random() * 180 - 90).toFixed(6)  // -90 to 90
-    const lon = () => (Math.random() * 360 - 180).toFixed(6) // -180 to 180
+    const { minLat, maxLat, minLon, maxLon } = coordinateRange;
+    const lat = () => (Math.random() * (maxLat - minLat) + minLat).toFixed(6);
+    const lon = () => (Math.random() * (maxLon - minLon) + minLon).toFixed(6);
 
     switch (type) {
-      case 'Point':
-        return [parseFloat(lon()), parseFloat(lat())]
-      case 'LineString':
-        return Array.from({ length: 3 }, () => [parseFloat(lon()), parseFloat(lat())])
-      case 'Polygon':
-        const center = [parseFloat(lon()), parseFloat(lat())]
-        const radius = Math.random() * 0.1 // Small radius in degrees
+      case "Point":
+        return [parseFloat(lon()), parseFloat(lat())];
+      case "LineString":
+        return Array.from({ length: 3 }, () => [parseFloat(lon()), parseFloat(lat())]);
+      case "Polygon":
+        const center = [parseFloat(lon()), parseFloat(lat())];
+        const radius = Math.random() * 0.1;
         const points = Array.from({ length: 5 }, (_, i) => {
-          const angle = (i / 5) * 2 * Math.PI
+          const angle = (i / 5) * 2 * Math.PI;
           return [
             parseFloat((center[0] + radius * Math.cos(angle)).toFixed(6)),
-            parseFloat((center[1] + radius * Math.sin(angle)).toFixed(6))
-          ]
-        })
-        return [points.concat([points[0]])] // Closed polygon
+            parseFloat((center[1] + radius * Math.sin(angle)).toFixed(6)),
+          ];
+        });
+        return [points.concat([points[0]])];
+      case "MultiPoint":
+        return Array.from({ length: 4 }, () => [parseFloat(lon()), parseFloat(lat())]);
+      case "MultiLineString":
+        return Array.from({ length: 2 }, () =>
+          Array.from({ length: 3 }, () => [parseFloat(lon()), parseFloat(lat())])
+        );
+      case "MultiPolygon":
+        return Array.from({ length: 2 }, () => {
+          const center = [parseFloat(lon()), parseFloat(lat())];
+          const radius = Math.random() * 0.1;
+          const points = Array.from({ length: 5 }, (_, i) => {
+            const angle = (i / 5) * 2 * Math.PI;
+            return [
+              parseFloat((center[0] + radius * Math.cos(angle)).toFixed(6)),
+              parseFloat((center[1] + radius * Math.sin(angle)).toFixed(6)),
+            ];
+          });
+          return [points.concat([points[0]])];
+        });
       default:
-        return [0, 0]
+        return [0, 0];
     }
-  }, [])
+  }, [coordinateRange]);
 
   // Generate random property values
   const generatePropertyValue = useCallback((type) => {
-    const timestamp = Date.now()
+    const timestamp = Date.now();
     switch (type) {
-      case 'number':
-        return Math.floor(Math.random() * 10000)
-      case 'string':
-        const prefixes = ['place', 'location', 'site', 'area']
-        return `${prefixes[Math.floor(Math.random() * prefixes.length)]}_${timestamp}_${Math.random().toString(36).substring(2, 8)}`
-      case 'boolean':
-        return Math.random() > 0.5
+      case "number":
+        return Math.floor(Math.random() * 10000);
+      case "string":
+        const prefixes = ["place", "location", "site", "area"];
+        return `${prefixes[Math.floor(Math.random() * prefixes.length)]}_${timestamp}_${Math.random().toString(36).substring(2, 8)}`;
+      case "boolean":
+        return Math.random() > 0.5;
       default:
-        return null
+        return null;
     }
-  }, [])
+  }, []);
 
-  const generateGeoJSON = useCallback(() => {
-    const validationError = validateFields()
+  // Generate GeoJSON
+  const generateGeoJSON = useCallback(async () => {
+    const validationError = validateFields();
     if (validationError) {
-      setError(validationError)
-      setGeoJsonData('')
-      console.error('Validation failed:', validationError)
-      return
+      setError(validationError);
+      setGeoJsonData("");
+      return;
     }
 
-    setError('')
-    console.log('Generating', count, 'GeoJSON features...')
+    setError("");
+    setIsLoading(true);
 
     try {
-      const features = Array.from({ length: Math.min(count, MAX_ITEMS) }, () => {
-        const feature = {
-          type: 'Feature',
-          geometry: {
-            type: geometryType,
-            coordinates: generateCoordinates(geometryType)
-          },
-          properties: properties.reduce((obj, prop) => ({
+      const features = Array.from({ length: Math.min(count, MAX_ITEMS) }, () => ({
+        type: "Feature",
+        geometry: {
+          type: geometryType,
+          coordinates: generateCoordinates(geometryType),
+        },
+        properties: properties.reduce(
+          (obj, prop) => ({
             ...obj,
-            [prop.name]: generatePropertyValue(prop.type)
-          }), {})
-        }
-        return feature
-      })
+            [prop.name]: generatePropertyValue(prop.type),
+          }),
+          {}
+        ),
+      }));
 
       const geojson = {
-        type: 'FeatureCollection',
-        features: features
-      }
+        type: "FeatureCollection",
+        features: features,
+      };
 
-      const jsonString = JSON.stringify(geojson, null, 2)
-      setGeoJsonData(jsonString)
-      setIsCopied(false)
-      
-      console.log('Generated features:', features.length, 'items')
+      const jsonString = JSON.stringify(geojson, null, 2);
+      setGeoJsonData(jsonString);
+      setIsCopied(false);
     } catch (err) {
-      setError('Generation failed: ' + err.message)
-      console.error('Generation failed:', err)
+      setError("Generation failed: " + err.message);
+    } finally {
+      setIsLoading(false);
     }
-  }, [count, geometryType, properties, generateCoordinates, generatePropertyValue])
+  }, [count, geometryType, properties, generateCoordinates, generatePropertyValue]);
 
+  // Validation
   const validateFields = () => {
-    if (properties.length === 0) return 'Please add at least one property'
-    if (properties.some(prop => !prop.name.trim())) return 'All property names must be filled'
-    if (new Set(properties.map(p => p.name)).size !== properties.length) return 'Property names must be unique'
-    return ''
-  }
+    if (properties.length === 0) return "Please add at least one property";
+    if (properties.some((prop) => !prop.name.trim())) return "All property names must be filled";
+    if (new Set(properties.map((p) => p.name)).size !== properties.length)
+      return "Property names must be unique";
+    if (
+      coordinateRange.minLat < -90 || coordinateRange.maxLat > 90 ||
+      coordinateRange.minLon < -180 || coordinateRange.maxLon > 180 ||
+      coordinateRange.minLat >= coordinateRange.maxLat ||
+      coordinateRange.minLon >= coordinateRange.maxLon
+    ) return "Invalid coordinate range";
+    return "";
+  };
 
+  // Property management
   const addProperty = () => {
     if (properties.length < 20) {
-      setProperties([...properties, { 
-        name: `prop${properties.length + 1}`, 
-        type: 'number' 
-      }])
+      setProperties([...properties, { name: `prop${properties.length + 1}`, type: "number" }]);
     }
-  }
+  };
 
   const updateProperty = (index, key, value) => {
-    setProperties(properties.map((prop, i) => 
-      i === index ? { ...prop, [key]: value } : prop
-    ))
-  }
+    setProperties(properties.map((prop, i) => (i === index ? { ...prop, [key]: value } : prop)));
+  };
 
   const removeProperty = (index) => {
     if (properties.length > 1) {
-      setProperties(properties.filter((_, i) => i !== index))
+      setProperties(properties.filter((_, i) => i !== index));
     }
-  }
+  };
 
+  // Clipboard and download
   const copyToClipboard = async () => {
     try {
-      await navigator.clipboard.writeText(geojsonData)
-      setIsCopied(true)
-      console.log('GeoJSON copied to clipboard')
-      setTimeout(() => setIsCopied(false), 2000)
+      await navigator.clipboard.writeText(geojsonData);
+      setIsCopied(true);
+      setTimeout(() => setIsCopied(false), 2000);
     } catch (err) {
-      setError('Failed to copy: ' + err.message)
-      console.error('Copy failed:', err.message)
+      setError("Failed to copy: " + err.message);
     }
-  }
+  };
 
   const downloadGeoJSON = () => {
     try {
-      const blob = new Blob([geojsonData], { type: 'application/json;charset=utf-8' })
-      saveAs(blob, `geojson-${Date.now()}.geojson`)
-      console.log('GeoJSON downloaded')
+      const blob = new Blob([geojsonData], { type: "application/json;charset=utf-8" });
+      saveAs(blob, `geojson-${Date.now()}.geojson`);
     } catch (err) {
-      setError('Download failed: ' + err.message)
-      console.error('Download failed:', err.message)
+      setError("Download failed: " + err.message);
     }
-  }
+  };
+
+  // Reset
+  const reset = () => {
+    setGeoJsonData("");
+    setCount(5);
+    setGeometryType("Point");
+    setProperties([{ name: "id", type: "number" }, { name: "name", type: "string" }]);
+    setCoordinateRange({ minLat: -90, maxLat: 90, minLon: -180, maxLon: 180 });
+    setIsCopied(false);
+    setError("");
+  };
 
   return (
-    <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4">
-      <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-3xl">
-        <h1 className="text-2xl font-bold mb-6 text-gray-800">
-          GeoJSON Data Generator
-        </h1>
+    <div className="min-h-screen  flex items-center justify-center ">
+      <div className="w-full  bg-white rounded-xl shadow-lg p-6 sm:p-8">
+        <h1 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-6">GeoJSON Data Generator</h1>
 
         {error && (
-          <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
+          <div className="mb-6 p-4 bg-red-50 border border-red-200 text-red-700 rounded-lg">
             {error}
           </div>
         )}
 
-        <div className="space-y-4 mb-6">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Number of Features (1-{MAX_ITEMS})
-            </label>
-            <input
-              type="number"
-              min="1"
-              max={MAX_ITEMS}
-              value={count}
-              onChange={(e) => {
-                const newCount = Math.max(1, Math.min(MAX_ITEMS, Number(e.target.value) || 1))
-                setCount(newCount)
-                console.log('Count updated to:', newCount)
-              }}
-              className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
+        {/* Input Fields */}
+        <div className="space-y-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Number of Features (1-{MAX_ITEMS})
+              </label>
+              <input
+                type="number"
+                min="1"
+                max={MAX_ITEMS}
+                value={count}
+                onChange={(e) => setCount(Math.max(1, Math.min(MAX_ITEMS, Number(e.target.value) || 1)))}
+                className="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500"
+                disabled={isLoading}
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Geometry Type</label>
+              <select
+                value={geometryType}
+                onChange={(e) => setGeometryType(e.target.value)}
+                className="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500"
+                disabled={isLoading}
+              >
+                {GEOMETRY_TYPES.map((type) => (
+                  <option key={type} value={type}>
+                    {type}
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Geometry Type
-            </label>
-            <select
-              value={geometryType}
-              onChange={(e) => setGeometryType(e.target.value)}
-              className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              {GEOMETRY_TYPES.map(type => (
-                <option key={type} value={type}>
-                  {type}
-                </option>
-              ))}
-            </select>
+          {/* Coordinate Range */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Latitude Range</label>
+              <div className="flex gap-2">
+                <input
+                  type="number"
+                  min="-90"
+                  max="90"
+                  value={coordinateRange.minLat}
+                  onChange={(e) => setCoordinateRange({ ...coordinateRange, minLat: parseFloat(e.target.value) })}
+                  className="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500"
+                  placeholder="Min (-90)"
+                  disabled={isLoading}
+                />
+                <input
+                  type="number"
+                  min="-90"
+                  max="90"
+                  value={coordinateRange.maxLat}
+                  onChange={(e) => setCoordinateRange({ ...coordinateRange, maxLat: parseFloat(e.target.value) })}
+                  className="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500"
+                  placeholder="Max (90)"
+                  disabled={isLoading}
+                />
+              </div>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Longitude Range</label>
+              <div className="flex gap-2">
+                <input
+                  type="number"
+                  min="-180"
+                  max="180"
+                  value={coordinateRange.minLon}
+                  onChange={(e) => setCoordinateRange({ ...coordinateRange, minLon: parseFloat(e.target.value) })}
+                  className="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500"
+                  placeholder="Min (-180)"
+                  disabled={isLoading}
+                />
+                <input
+                  type="number"
+                  min="-180"
+                  max="180"
+                  value={coordinateRange.maxLon}
+                  onChange={(e) => setCoordinateRange({ ...coordinateRange, maxLon: parseFloat(e.target.value) })}
+                  className="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500"
+                  placeholder="Max (180)"
+                  disabled={isLoading}
+                />
+              </div>
+            </div>
           </div>
 
+          {/* Properties */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Properties ({properties.length})
             </label>
-            {properties.map((prop, index) => (
-              <div key={index} className="flex gap-2 mb-2 items-center">
-                <input
-                  type="text"
-                  value={prop.name}
-                  onChange={(e) => updateProperty(index, 'name', e.target.value)}
-                  placeholder="Property Name"
-                  className="flex-1 p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-                <select
-                  value={prop.type}
-                  onChange={(e) => updateProperty(index, 'type', e.target.value)}
-                  className="flex-1 p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                  {PROPERTY_TYPES.map(type => (
-                    <option key={type} value={type}>
-                      {type}
-                    </option>
-                  ))}
-                </select>
-                <button
-                  onClick={() => removeProperty(index)}
-                  disabled={properties.length <= 1}
-                  className="p-2 bg-red-500 text-white rounded-md hover:bg-red-600 disabled:bg-gray-400"
-                >
-                  X
-                </button>
-              </div>
-            ))}
+            <div className="space-y-2 max-h-48 overflow-y-auto">
+              {properties.map((prop, index) => (
+                <div key={index} className="flex items-center gap-2">
+                  <input
+                    type="text"
+                    value={prop.name}
+                    onChange={(e) => updateProperty(index, "name", e.target.value)}
+                    placeholder="Property Name"
+                    className="flex-1 p-2 border rounded-md focus:ring-2 focus:ring-blue-500"
+                    disabled={isLoading}
+                  />
+                  <select
+                    value={prop.type}
+                    onChange={(e) => updateProperty(index, "type", e.target.value)}
+                    className="w-32 p-2 border rounded-md focus:ring-2 focus:ring-blue-500"
+                    disabled={isLoading}
+                  >
+                    {PROPERTY_TYPES.map((type) => (
+                      <option key={type} value={type}>
+                        {type}
+                      </option>
+                    ))}
+                  </select>
+                  <button
+                    onClick={() => removeProperty(index)}
+                    disabled={properties.length <= 1 || isLoading}
+                    className="p-2 bg-red-500 text-white rounded-md hover:bg-red-600 disabled:bg-gray-400 transition-colors"
+                  >
+                    <FaTrash />
+                  </button>
+                </div>
+              ))}
+            </div>
             <button
               onClick={addProperty}
-              disabled={properties.length >= 20}
-              className="mt-2 text-sm text-blue-600 hover:text-blue-800 disabled:text-gray-400"
+              disabled={properties.length >= 20 || isLoading}
+              className="mt-2 flex items-center text-sm text-blue-600 hover:text-blue-800 disabled:text-gray-400 transition-colors"
             >
-              + Add Property {properties.length >= 20 && '(Max 20)'}
+              <FaPlus className="mr-1" /> Add Property {properties.length >= 20 && "(Max 20)"}
             </button>
           </div>
         </div>
 
-        <div className="flex flex-wrap gap-3 mb-6">
+        {/* Action Buttons */}
+        <div className="flex flex-col sm:flex-row gap-4 mt-6">
           <button
             onClick={generateGeoJSON}
-            className="flex-1 bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+            disabled={isLoading}
+            className="flex-1 py-2 px-4 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors flex items-center justify-center"
           >
-            Generate GeoJSON
+            {isLoading ? (
+              <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-white mr-2"></div>
+            ) : null}
+            {isLoading ? "Generating..." : "Generate GeoJSON"}
           </button>
-
           {geojsonData && (
             <>
               <button
                 onClick={copyToClipboard}
-                className={`flex-1 py-2 px-4 rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 ${
+                className={`flex-1 py-2 px-4 rounded-md transition-colors flex items-center justify-center ${
                   isCopied
-                    ? 'bg-green-600 text-white hover:bg-green-700 focus:ring-green-500'
-                    : 'bg-gray-600 text-white hover:bg-gray-700 focus:ring-gray-500'
+                    ? "bg-green-600 text-white hover:bg-green-700"
+                    : "bg-gray-600 text-white hover:bg-gray-700"
                 }`}
               >
-                {isCopied ? 'Copied!' : 'Copy GeoJSON'}
+                <FaCopy className="mr-2" /> {isCopied ? "Copied!" : "Copy GeoJSON"}
               </button>
-
               <button
                 onClick={downloadGeoJSON}
-                className="flex-1 bg-green-600 text-white py-2 px-4 rounded-md hover:bg-green-700 transition-colors focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
+                className="flex-1 py-2 px-4 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors flex items-center justify-center"
               >
-                Download GeoJSON
+                <FaDownload className="mr-2" /> Download GeoJSON
               </button>
-
               <button
-                onClick={() => { setGeoJsonData(''); setError('') }}
-                className="flex-1 bg-red-600 text-white py-2 px-4 rounded-md hover:bg-red-700 transition-colors focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
+                onClick={reset}
+                className="flex-1 py-2 px-4 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors flex items-center justify-center"
               >
-                Clear
+                <FaSync className="mr-2" /> Reset
               </button>
             </>
           )}
         </div>
 
+        {/* Generated Output */}
         {geojsonData && (
-          <div className="mt-4">
+          <div className="mt-6">
             <h2 className="text-lg font-semibold text-gray-700 mb-2">
-              Generated GeoJSON ({count} features):
+              Generated GeoJSON ({count} features)
             </h2>
-            <div className="bg-gray-50 p-4 rounded-md border border-gray-200 max-h-96 overflow-auto">
+            <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 max-h-96 overflow-auto">
               <pre className="text-sm font-mono text-gray-800 whitespace-pre-wrap">
                 {geojsonData}
               </pre>
@@ -299,9 +391,21 @@ const GeoJSONDataGenerator = () => {
             </div>
           </div>
         )}
+
+        {/* Features */}
+        <div className="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
+          <h3 className="font-semibold text-blue-700 mb-2">Features</h3>
+          <ul className="list-disc list-inside text-blue-600 text-sm space-y-1">
+            <li>Support for Point, LineString, Polygon, MultiPoint, MultiLineString, MultiPolygon</li>
+            <li>Customizable coordinate ranges</li>
+            <li>Dynamic property management (up to 20 properties)</li>
+            <li>Copy to clipboard and download as .geojson</li>
+             <li>Real-time validation and error handling</li>
+          </ul>
+        </div>
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default GeoJSONDataGenerator
+export default GeoJSONDataGenerator;
