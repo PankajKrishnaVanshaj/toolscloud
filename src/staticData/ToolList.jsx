@@ -6858,7 +6858,6 @@ const ToolList = [
         desc: "Retrieve and download transcripts from YouTube videos.",
         code: "YouTubeToText",
       },
-      // New 100 Unique Misc Tools
       {
         name: "Random Name Generator",
         slug: "random-name-generator",
