@@ -1,7 +1,6 @@
-// components/HomeAffordabilityCalculator.js
-'use client';
-
-import React, { useState, useEffect } from 'react';
+"use client";
+import React, { useState, useEffect, useCallback } from "react";
+import { FaSync, FaDownload } from "react-icons/fa";
 
 const HomeAffordabilityCalculator = () => {
   const [annualIncome, setAnnualIncome] = useState(50000);
@@ -9,139 +8,256 @@ const HomeAffordabilityCalculator = () => {
   const [downPayment, setDownPayment] = useState(20000);
   const [interestRate, setInterestRate] = useState(5);
   const [loanTerm, setLoanTerm] = useState(30);
+  const [propertyTaxRate, setPropertyTaxRate] = useState(1.2); // Annual % of home value
+  const [insuranceCost, setInsuranceCost] = useState(100); // Monthly
+  const [hoaFees, setHoaFees] = useState(0); // Monthly
+  const [dtiRatio, setDtiRatio] = useState(36); // Debt-to-Income ratio
   const [results, setResults] = useState(null);
 
-  const calculateAffordability = () => {
-    // Assume 36% of income can go towards housing (common guideline)
+  const calculateAffordability = useCallback(() => {
     const monthlyIncome = annualIncome / 12;
-    const maxMonthlyPayment = (monthlyIncome * 0.36) - monthlyExpenses;
+    const maxHousingExpense = (monthlyIncome * (dtiRatio / 100)) - monthlyExpenses;
 
-    // Calculate maximum loan amount using the formula for monthly payment
+    // Monthly costs beyond mortgage payment
+    const monthlyTax = (maxHousingExpense * (propertyTaxRate / 100)) / 12;
+    const additionalMonthlyCosts = monthlyTax + insuranceCost + hoaFees;
+    const maxMonthlyPayment = maxHousingExpense - additionalMonthlyCosts;
+
+    // Prevent negative or invalid payments
+    if (maxMonthlyPayment <= 0) {
+      setResults({
+        maxMonthlyPayment: 0,
+        loanAmount: 0,
+        totalHomePrice: downPayment,
+        monthlyTax,
+        totalMonthlyCost: additionalMonthlyCosts,
+      });
+      return;
+    }
+
+    // Calculate loan amount
     const monthlyRate = interestRate / 100 / 12;
     const numberOfPayments = loanTerm * 12;
-    const loanAmount = 
-      (maxMonthlyPayment * (Math.pow(1 + monthlyRate, numberOfPayments) - 1)) / 
+    const loanAmount =
+      (maxMonthlyPayment * (Math.pow(1 + monthlyRate, numberOfPayments) - 1)) /
       (monthlyRate * Math.pow(1 + monthlyRate, numberOfPayments));
 
-    // Total home price includes down payment
     const totalHomePrice = loanAmount + downPayment;
+    const totalMonthlyCost = maxMonthlyPayment + additionalMonthlyCosts;
 
     setResults({
       maxMonthlyPayment: maxMonthlyPayment.toFixed(2),
       loanAmount: loanAmount.toFixed(2),
       totalHomePrice: totalHomePrice.toFixed(2),
+      monthlyTax: monthlyTax.toFixed(2),
+      totalMonthlyCost: totalMonthlyCost.toFixed(2),
     });
-  };
+  }, [
+    annualIncome,
+    monthlyExpenses,
+    downPayment,
+    interestRate,
+    loanTerm,
+    propertyTaxRate,
+    insuranceCost,
+    hoaFees,
+    dtiRatio,
+  ]);
 
   useEffect(() => {
     calculateAffordability();
-  }, [annualIncome, monthlyExpenses, downPayment, interestRate, loanTerm]);
+  }, [
+    annualIncome,
+    monthlyExpenses,
+    downPayment,
+    interestRate,
+    loanTerm,
+    propertyTaxRate,
+    insuranceCost,
+    hoaFees,
+    dtiRatio,
+  ]);
+
+  // Reset to default values
+  const reset = () => {
+    setAnnualIncome(50000);
+    setMonthlyExpenses(1000);
+    setDownPayment(20000);
+    setInterestRate(5);
+    setLoanTerm(30);
+    setPropertyTaxRate(1.2);
+    setInsuranceCost(100);
+    setHoaFees(0);
+    setDtiRatio(36);
+  };
+
+  // Download results as text
+  const downloadResults = () => {
+    if (!results) return;
+    const text = `
+Home Affordability Results
+-------------------------
+Annual Income: $${annualIncome.toLocaleString()}
+Monthly Expenses: $${monthlyExpenses.toLocaleString()}
+Down Payment: $${downPayment.toLocaleString()}
+Interest Rate: ${interestRate}%
+Loan Term: ${loanTerm} years
+Property Tax Rate: ${propertyTaxRate}%
+Monthly Insurance: $${insuranceCost}
+Monthly HOA Fees: $${hoaFees}
+DTI Ratio: ${dtiRatio}%
+
+Results:
+Maximum Monthly Payment: $${Number(results.maxMonthlyPayment).toLocaleString()}
+Maximum Loan Amount: $${Number(results.loanAmount).toLocaleString()}
+Total Home Price: $${Number(results.totalHomePrice).toLocaleString()}
+Monthly Property Tax: $${Number(results.monthlyTax).toLocaleString()}
+Total Monthly Cost: $${Number(results.totalMonthlyCost).toLocaleString()}
+    `;
+    const blob = new Blob([text], { type: "text/plain" });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = `affordability-results-${Date.now()}.txt`;
+    link.click();
+  };
 
   return (
-    <div className="max-w-2xl mx-auto p-6 bg-white rounded-lg shadow-md">
-      <h1 className="text-2xl font-bold mb-6 text-center">Home Affordability Calculator</h1>
+    <div className="min-h-screen  flex items-center justify-center ">
+      <div className="w-full  bg-white rounded-xl shadow-lg p-6 sm:p-8">
+        <h1 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-6 text-center">
+          Home Affordability Calculator
+        </h1>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Annual Income ($)
-          </label>
-          <input
-            type="number"
-            value={annualIncome}
-            onChange={(e) => setAnnualIncome(Number(e.target.value))}
-            className="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500"
-            min="0"
-          />
+        {/* Inputs */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
+          {[
+            { label: "Annual Income ($)", value: annualIncome, setter: setAnnualIncome, min: 0 },
+            {
+              label: "Monthly Expenses ($)",
+              value: monthlyExpenses,
+              setter: setMonthlyExpenses,
+              min: 0,
+            },
+            { label: "Down Payment ($)", value: downPayment, setter: setDownPayment, min: 0 },
+            {
+              label: "Interest Rate (%)",
+              value: interestRate,
+              setter: setInterestRate,
+              min: 0,
+              max: 20,
+              step: 0.1,
+            },
+            {
+              label: "Loan Term (years)",
+              value: loanTerm,
+              setter: setLoanTerm,
+              min: 1,
+              max: 50,
+            },
+            {
+              label: "Property Tax Rate (%)",
+              value: propertyTaxRate,
+              setter: setPropertyTaxRate,
+              min: 0,
+              max: 10,
+              step: 0.1,
+            },
+            {
+              label: "Monthly Insurance ($)",
+              value: insuranceCost,
+              setter: setInsuranceCost,
+              min: 0,
+            },
+            { label: "Monthly HOA Fees ($)", value: hoaFees, setter: setHoaFees, min: 0 },
+            {
+              label: "DTI Ratio (%)",
+              value: dtiRatio,
+              setter: setDtiRatio,
+              min: 10,
+              max: 50,
+            },
+          ].map(({ label, value, setter, min, max, step = 1 }) => (
+            <div key={label}>
+              <label className="block text-sm font-medium text-gray-700 mb-1">{label}</label>
+              <input
+                type="number"
+                value={value}
+                onChange={(e) => setter(Number(e.target.value))}
+                className="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500"
+                min={min}
+                max={max}
+                step={step}
+              />
+            </div>
+          ))}
         </div>
 
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Monthly Expenses ($)
-          </label>
-          <input
-            type="number"
-            value={monthlyExpenses}
-            onChange={(e) => setMonthlyExpenses(Number(e.target.value))}
-            className="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500"
-            min="0"
-          />
+        {/* Results */}
+        {results && (
+          <div className="bg-gray-50 p-4 rounded-lg mb-6">
+            <h2 className="text-lg font-semibold mb-2 text-gray-800">Results</h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <p>
+                Maximum Monthly Payment:{" "}
+                <span className="font-bold text-green-600">
+                  ${Number(results.maxMonthlyPayment).toLocaleString()}
+                </span>
+              </p>
+              <p>
+                Maximum Loan Amount:{" "}
+                <span className="font-bold text-green-600">
+                  ${Number(results.loanAmount).toLocaleString()}
+                </span>
+              </p>
+              <p>
+                Total Home Price:{" "}
+                <span className="font-bold text-green-600">
+                  ${Number(results.totalHomePrice).toLocaleString()}
+                </span>
+              </p>
+              <p>
+                Monthly Property Tax:{" "}
+                <span className="font-bold text-green-600">
+                  ${Number(results.monthlyTax).toLocaleString()}
+                </span>
+              </p>
+              <p>
+                Total Monthly Cost:{" "}
+                <span className="font-bold text-green-600">
+                  ${Number(results.totalMonthlyCost).toLocaleString()}
+                </span>
+              </p>
+            </div>
+          </div>
+        )}
+
+        {/* Action Buttons */}
+        <div className="flex flex-col sm:flex-row gap-4 mb-6">
+          <button
+            onClick={reset}
+            className="flex-1 py-2 px-4 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors flex items-center justify-center"
+          >
+            <FaSync className="mr-2" /> Reset
+          </button>
+          <button
+            onClick={downloadResults}
+            disabled={!results}
+            className="flex-1 py-2 px-4 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors flex items-center justify-center"
+          >
+            <FaDownload className="mr-2" /> Download Results
+          </button>
         </div>
 
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Down Payment ($)
-          </label>
-          <input
-            type="number"
-            value={downPayment}
-            onChange={(e) => setDownPayment(Number(e.target.value))}
-            className="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500"
-            min="0"
-          />
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Interest Rate (%)
-          </label>
-          <input
-            type="number"
-            value={interestRate}
-            onChange={(e) => setInterestRate(Number(e.target.value))}
-            className="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500"
-            min="0"
-            max="20"
-            step="0.1"
-          />
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Loan Term (years)
-          </label>
-          <input
-            type="number"
-            value={loanTerm}
-            onChange={(e) => setLoanTerm(Number(e.target.value))}
-            className="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500"
-            min="1"
-            max="50"
-          />
+        {/* Notes */}
+        <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
+          <h3 className="font-semibold text-blue-700 mb-2">Notes</h3>
+          <p className="text-sm text-blue-600">
+            This estimate uses a customizable debt-to-income (DTI) ratio and includes property taxes,
+            insurance, and HOA fees. Actual affordability may vary due to credit score, lender
+            policies, and other factors. Consult a financial advisor for personalized advice.
+          </p>
         </div>
       </div>
-
-      {results && (
-        <div className="bg-gray-50 p-4 rounded-md">
-          <h2 className="text-lg font-semibold mb-2">Results</h2>
-          <div className="space-y-2">
-            <p>
-              Maximum Monthly Payment:{' '}
-              <span className="font-bold text-green-600">
-                ${Number(results.maxMonthlyPayment).toLocaleString()}
-              </span>
-            </p>
-            <p>
-              Maximum Loan Amount:{' '}
-              <span className="font-bold text-green-600">
-                ${Number(results.loanAmount).toLocaleString()}
-              </span>
-            </p>
-            <p>
-              Total Home Price You Can Afford:{' '}
-              <span className="font-bold text-green-600">
-                ${Number(results.totalHomePrice).toLocaleString()}
-              </span>
-            </p>
-          </div>
-        </div>
-      )}
-
-      <p className="text-xs text-gray-500 mt-4">
-        Note: This is an estimate based on a 36% debt-to-income ratio guideline. 
-        Actual affordability may vary due to credit score, taxes, insurance, 
-        and lender requirements. Consult a financial advisor for accurate advice.
-      </p>
     </div>
   );
 };

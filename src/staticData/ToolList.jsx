@@ -6164,7 +6164,6 @@ const ToolList = [
         desc: "Plan your retirement savings and estimate future value.",
         code: "RetirementCalculator",
       },
-      // New 50 Finance Tools
       {
         name: "Compound Interest Calculator",
         slug: "compound-interest-calculator",
