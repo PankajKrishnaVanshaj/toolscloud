@@ -13,6 +13,7 @@ import {
 const TextShuffler = () => {
   const [inputText, setInputText] = useState("");
   const [shuffledText, setShuffledText] = useState("");
+  const [changes, setChanges] = useState([]); // New state for changes
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [options, setOptions] = useState({
@@ -62,7 +63,7 @@ const TextShuffler = () => {
           shuffledLine = shuffleArray(items, options.seed, options.shuffleStrength).join("");
           break;
         case "words":
-          items = line.split(/\s+/).filter(w => w.length > 0);
+          items = line.split(/\s+/).filter((w) => w.length > 0);
           shuffledLine = shuffleArray(items, options.seed, options.shuffleStrength).join(" ");
           break;
         case "lines":
@@ -72,8 +73,10 @@ const TextShuffler = () => {
           if (!options.customDelimiter) {
             return { error: "Please specify a custom delimiter" };
           }
-          items = line.split(options.customDelimiter).filter(i => i.length > 0);
-          shuffledLine = shuffleArray(items, options.seed, options.shuffleStrength).join(options.customDelimiter);
+          items = line.split(options.customDelimiter).filter((i) => i.length > 0);
+          shuffledLine = shuffleArray(items, options.seed, options.shuffleStrength).join(
+            options.customDelimiter
+          );
           break;
         default:
           return { error: "Invalid shuffle type" };
@@ -128,10 +131,11 @@ const TextShuffler = () => {
   const handleShuffle = async () => {
     setError("");
     setShuffledText("");
+    setChanges([]); // Reset changes
     setIsLoading(true);
 
     try {
-      await new Promise(resolve => setTimeout(resolve, 300));
+      await new Promise((resolve) => setTimeout(resolve, 300));
       const result = shuffleText(inputText);
 
       if (result.error) {
@@ -140,6 +144,7 @@ const TextShuffler = () => {
       }
 
       setShuffledText(result.shuffled);
+      setChanges(result.changes); // Store changes in state
     } catch (err) {
       setError("An error occurred while shuffling the text");
     } finally {
@@ -150,6 +155,7 @@ const TextShuffler = () => {
   const reset = () => {
     setInputText("");
     setShuffledText("");
+    setChanges([]); // Reset changes
     setError("");
     setOptions({
       shuffleType: "words",
@@ -163,7 +169,7 @@ const TextShuffler = () => {
   };
 
   const handleOptionChange = (option, value) => {
-    setOptions(prev => ({ ...prev, [option]: value }));
+    setOptions((prev) => ({ ...prev, [option]: value }));
   };
 
   const exportShuffledText = () => {
@@ -252,7 +258,9 @@ const TextShuffler = () => {
                   onChange={(e) => handleOptionChange("shuffleStrength", parseFloat(e.target.value))}
                   className="w-full"
                 />
-                <span className="text-sm text-gray-500">{(options.shuffleStrength * 100).toFixed(0)}%</span>
+                <span className="text-sm text-gray-500">
+                  {(options.shuffleStrength * 100).toFixed(0)}%
+                </span>
               </div>
               <label className="flex items-center space-x-2 text-sm text-gray-600">
                 <input
@@ -335,7 +343,7 @@ const TextShuffler = () => {
             <div className="mt-4 text-sm text-gray-600">
               <p className="font-medium">Changes Applied:</p>
               <ul className="list-disc list-inside mt-2">
-                {shuffleText(inputText).changes.map((change, index) => (
+                {changes.map((change, index) => (
                   <li key={index}>{change}</li>
                 ))}
               </ul>

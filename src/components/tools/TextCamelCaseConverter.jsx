@@ -33,10 +33,24 @@ const TextCamelCaseConverter = () => {
 
     let separators;
     switch (options.separator) {
-      case "underscore": separators = /_+|_+\s*/g; break;
-      case "hyphen": separators = /-+|-+\s*/g; break;
-      case "custom": separators = new RegExp(`${options.customSeparator}+|${options.customSeparator}+\\s*`, "g"); break;
-      default: separators = /\s+/g; // space
+      case "underscore":
+        separators = /_+|_+\s*/g;
+        break;
+      case "hyphen":
+        separators = /-+|-+\s*/g;
+        break;
+      case "custom":
+        if (!options.customSeparator) {
+          // Fallback to space if custom separator is empty
+          separators = /\s+/g;
+        } else {
+          // Escape special regex characters in customSeparator and create the regex
+          const escapedSeparator = options.customSeparator.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+          separators = new RegExp(`${escapedSeparator}+|${escapedSeparator}+\\s*`, "g");
+        }
+        break;
+      default:
+        separators = /\s+/g; // space
     }
 
     let result = text

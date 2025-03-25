@@ -243,7 +243,6 @@ const TextCaseConverter = () => {
             <li>Text reversal and space normalization</li>
             <li>Copy, export, and undo functionality</li>
             <li>History tracking of last 5 operations</li>
-            <li>Responsive design for all devices</li>
           </ul>
         </div>
       </div>

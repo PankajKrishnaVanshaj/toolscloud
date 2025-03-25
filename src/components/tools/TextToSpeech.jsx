@@ -316,7 +316,6 @@ const TextToSpeech = () => {
             <li>Real-time word highlighting</li>
             <li>Save, copy, and export text</li>
             <li>History of last 5 speech instances</li>
-            <li>Responsive design for all devices</li>
           </ul>
         </div>
       </div>

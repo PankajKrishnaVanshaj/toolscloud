@@ -352,7 +352,6 @@ const TextProfanityFilter = () => {
             <li>Case sensitivity and whole word matching</li>
             <li>Preserve first letter option</li>
             <li>Export results and history tracking</li>
-            <li>Responsive design for all devices</li>
           </ul>
           <p className="mt-2 text-xs text-red-600">Note: Profanity list is limited; use a library like 'bad-words' for production.</p>
         </div>

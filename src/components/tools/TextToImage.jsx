@@ -529,7 +529,6 @@ const TextToImage = () => {
             <li>Advanced styling (gradient, shadow, border, opacity, transform)</li>
             <li>Undo/redo history (up to 10 steps)</li>
             <li>Export as PNG/JPEG or copy to clipboard</li>
-            <li>Responsive design for all devices</li>
           </ul>
         </div>
 

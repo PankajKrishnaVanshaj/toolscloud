@@ -389,7 +389,6 @@ const TextKeywordExtractor = () => {
             <li>Support for n-grams and custom stop words</li>
             <li>Undo/redo history (up to 10 steps)</li>
             <li>Import/export text and keywords</li>
-            <li>Responsive design for all devices</li>
           </ul>
         </div>
       </div>

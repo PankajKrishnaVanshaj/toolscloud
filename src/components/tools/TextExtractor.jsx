@@ -329,25 +329,27 @@ const TextExtractor = () => {
         )}
 
         {/* Output Display */}
-        {extractedText.length > 0 && (
+        {extractedText && (
           <div className="mt-8 p-6 bg-orange-50 rounded-lg">
             <h2 className="text-xl font-semibold text-gray-800 text-center">
               Extracted Text ({options.extractType}, {extractText(inputText).matchCount} matches)
             </h2>
             <div className="mt-3 text-lg text-gray-700">
-              {options.outputFormat === "list" ? (
+              {options.outputFormat === "list" && Array.isArray(extractedText) ? (
                 <ul className="list-disc list-inside space-y-1 max-h-64 overflow-auto">
                   {extractedText.map((item, index) => (
                     <li key={index}>{item}</li>
                   ))}
                 </ul>
               ) : (
-                <pre className="whitespace-pre-wrap break-all max-h-64 overflow-auto">{extractedText}</pre>
+                <pre className="whitespace-pre-wrap break-all max-h-64 overflow-auto">
+                  {typeof extractedText === "string" ? extractedText : JSON.stringify(extractedText, null, 2)}
+                </pre>
               )}
             </div>
             <button
               onClick={() => navigator.clipboard.writeText(
-                options.outputFormat === "list" ? extractedText.join("\n") : extractedText
+                options.outputFormat === "list" && Array.isArray(extractedText) ? extractedText.join("\n") : extractedText
               )}
               className="mt-4 w-full py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-all font-semibold"
             >

@@ -21,12 +21,12 @@ const TextDecoder = () => {
     decodeType: "base64", // base64, url, hex, html, rot13, binary
     applyToLines: false,
     trimWhitespace: true,
-    validateInput: true,  // Validate input format before decoding
+    validateInput: true, // Validate input format before decoding
   });
 
   const decodeText = (text) => {
     if (!text.trim()) {
-      return { error: "Please enter some text to decode" };
+      return { error: "Please enter some text to decode", changes: [] };
     }
 
     let resultLines = options.applyToLines ? text.split("\n") : [text];
@@ -74,10 +74,10 @@ const TextDecoder = () => {
             decodedLine = decodedLine.split(" ").map(bin => String.fromCharCode(parseInt(bin, 2))).join("");
             break;
           default:
-            return { error: "Invalid decode type" };
+            return { error: "Invalid decode type", changes: [] };
         }
       } catch (err) {
-        return { error: `Decoding failed: ${err.message}` };
+        return { error: `Decoding failed: ${err.message}`, changes: [] };
       }
 
       decodedLines.push(decodedLine);
@@ -173,8 +173,8 @@ const TextDecoder = () => {
   const debouncedSetInputText = useCallback(debounce((value) => setInputText(value), 300), []);
 
   return (
-    <div className="min-h-screen flex items-center justify-center ">
-      <div className="bg-white p-8 rounded-2xl shadow-xl w-full">
+    <div className="min-h-screen flex items-center justify-center">
+      <div className="bg-white p-8 rounded-2xl shadow-xl w-full ">
         <h1 className="text-4xl font-bold mb-8 text-center text-gray-900">
           Advanced Text Decoder
         </h1>
@@ -298,9 +298,13 @@ const TextDecoder = () => {
             <div className="mt-4 text-sm text-gray-600">
               <p className="font-medium">Changes Applied:</p>
               <ul className="list-disc list-inside mt-2">
-                {decodeText(inputText).changes.map((change, index) => (
-                  <li key={index}>{change}</li>
-                ))}
+                {decodeText(inputText).changes && decodeText(inputText).changes.length > 0 ? (
+                  decodeText(inputText).changes.map((change, index) => (
+                    <li key={index}>{change}</li>
+                  ))
+                ) : (
+                  <li>No changes available</li>
+                )}
               </ul>
             </div>
             <button

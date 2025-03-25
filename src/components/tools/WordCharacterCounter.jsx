@@ -248,7 +248,6 @@ const WordCharacterCounter = () => {
             <li>Estimates reading/speaking time and readability (Flesch Score)</li>
             <li>Customizable counting with case, punctuation, and delimiters</li>
             <li>Word frequency analysis and export functionality</li>
-            <li>Responsive design for all devices</li>
           </ul>
         </div>
       </div>

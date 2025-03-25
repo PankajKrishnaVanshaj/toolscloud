@@ -349,7 +349,6 @@ const TextReverser = () => {
             <li>Custom options (case, whitespace, punctuation)</li>
             <li>Undo/redo history (up to 10 steps)</li>
             <li>Copy or download reversed text</li>
-            <li>Responsive design for all devices</li>
           </ul>
         </div>
       </div>

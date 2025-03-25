@@ -133,7 +133,7 @@ const TextReadabilityScorer = () => {
       `Input Text:\n${inputText}`,
       options.includeStats && `Basic Statistics:\nWords: ${results.wordCount}\nSentences: ${results.sentenceCount}\nSyllables: ${results.syllableCount}\nComplex Words: ${results.complexWords}`,
       `Readability Scores:\nFlesch Reading Ease: ${results.scores.fleschReadingEase}\nFlesch-Kincaid Grade: ${results.scores.fleschKincaidGrade}\nGunning Fog: ${results.scores.gunningFog}\nSMOG Index: ${results.scores.smogIndex}`,
-      options.detailedBreakdown && `Detailed Breakdown:\nWords:\n${results.details.words.map(w => `${w.word}: ${w.syllables}`).join("\n")}\nSentences:\n${results.details.sentences.join("\n")}`,
+      options.detailedBreakdown && results.details && `Detailed Breakdown:\nWords:\n${results.details.words.map(w => `${w.word}: ${w.syllables}`).join("\n")}\nSentences:\n${results.details.sentences.join("\n")}`,
     ].filter(Boolean).join("\n\n");
 
     const blob = new Blob([content], { type: "text/plain" });
@@ -145,8 +145,8 @@ const TextReadabilityScorer = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center ">
-      <div className="bg-white p-6 sm:p-8 rounded-2xl shadow-xl w-full ">
+    <div className="min-h-screen flex items-center justify-center">
+      <div className="bg-white p-6 sm:p-8 rounded-2xl shadow-xl w-full">
         <h1 className="text-3xl sm:text-4xl font-bold mb-6 sm:mb-8 text-center text-gray-900">
           Advanced Text Readability Scorer
         </h1>
@@ -281,7 +281,7 @@ const TextReadabilityScorer = () => {
                 </ul>
               </div>
             </div>
-            {options.detailedBreakdown && (
+            {options.detailedBreakdown && results.details && (
               <div className="mt-4 space-y-4">
                 <div>
                   <p className="text-sm font-medium text-gray-600">Word Breakdown:</p>

@@ -142,7 +142,7 @@ const ChemicalEquationBalancer = () => {
 
   return (
     <div className="min-h-screen  flex items-center justify-center ">
-      <div className="w-full max-w-2xl bg-white rounded-xl shadow-lg p-6 sm:p-8">
+      <div className="w-full bg-white rounded-xl shadow-lg p-6 sm:p-8">
         <h2 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-6">Chemical Equation Balancer</h2>
 
         {/* Input Field */}

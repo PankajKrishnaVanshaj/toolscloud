@@ -13,6 +13,7 @@ import {
 const TextTrimmer = () => {
   const [inputText, setInputText] = useState("");
   const [trimmedText, setTrimmedText] = useState("");
+  const [trimResult, setTrimResult] = useState(null); // New state for trim result
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isCopied, setIsCopied] = useState(false);
@@ -191,6 +192,7 @@ const TextTrimmer = () => {
   const handleTrim = useCallback(async () => {
     setError("");
     setTrimmedText("");
+    setTrimResult(null);
     setIsLoading(true);
 
     try {
@@ -201,6 +203,7 @@ const TextTrimmer = () => {
         setError(result.error);
       } else {
         setTrimmedText(result.trimmed);
+        setTrimResult(result);
         setHistory(prev => [...prev, { input: inputText, output: result.trimmed, options: { ...options } }].slice(-5));
       }
     } catch (err) {
@@ -213,6 +216,7 @@ const TextTrimmer = () => {
   const reset = () => {
     setInputText("");
     setTrimmedText("");
+    setTrimResult(null);
     setError("");
     setIsCopied(false);
     setOptions({
@@ -245,7 +249,7 @@ const TextTrimmer = () => {
   };
 
   const exportTrimmedText = () => {
-    const content = `Input: ${inputText}\nTrimmed: ${trimmedText}\n\nChanges:\n${trimText(inputText).changes.join("\n")}`;
+    const content = `Input: ${inputText}\nTrimmed: ${trimmedText}\n\nChanges:\n${trimResult ? trimResult.changes.join("\n") : "No changes available"}`;
     const blob = new Blob([content], { type: "text/plain" });
     const link = document.createElement("a");
     link.href = URL.createObjectURL(blob);
@@ -412,7 +416,7 @@ const TextTrimmer = () => {
         )}
 
         {/* Output Display */}
-        {trimmedText && (
+        {trimmedText && trimResult && (
           <div className="mt-8 p-6 bg-teal-50 rounded-lg">
             <h2 className="text-xl font-semibold text-gray-800 text-center">
               Trimmed Text
@@ -423,7 +427,7 @@ const TextTrimmer = () => {
             <div className="mt-4 text-sm text-gray-600">
               <p className="font-medium">Changes Applied:</p>
               <ul className="list-disc list-inside mt-2">
-                {trimText(inputText).changes.map((change, index) => (
+                {trimResult.changes.map((change, index) => (
                   <li key={index}>{change}</li>
                 ))}
               </ul>
@@ -457,6 +461,7 @@ const TextTrimmer = () => {
                       setInputText(entry.input);
                       setTrimmedText(entry.output);
                       setOptions(entry.options);
+                      setTrimResult(trimText(entry.input)); // Restore the full result
                     }}
                     className="text-teal-500 hover:text-teal-700"
                   >

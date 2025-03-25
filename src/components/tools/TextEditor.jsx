@@ -36,19 +36,24 @@ const TextEditor = () => {
   const [historyIndex, setHistoryIndex] = useState(0);
   const editorRef = useRef(null);
 
-  // Ensure initial history reflects the starting text
+  // Initialize editor with left alignment and sync initial text
   useEffect(() => {
     if (editorRef.current) {
+      editorRef.current.style.textAlign = "left";
+      editorRef.current.style.direction = "ltr";
       editorRef.current.innerHTML = text;
     }
   }, []);
 
-  const updateHistory = useCallback((newText) => {
-    const newHistory = history.slice(0, historyIndex + 1);
-    newHistory.push(newText);
-    setHistory(newHistory.slice(-20)); // Limit history to last 20 changes
-    setHistoryIndex(newHistory.length - 1);
-  }, [history, historyIndex]);
+  const updateHistory = useCallback(
+    (newText) => {
+      const newHistory = history.slice(0, historyIndex + 1);
+      newHistory.push(newText);
+      setHistory(newHistory.slice(-20)); // Limit history to last 20 changes
+      setHistoryIndex(newHistory.length - 1);
+    },
+    [history, historyIndex]
+  );
 
   const handleTextChange = (e) => {
     const newText = e.target.innerHTML;
@@ -58,20 +63,22 @@ const TextEditor = () => {
 
   const handleUndo = () => {
     if (historyIndex > 0) {
-      setHistoryIndex(historyIndex - 1);
-      setText(history[historyIndex - 1]);
+      const newIndex = historyIndex - 1;
+      setHistoryIndex(newIndex);
+      setText(history[newIndex]);
       if (editorRef.current) {
-        editorRef.current.innerHTML = history[historyIndex - 1];
+        editorRef.current.innerHTML = history[newIndex];
       }
     }
   };
 
   const handleRedo = () => {
     if (historyIndex < history.length - 1) {
-      setHistoryIndex(historyIndex + 1);
-      setText(history[historyIndex + 1]);
+      const newIndex = historyIndex + 1;
+      setHistoryIndex(newIndex);
+      setText(history[newIndex]);
       if (editorRef.current) {
-        editorRef.current.innerHTML = history[historyIndex + 1];
+        editorRef.current.innerHTML = history[newIndex];
       }
     }
   };
@@ -149,8 +156,8 @@ const TextEditor = () => {
   };
 
   return (
-    <div className="min-h-screen  flex items-center justify-center">
-      <div className="w-full  bg-white shadow-lg rounded-2xl p-4 sm:p-6">
+    <div className="min-h-screen flex items-center justify-center">
+      <div className="w-full bg-white shadow-lg rounded-2xl p-4 sm:p-6">
         <h1 className="text-2xl sm:text-3xl font-bold mb-4 sm:mb-6 text-center text-gray-900">
           Advanced Text Editor
         </h1>
@@ -386,8 +393,12 @@ const TextEditor = () => {
 
         {/* Stats */}
         <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 text-xs sm:text-sm text-gray-600 mb-2 justify-center">
-          <p>Words: <span className="text-blue-600">{wordCount()}</span></p>
-          <p>Characters: <span className="text-blue-600">{charCount()}</span></p>
+          <p>
+            Words: <span className="text-blue-600">{wordCount()}</span>
+          </p>
+          <p>
+            Characters: <span className="text-blue-600">{charCount()}</span>
+          </p>
         </div>
 
         {/* Editor */}
@@ -397,18 +408,18 @@ const TextEditor = () => {
           className="w-full h-48 sm:h-64 p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 overflow-auto bg-white text-sm sm:text-base"
           contentEditable
           onInput={handleTextChange}
-          dangerouslySetInnerHTML={{ __html: text }}
         ></div>
 
         {/* Features Info */}
         <div className="mt-6 p-4 bg-blue-100 rounded-lg border border-blue-300">
-          <h3 className="font-semibold text-blue-700 text-sm sm:text-base">Features</h3>
+          <h3 className="font-semibold text-blue-700 text-sm sm:text-base">
+            Features
+          </h3>
           <ul className="list-disc list-inside text-blue-600 text-xs sm:text-sm">
             <li>Rich text formatting (bold, italic, lists, etc.)</li>
             <li>Advanced styling (headings, code, blockquote, images)</li>
             <li>Undo/redo with history tracking</li>
             <li>Import/export as HTML</li>
-            <li>Responsive design for all devices</li>
           </ul>
         </div>
       </div>

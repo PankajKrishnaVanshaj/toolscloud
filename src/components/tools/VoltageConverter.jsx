@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useEffect } from "react";
 import { FaSync, FaHistory } from "react-icons/fa";
 
 const VoltageConverter = () => {
@@ -9,17 +9,19 @@ const VoltageConverter = () => {
   const [currentUnit, setCurrentUnit] = useState("A");
   const [history, setHistory] = useState([]);
   const [decimalPlaces, setDecimalPlaces] = useState(4);
+  const [results, setResults] = useState({});
+  const [power, setPower] = useState(null);
 
   // Conversion factors to Volts (V)
   const conversionFactors = {
-    V: 1, // Volt
-    mV: 1e-3, // Millivolt
-    uV: 1e-6, // Microvolt
-    nV: 1e-9, // Nanovolt
-    kV: 1e3, // Kilovolt
-    MV: 1e6, // Megavolt
-    abV: 1e-8, // Abvolt
-    statV: 299.792458, // Statvolt
+    V: 1,
+    mV: 1e-3,
+    uV: 1e-6,
+    nV: 1e-9,
+    kV: 1e3,
+    MV: 1e6,
+    abV: 1e-8,
+    statV: 299.792458,
   };
 
   const unitDisplayNames = {
@@ -35,11 +37,11 @@ const VoltageConverter = () => {
 
   // Current conversion factors to Amperes (A)
   const currentConversion = {
-    A: 1, // Ampere
-    mA: 1e-3, // Milliampere
-    uA: 1e-6, // Microampere
-    nA: 1e-9, // Nanoampere
-    kA: 1e3, // Kiloampere
+    A: 1,
+    mA: 1e-3,
+    uA: 1e-6,
+    nA: 1e-9,
+    kA: 1e3,
   };
 
   const currentDisplayNames = {
@@ -55,27 +57,51 @@ const VoltageConverter = () => {
     (inputValue, fromUnit) => {
       if (!inputValue || isNaN(inputValue)) return {};
       const valueInVolts = inputValue * conversionFactors[fromUnit];
-      const result = Object.keys(conversionFactors).reduce((acc, unit) => {
+      return Object.keys(conversionFactors).reduce((acc, unit) => {
         acc[unit] = valueInVolts / conversionFactors[unit];
         return acc;
       }, {});
-      // Add to history
-      setHistory((prev) => [
-        { voltage: inputValue, unit: fromUnit, result },
-        ...prev.slice(0, 4),
-      ]); // Keep last 5 entries
-      return result;
     },
     [conversionFactors]
   );
 
   // Calculate power
-  const calculatePower = useCallback(() => {
-    if (!value || !current || isNaN(value) || isNaN(current)) return null;
-    const voltageInVolts = value * conversionFactors[unit];
-    const currentInAmperes = current * currentConversion[currentUnit];
-    return voltageInVolts * currentInAmperes; // Power in Watts
-  }, [value, unit, current, currentUnit, conversionFactors, currentConversion]);
+  const calculatePower = useCallback(
+    (voltage, voltUnit, curr, currUnit) => {
+      if (!voltage || !curr || isNaN(voltage) || isNaN(curr)) return null;
+      const voltageInVolts = voltage * conversionFactors[voltUnit];
+      const currentInAmperes = curr * currentConversion[currUnit];
+      return voltageInVolts * currentInAmperes; // Power in Watts
+    },
+    [conversionFactors, currentConversion]
+  );
+
+  // Update results and history when inputs change
+  useEffect(() => {
+    const newResults = convertValue(value, unit);
+    // Only update results if they differ
+    if (JSON.stringify(newResults) !== JSON.stringify(results)) {
+      setResults(newResults);
+    }
+
+    // Only update history if value is valid and has changed
+    if (
+      value &&
+      !isNaN(value) &&
+      (history.length === 0 || history[0].voltage !== value || history[0].unit !== unit)
+    ) {
+      setHistory((prev) => [
+        { voltage: value, unit, result: newResults },
+        ...prev.slice(0, 4),
+      ]);
+    }
+
+    const newPower = calculatePower(value, unit, current, currentUnit);
+    // Only update power if it differs
+    if (newPower !== power) {
+      setPower(newPower);
+    }
+  }, [value, unit, current, currentUnit, convertValue, calculatePower, results, power, history]);
 
   // Reset inputs
   const reset = () => {
@@ -85,14 +111,13 @@ const VoltageConverter = () => {
     setCurrentUnit("A");
     setHistory([]);
     setDecimalPlaces(4);
+    setResults({});
+    setPower(null);
   };
 
-  const results = convertValue(value, unit);
-  const power = calculatePower();
-
   return (
-    <div className="min-h-screen  flex items-center justify-center ">
-      <div className="w-full  bg-white rounded-xl shadow-lg p-6 sm:p-8">
+    <div className="min-h-screen flex items-center justify-center">
+      <div className="w-full bg-white rounded-xl shadow-lg p-6 sm:p-8">
         <h1 className="text-2xl sm:text-3xl font-bold text-center mb-6 text-gray-800">
           Voltage & Power Converter
         </h1>
@@ -173,9 +198,9 @@ const VoltageConverter = () => {
           </div>
 
           {/* Results Section */}
-          {(value || power) && (
+          {(Object.keys(results).length > 0 || power !== null) && (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {value && (
+              {Object.keys(results).length > 0 && (
                 <div className="p-4 bg-gray-50 rounded-md">
                   <h2 className="text-lg font-semibold mb-2">Voltage Conversions</h2>
                   <div className="grid grid-cols-2 gap-2 text-sm">
@@ -189,7 +214,7 @@ const VoltageConverter = () => {
                 </div>
               )}
 
-              {power && (
+              {power !== null && (
                 <div className="p-4 bg-blue-50 rounded-md">
                   <h2 className="text-lg font-semibold mb-2">Power Calculations</h2>
                   <div className="text-sm">

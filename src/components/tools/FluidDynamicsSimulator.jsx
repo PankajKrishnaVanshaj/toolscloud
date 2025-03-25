@@ -1,28 +1,27 @@
 "use client";
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { FaPlay, FaPause, FaSync, FaDownload } from "react-icons/fa";
-import html2canvas from "html2canvas"; // For downloading simulation snapshot
+import html2canvas from "html2canvas";
 
 const FluidDynamicsSimulator = () => {
   const [isRunning, setIsRunning] = useState(false);
   const [viscosity, setViscosity] = useState(0.02);
   const [inflowVelocity, setInflowVelocity] = useState(0.1);
-  const [displayMode, setDisplayMode] = useState("speed"); // "speed", "density", "vorticity"
+  const [displayMode, setDisplayMode] = useState("speed");
   const [obstacleSize, setObstacleSize] = useState(1);
   const canvasRef = useRef(null);
 
-  // Simulation parameters
-  const width = 100; // Grid width
-  const height = 50; // Grid height
-  const scale = 6; // Pixels per grid cell
+  const width = 100;
+  const height = 50;
+  const scale = 6;
   const canvasWidth = width * scale;
   const canvasHeight = height * scale;
 
-  // Lattice Boltzmann variables
   const [f, setF] = useState(() => initializeFluid());
+  const [ux, setUx] = useState(() => Array(height).fill().map(() => Array(width).fill(0)));
+  const [uy, setUy] = useState(() => Array(height).fill().map(() => Array(width).fill(0)));
   const [obstacles, setObstacles] = useState(() => new Set());
 
-  // D2Q9 lattice velocities and weights
   const e = [
     [0, 0], [1, 0], [0, 1], [-1, 0], [0, -1],
     [1, 1], [-1, 1], [-1, -1], [1, -1],
@@ -35,13 +34,12 @@ const FluidDynamicsSimulator = () => {
       .map(() => Array(width).fill().map(() => Array(9).fill(1 / 9)));
   }
 
-  // Simulation step
   const stepSimulation = useCallback(() => {
     setF((prevF) => {
       const newF = prevF.map((row) => row.map((cell) => [...cell]));
       const rho = Array(height).fill().map(() => Array(width).fill(0));
-      const ux = Array(height).fill().map(() => Array(width).fill(0));
-      const uy = Array(height).fill().map(() => Array(width).fill(0));
+      const newUx = Array(height).fill().map(() => Array(width).fill(0));
+      const newUy = Array(height).fill().map(() => Array(width).fill(0));
 
       // Compute macroscopic variables
       for (let y = 0; y < height; y++) {
@@ -55,8 +53,8 @@ const FluidDynamicsSimulator = () => {
             velY += newF[y][x][i] * e[i][1];
           }
           rho[y][x] = density;
-          ux[y][x] = velX / density;
-          uy[y][x] = velY / density;
+          newUx[y][x] = velX / density;
+          newUy[y][x] = velY / density;
         }
       }
 
@@ -64,9 +62,9 @@ const FluidDynamicsSimulator = () => {
       const tau = 3 * viscosity + 0.5;
       for (let y = 0; y < height; y++) {
         for (let x = 0; x < width; x++) {
-          const u2 = ux[y][x] * ux[y][x] + uy[y][x] * uy[y][x];
+          const u2 = newUx[y][x] * newUx[y][x] + newUy[y][x] * newUy[y][x];
           for (let i = 0; i < 9; i++) {
-            const eu = e[i][0] * ux[y][x] + e[i][1] * uy[y][x];
+            const eu = e[i][0] * newUx[y][x] + e[i][1] * newUy[y][x];
             const feq = w[i] * rho[y][x] * (1 + 3 * eu + 4.5 * eu * eu - 1.5 * u2);
             newF[y][x][i] += (feq - newF[y][x][i]) / tau;
           }
@@ -99,7 +97,8 @@ const FluidDynamicsSimulator = () => {
       }
 
       // Obstacles (bounce-back)
-      obstacles.forEach(([ox, oy]) => {
+      obstacles.forEach((coord) => {
+        const [ox, oy] = coord.split(",").map(Number);
         for (let i = 0; i < 9; i++) {
           const newX = (ox + e[i][0] + width) % width;
           const newY = (oy + e[i][1] + height) % height;
@@ -108,11 +107,12 @@ const FluidDynamicsSimulator = () => {
         }
       });
 
+      setUx(newUx);
+      setUy(newUy);
       return newF;
     });
   }, [viscosity, inflowVelocity, obstacles]);
 
-  // Run simulation
   useEffect(() => {
     let interval;
     if (isRunning) {
@@ -121,7 +121,6 @@ const FluidDynamicsSimulator = () => {
     return () => clearInterval(interval);
   }, [isRunning, stepSimulation]);
 
-  // Draw fluid
   const drawFluid = useCallback(() => {
     const canvas = canvasRef.current;
     const ctx = canvas.getContext("2d");
@@ -130,22 +129,17 @@ const FluidDynamicsSimulator = () => {
     for (let y = 0; y < height; y++) {
       for (let x = 0; x < width; x++) {
         let rho = 0;
-        let ux = 0;
-        let uy = 0;
         for (let i = 0; i < 9; i++) {
           rho += f[y][x][i];
-          ux += f[y][x][i] * e[i][0];
-          uy += f[y][x][i] * e[i][1];
         }
         const density = rho;
-        const velX = ux / density;
-        const velY = uy / density;
+        const velX = ux[y][x];
+        const velY = uy[y][x];
         const speed = Math.sqrt(velX * velX + velY * velY);
         const vorticity = y > 0 && y < height - 1 && x < width - 1
           ? (ux[y + 1][x] - ux[y - 1][x]) - (uy[y][x + 1] - uy[y][x - 1])
           : 0;
 
-        // Visualization based on display mode
         let r, g, b;
         if (displayMode === "speed") {
           r = Math.min(255, speed * 2000);
@@ -162,20 +156,18 @@ const FluidDynamicsSimulator = () => {
         ctx.fillStyle = `rgb(${r}, ${g}, ${b})`;
         ctx.fillRect(x * scale, y * scale, scale, scale);
 
-        // Obstacles
         if (obstacles.has(`${x},${y}`)) {
           ctx.fillStyle = "black";
           ctx.fillRect(x * scale, y * scale, scale, scale);
         }
       }
     }
-  }, [f, displayMode, obstacles]);
+  }, [f, ux, uy, displayMode, obstacles]);
 
   useEffect(() => {
     drawFluid();
   }, [drawFluid]);
 
-  // Handle obstacle placement
   const handleCanvasClick = (e) => {
     const rect = canvasRef.current.getBoundingClientRect();
     const x = Math.floor((e.clientX - rect.left) / scale);
@@ -200,7 +192,6 @@ const FluidDynamicsSimulator = () => {
     });
   };
 
-  // Download snapshot
   const downloadSnapshot = () => {
     if (canvasRef.current) {
       html2canvas(canvasRef.current).then((canvas) => {
@@ -213,14 +204,13 @@ const FluidDynamicsSimulator = () => {
   };
 
   return (
-    <div className="min-h-screen  flex items-center justify-center ">
-      <div className="w-full  bg-white rounded-xl shadow-lg p-6 sm:p-8">
+    <div className="min-h-screen flex items-center justify-center">
+      <div className="w-full bg-white rounded-xl shadow-lg p-6 sm:p-8">
         <h1 className="text-2xl sm:text-3xl font-bold text-center mb-6 text-gray-800">
           Fluid Dynamics Simulator
         </h1>
 
         <div className="space-y-6">
-          {/* Canvas */}
           <div>
             <canvas
               ref={canvasRef}
@@ -237,7 +227,6 @@ const FluidDynamicsSimulator = () => {
             </p>
           </div>
 
-          {/* Controls */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -297,7 +286,6 @@ const FluidDynamicsSimulator = () => {
             </div>
           </div>
 
-          {/* Action Buttons */}
           <div className="flex flex-col sm:flex-row gap-4">
             <button
               onClick={() => setIsRunning(!isRunning)}
@@ -309,6 +297,8 @@ const FluidDynamicsSimulator = () => {
             <button
               onClick={() => {
                 setF(initializeFluid());
+                setUx(Array(height).fill().map(() => Array(width).fill(0)));
+                setUy(Array(height).fill().map(() => Array(width).fill(0)));
                 setObstacles(new Set());
                 setIsRunning(false);
               }}
@@ -324,7 +314,6 @@ const FluidDynamicsSimulator = () => {
             </button>
           </div>
 
-          {/* Features */}
           <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
             <h3 className="font-semibold text-blue-700 mb-2">Features</h3>
             <ul className="list-disc list-inside text-blue-600 text-sm space-y-1">

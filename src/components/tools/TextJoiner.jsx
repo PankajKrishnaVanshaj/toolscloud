@@ -13,6 +13,7 @@ import {
 const TextJoiner = () => {
   const [inputText, setInputText] = useState("");
   const [joinedText, setJoinedText] = useState("");
+  const [joinResult, setJoinResult] = useState(null); // New state for full result
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [history, setHistory] = useState([]);
@@ -95,6 +96,7 @@ const TextJoiner = () => {
   const handleJoin = useCallback(async () => {
     setError("");
     setJoinedText("");
+    setJoinResult(null);
     setIsLoading(true);
 
     try {
@@ -105,6 +107,7 @@ const TextJoiner = () => {
         setError(result.error);
       } else {
         setJoinedText(result.joined);
+        setJoinResult(result);
         setHistory(prev => [...prev, { input: inputText, output: result.joined, options: { ...options } }].slice(-5));
       }
     } catch (err) {
@@ -117,6 +120,7 @@ const TextJoiner = () => {
   const reset = () => {
     setInputText("");
     setJoinedText("");
+    setJoinResult(null);
     setError("");
     setOptions({
       separator: ", ",
@@ -139,7 +143,7 @@ const TextJoiner = () => {
   };
 
   const exportJoinedText = () => {
-    const content = `Original Text:\n${inputText}\n\nJoined Text:\n${joinedText}\n\nChanges:\n${joinText(inputText).changes.join("\n")}`;
+    const content = `Original Text:\n${inputText}\n\nJoined Text:\n${joinedText}\n\nChanges:\n${joinResult ? joinResult.changes.join("\n") : "No changes available"}`;
     const blob = new Blob([content], { type: "text/plain" });
     const link = document.createElement("a");
     link.href = URL.createObjectURL(blob);
@@ -305,10 +309,10 @@ const TextJoiner = () => {
         )}
 
         {/* Output Display */}
-        {joinedText && (
+        {joinedText && joinResult && (
           <div className="mt-8 p-6 bg-teal-50 rounded-lg">
             <h2 className="text-xl font-semibold text-gray-800 text-center">
-              Joined Text ({joinText(inputText).segmentCount} segments)
+              Joined Text ({joinResult.segmentCount} segments)
             </h2>
             <p className="mt-3 text-lg text-gray-700 break-words whitespace-pre-wrap max-h-64 overflow-auto">
               {joinedText}
@@ -316,7 +320,7 @@ const TextJoiner = () => {
             <div className="mt-4 text-sm text-gray-600">
               <p className="font-medium">Changes Applied:</p>
               <ul className="list-disc list-inside mt-2">
-                {joinText(inputText).changes.map((change, index) => (
+                {joinResult.changes.map((change, index) => (
                   <li key={index}>{change}</li>
                 ))}
               </ul>
@@ -348,6 +352,7 @@ const TextJoiner = () => {
                       setInputText(entry.input);
                       setJoinedText(entry.output);
                       setOptions(entry.options);
+                      setJoinResult(joinText(entry.input)); // Restore full result
                     }}
                     className="text-teal-500 hover:text-teal-700"
                   >

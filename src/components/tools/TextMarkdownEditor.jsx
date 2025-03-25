@@ -262,7 +262,7 @@ const TextMarkdownEditor = () => {
         {/* Editor and Preview */}
         <div className="flex flex-col md:flex-row gap-4 flex-grow">
           {/* Markdown Input */}
-          <div className={`w-full ${showPreview ? "md:w-1/2" : "md:w-full"} flex flex-col`}>
+          <div className={`w-full ${showPreview ? "md:w-1/2" : "md:w-full"} flex flex-col min-h-80`}>
             <label className="block text-gray-700 font-medium mb-2">Markdown Input</label>
             <textarea
               id="markdown-input"

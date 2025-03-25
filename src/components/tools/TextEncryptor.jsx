@@ -379,7 +379,6 @@ const TextEncryptor = () => {
             <li>Customizable Caesar shift and AES key</li>
             <li>Output case formatting (original, lower, upper)</li>
             <li>Export results and history tracking</li>
-            <li>Responsive design for all devices</li>
           </ul>
         </div>
       </div>

@@ -19,23 +19,23 @@ const validateQuotes = (text) => {
   for (let i = 0; i < text.length; i++) {
     if (text[i] === '"') {
       doubleQuoteCount++;
-      positions.push({ type: 'double', index: i });
+      positions.push({ type: "double", index: i });
     } else if (text[i] === "'") {
       singleQuoteCount++;
-      positions.push({ type: 'single', index: i });
+      positions.push({ type: "single", index: i });
     }
   }
 
   if (doubleQuoteCount % 2 !== 0) {
     errors.push({
       message: 'Mismatched double quotes (") found.',
-      positions: positions.filter(p => p.type === 'double'),
+      positions: positions.filter((p) => p.type === "double"),
     });
   }
   if (singleQuoteCount % 2 !== 0) {
     errors.push({
       message: "Mismatched single quotes (') found.",
-      positions: positions.filter(p => p.type === 'single'),
+      positions: positions.filter((p) => p.type === "single"),
     });
   }
 
@@ -59,22 +59,22 @@ const validateBrackets = (text, bracketType) => {
     const char = text[i];
     if (selectedBrackets[char]) {
       stack.push({ char, index: i });
-      positions.push({ type: 'open', char, index: i });
+      positions.push({ type: "open", char, index: i });
     } else if (Object.values(selectedBrackets).includes(char)) {
       if (stack.length === 0 || selectedBrackets[stack.pop().char] !== char) {
         errors.push({
           message: `Mismatched ${bracketType} brackets found.`,
-          positions: [{ type: 'close', char, index: i }],
+          positions: [{ type: "close", char, index: i }],
         });
         break;
       }
-      positions.push({ type: 'close', char, index: i });
+      positions.push({ type: "close", char, index: i });
     }
   }
   if (stack.length > 0) {
     errors.push({
       message: `Unmatched opening ${bracketType} bracket(s) found.`,
-      positions: stack.map(s => ({ type: 'open', char: s.char, index: s.index })),
+      positions: stack.map((s) => ({ type: "open", char: s.char, index: s.index })),
     });
   }
 
@@ -133,16 +133,27 @@ const QuoteValidator = () => {
 
   const highlightErrors = (inputText, validationErrors) => {
     let highlighted = inputText;
+    const errorPositions = [];
+
+    // Collect all error positions
     validationErrors.forEach((error) => {
       error.positions.forEach((pos) => {
-        const start = pos.index;
-        const end = start + 1;
-        highlighted =
-          highlighted.substring(0, start) +
-          `<span class="bg-red-200 text-red-700">${highlighted[start]}</span>` +
-          highlighted.substring(end);
+        errorPositions.push(pos.index);
       });
     });
+
+    // Sort positions in descending order to avoid offset issues when inserting spans
+    errorPositions.sort((a, b) => b - a);
+
+    // Insert highlights from right to left
+    errorPositions.forEach((index) => {
+      const char = highlighted[index];
+      highlighted =
+        highlighted.substring(0, index) +
+        `<span class="bg-red-200 text-red-700">${char}</span>` +
+        highlighted.substring(index + 1);
+    });
+
     setHighlightedText(highlighted);
   };
 
@@ -164,7 +175,9 @@ const QuoteValidator = () => {
       "",
       "Errors:",
       errors.length > 0
-        ? errors.map((e) => `- ${e.message} (Positions: ${e.positions.map(p => p.index).join(", ")})`).join("\n")
+        ? errors
+            .map((e) => `- ${e.message} (Positions: ${e.positions.map((p) => p.index).join(", ")})`)
+            .join("\n")
         : "No errors found.",
     ].join("\n");
     const blob = new Blob([report], { type: "text/plain" });
@@ -194,7 +207,7 @@ const QuoteValidator = () => {
         </label>
         <div className="grid grid-cols-2 gap-4">
           {[
-            { label: "Quotes (' \")", value: "quotes" },
+            { label: 'Quotes (" \')', value: "quotes" },
             { label: "All Brackets", value: "brackets" },
             { label: "Parentheses ( )", value: "parentheses" },
             { label: "Curly Braces { }", value: "curly" },
@@ -267,7 +280,7 @@ const QuoteValidator = () => {
                   ❌ {error.message}
                   {showDetails && (
                     <span className="text-sm ml-2">
-                      (Positions: {error.positions.map(p => p.index).join(", ")})
+                      (Positions: {error.positions.map((p) => p.index).join(", ")})
                     </span>
                   )}
                 </li>

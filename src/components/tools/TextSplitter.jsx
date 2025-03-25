@@ -13,6 +13,7 @@ import {
 const TextSplitter = () => {
   const [inputText, setInputText] = useState("");
   const [splitText, setSplitText] = useState([]);
+  const [splitResult, setSplitResult] = useState(null); // New state for full result
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [history, setHistory] = useState([]);
@@ -106,6 +107,7 @@ const TextSplitter = () => {
   const handleSplit = useCallback(async () => {
     setError("");
     setSplitText([]);
+    setSplitResult(null);
     setIsLoading(true);
 
     try {
@@ -116,6 +118,7 @@ const TextSplitter = () => {
         setError(result.error);
       } else {
         setSplitText(result.segments);
+        setSplitResult(result);
         setHistory(prev => [...prev, { input: inputText, output: result.segments, options: { ...options } }].slice(-5));
       }
     } catch (err) {
@@ -128,6 +131,7 @@ const TextSplitter = () => {
   const reset = () => {
     setInputText("");
     setSplitText([]);
+    setSplitResult(null);
     setError("");
     setOptions({
       splitMethod: "delimiter",
@@ -150,7 +154,7 @@ const TextSplitter = () => {
   };
 
   const exportSplitText = () => {
-    const content = `Original Text:\n${inputText}\n\nSplit Text (${splitText.length} segments):\n${splitText.join(options.joinSeparator)}\n\nChanges:\n${splitTextFunc(inputText).changes.join("\n")}`;
+    const content = `Original Text:\n${inputText}\n\nSplit Text (${splitText.length} segments):\n${splitText.join(options.joinSeparator)}\n\nChanges:\n${splitResult ? splitResult.changes.join("\n") : "No changes available"}`;
     const blob = new Blob([content], { type: "text/plain" });
     const link = document.createElement("a");
     link.href = URL.createObjectURL(blob);
@@ -334,7 +338,7 @@ const TextSplitter = () => {
         )}
 
         {/* Output Display */}
-        {splitText.length > 0 && (
+        {splitText.length > 0 && splitResult && (
           <div className="mt-8 p-6 bg-orange-50 rounded-lg">
             <h2 className="text-xl font-semibold text-gray-800 text-center">
               Split Text ({splitText.length} segments)
@@ -347,7 +351,7 @@ const TextSplitter = () => {
             <div className="mt-4 text-sm text-gray-600">
               <p className="font-medium">Changes Applied:</p>
               <ul className="list-disc list-inside mt-2">
-                {splitTextFunc(inputText).changes.map((change, index) => (
+                {splitResult.changes.map((change, index) => (
                   <li key={index}>{change}</li>
                 ))}
               </ul>
@@ -379,6 +383,7 @@ const TextSplitter = () => {
                       setInputText(entry.input);
                       setSplitText(entry.output);
                       setOptions(entry.options);
+                      setSplitResult(splitTextFunc(entry.input)); // Restore full result
                     }}
                     className="text-orange-500 hover:text-orange-700"
                   >

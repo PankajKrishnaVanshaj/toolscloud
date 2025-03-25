@@ -415,7 +415,6 @@ const TextBeautifier = () => {
             <li>Find & replace with regex and case sensitivity</li>
             <li>Undo/redo history (up to 10 steps)</li>
             <li>Copy, download, and import text</li>
-            <li>Responsive design for all devices</li>
           </ul>
         </div>
       </div>

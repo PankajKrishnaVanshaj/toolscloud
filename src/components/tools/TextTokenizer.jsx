@@ -13,6 +13,7 @@ import {
 const TextTokenizer = () => {
   const [inputText, setInputText] = useState("");
   const [tokens, setTokens] = useState([]);
+  const [tokenResult, setTokenResult] = useState(null);
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [history, setHistory] = useState([]);
@@ -54,7 +55,6 @@ const TextTokenizer = () => {
         try {
           const regex = new RegExp(options.regexPattern, "g");
           tokenArray = text.split(regex).filter(Boolean);
-          // If regex is meant to match tokens, use match instead
           const matches = [...text.matchAll(regex)];
           if (matches.length > 0) {
             tokenArray = matches.map(match => match[0]);
@@ -67,7 +67,6 @@ const TextTokenizer = () => {
         return { error: "Invalid token type" };
     }
 
-    // Apply transformations
     if (!options.preserveCase) {
       tokenArray = tokenArray.map(token => token.toLowerCase());
     }
@@ -88,7 +87,6 @@ const TextTokenizer = () => {
       return { error: "No tokens found with the specified options" };
     }
 
-    // Format output
     let output;
     switch (options.outputFormat) {
       case "list":
@@ -131,6 +129,7 @@ const TextTokenizer = () => {
   const handleTokenize = useCallback(async () => {
     setError("");
     setTokens([]);
+    setTokenResult(null);
     setIsLoading(true);
 
     try {
@@ -141,6 +140,7 @@ const TextTokenizer = () => {
         setError(result.error);
       } else {
         setTokens(result.tokens);
+        setTokenResult(result);
         setHistory(prev => [...prev, { input: inputText, output: result.tokens, options: { ...options } }].slice(-5));
       }
     } catch (err) {
@@ -153,6 +153,7 @@ const TextTokenizer = () => {
   const reset = () => {
     setInputText("");
     setTokens([]);
+    setTokenResult(null);
     setError("");
     setOptions({
       tokenType: "words",
@@ -175,7 +176,7 @@ const TextTokenizer = () => {
   };
 
   const exportTokens = () => {
-    const content = `Original Text:\n${inputText}\n\nTokens (${options.tokenType}, ${tokens.length}):\n${options.outputFormat === "list" ? tokens.join("\n") : tokens}\n\nChanges:\n${tokenizeText(inputText).changes.join("\n")}`;
+    const content = `Original Text:\n${inputText}\n\nTokens (${options.tokenType}, ${tokenResult ? tokenResult.tokenCount : 0}):\n${options.outputFormat === "list" && Array.isArray(tokens) ? tokens.join("\n") : tokens}\n\nChanges:\n${tokenResult ? tokenResult.changes.join("\n") : "No changes available"}`;
     const blob = new Blob([content], { type: "text/plain" });
     const link = document.createElement("a");
     link.href = URL.createObjectURL(blob);
@@ -191,7 +192,6 @@ const TextTokenizer = () => {
           Advanced Text Tokenizer
         </h1>
 
-        {/* Input Section */}
         <div className="space-y-6">
           <div>
             <label className="block text-gray-700 font-medium mb-2">
@@ -209,7 +209,6 @@ const TextTokenizer = () => {
             </div>
           </div>
 
-          {/* Options */}
           <div className="p-4 bg-gray-50 rounded-lg space-y-4">
             <p className="text-sm font-medium text-gray-700">Tokenization Options:</p>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -316,7 +315,6 @@ const TextTokenizer = () => {
             </div>
           </div>
 
-          {/* Controls */}
           <div className="flex gap-4 flex-wrap">
             <button
               onClick={handleTokenize}
@@ -348,21 +346,19 @@ const TextTokenizer = () => {
           </div>
         </div>
 
-        {/* Error Display */}
         {error && (
           <div className="mt-6 p-4 bg-red-100 text-red-700 rounded-lg text-center">
             {error}
           </div>
         )}
 
-        {/* Output Display */}
-        {tokens.length > 0 && (
+        {tokens.length > 0 && tokenResult && (
           <div className="mt-8 p-6 bg-orange-50 rounded-lg max-h-[60vh] overflow-auto">
             <h2 className="text-xl font-semibold text-gray-800 text-center">
-              Tokens ({options.tokenType}, {tokenizeText(inputText).tokenCount} found)
+              Tokens ({options.tokenType}, {tokenResult.tokenCount} found)
             </h2>
             <div className="mt-4 text-gray-700">
-              {options.outputFormat === "list" ? (
+              {options.outputFormat === "list" && Array.isArray(tokens) ? (
                 <ul className="list-disc list-inside space-y-1">
                   {tokens.map((token, index) => (
                     <li key={index}>{token}</li>
@@ -375,14 +371,14 @@ const TextTokenizer = () => {
             <div className="mt-4 text-sm text-gray-600">
               <p className="font-medium">Changes Applied:</p>
               <ul className="list-disc list-inside mt-2">
-                {tokenizeText(inputText).changes.map((change, index) => (
+                {tokenResult.changes.map((change, index) => (
                   <li key={index}>{change}</li>
                 ))}
               </ul>
             </div>
             <button
               onClick={() => navigator.clipboard.writeText(
-                options.outputFormat === "list" ? tokens.join("\n") : tokens
+                options.outputFormat === "list" && Array.isArray(tokens) ? tokens.join("\n") : tokens
               )}
               className="mt-4 w-full py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-all font-semibold"
             >
@@ -392,7 +388,6 @@ const TextTokenizer = () => {
           </div>
         )}
 
-        {/* History */}
         {history.length > 0 && (
           <div className="mt-6 p-4 bg-gray-100 rounded-lg">
             <h3 className="font-semibold text-gray-700 flex items-center">
@@ -402,13 +397,14 @@ const TextTokenizer = () => {
               {history.slice().reverse().map((entry, index) => (
                 <li key={index} className="flex items-center justify-between">
                   <span>
-                    {entry.options.tokenType}: "{entry.input.slice(0, 30)}{entry.input.length > 30 ? "..." : ""}" ({entry.output.length})
+                    {entry.options.tokenType}: "{entry.input.slice(0, 30)}{entry.input.length > 30 ? "..." : ""}" ({Array.isArray(entry.output) ? entry.output.length : "N/A"})
                   </span>
                   <button
                     onClick={() => {
                       setInputText(entry.input);
                       setTokens(entry.output);
                       setOptions(entry.options);
+                      setTokenResult(tokenizeText(entry.input));
                     }}
                     className="text-orange-500 hover:text-orange-700"
                   >
@@ -420,7 +416,6 @@ const TextTokenizer = () => {
           </div>
         )}
 
-        {/* Features Info */}
         <div className="mt-6 p-4 bg-orange-100 rounded-lg border border-orange-300">
           <h3 className="font-semibold text-orange-700">Features</h3>
           <ul className="list-disc list-inside text-orange-600 text-sm">

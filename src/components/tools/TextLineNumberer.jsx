@@ -360,7 +360,6 @@ const TextLineNumberer = () => {
             <li>Options to skip or number only non-empty lines</li>
             <li>Undo/redo history (up to 10 steps)</li>
             <li>Import/export text with numbers</li>
-            <li>Responsive design for all devices</li>
           </ul>
         </div>
       </div>

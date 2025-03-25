@@ -277,7 +277,6 @@ const TextFindandReplace = () => {
             <li>Replace all or limit replacements</li>
             <li>Undo, copy, and export functionality</li>
             <li>History tracking of last 5 operations</li>
-            <li>Responsive design for all devices</li>
           </ul>
         </div>
       </div>
