@@ -309,7 +309,6 @@ const CodeSnippetGenerator = () => {
             <li>Copy and download functionality</li>
             <li>HTML preview capability</li>
             <li>Snippet history tracking</li>
-            <li>Responsive design</li>
           </ul>
         </div>
       </div>

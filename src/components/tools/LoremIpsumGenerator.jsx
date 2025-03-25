@@ -229,7 +229,6 @@ const LoremIpsumGenerator = () => {
             <li>Custom paragraphs, words, and sentences</li>
             <li>Text style options (normal, uppercase, lowercase)</li>
             <li>Copy, download, and track history</li>
-            <li>Responsive design for all devices</li>
           </ul>
         </div>
       </div>

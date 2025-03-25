@@ -224,7 +224,6 @@ const ColorPicker = () => {
             <li>Copy colors to clipboard</li>
             <li>Track and restore color history</li>
             <li>Download color palette</li>
-            <li>Responsive design</li>
           </ul>
         </div>
       </div>

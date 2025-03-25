@@ -219,7 +219,6 @@ const RegexTester = () => {
             <li>Copy individual matches to clipboard</li>
             <li>Download all matches as text file</li>
             <li>Toggle input text visibility</li>
-            <li>Responsive design with Tailwind CSS</li>
           </ul>
         </div>
       </div>

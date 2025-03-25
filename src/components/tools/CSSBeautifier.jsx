@@ -235,7 +235,6 @@ const CSSBeautifier = () => {
             <li>Alphabetical property sorting</li>
             <li>Control over newline insertion</li>
             <li>Copy and download formatted CSS</li>
-            <li>Responsive design</li>
           </ul>
         </div>
       </div>

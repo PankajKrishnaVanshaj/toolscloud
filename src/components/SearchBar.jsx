@@ -51,17 +51,17 @@ export default function SearchBar() {
         </button>
       </div>
 
-      {/* Display filtered tools as suggestions */}
+      {/* Display filtered tools as suggestions (Desktop) */}
       {searchTerm && (
-        <ul className="absolute bg-white shadow-lg border border-gray-200 rounded-md mt-1 w-80 max-h-60 overflow-auto z-10">
+        <ul className="absolute bg-white shadow-lg border border-gray-200 rounded-md mt-1 w-80 max-h-60 overflow-auto z-10 hidden md:block">
           {filteredTools.length > 0 ? (
-            filteredTools.map((tool,index) => (
+            filteredTools.map((tool, index) => (
               <li
                 key={`${tool.slug}-${index}`}
                 className="p-2 hover:bg-gray-100 cursor-pointer flex items-center space-x-2"
                 onClick={() => handleSelectTool(tool.slug)}
               >
-                <span className="text-secondary ">{tool.icon}</span>
+                <span className="text-secondary">{tool.icon}</span>
                 <span className="bg-gradient-to-r from-primary to-secondary text-transparent bg-clip-text">
                   {tool.name}
                 </span>
@@ -83,29 +83,35 @@ export default function SearchBar() {
 
       {/* Mobile Search Bar */}
       {showSearch && (
-        <div className="absolute top-16 left-0 w-full px-4 py-2 bg-white shadow-md border-t border-gray-200">
-          {" "}
-          <div className="flex items-center border border-gray-300 rounded-lg">
+        <div className="md:hidden fixed inset-x-0 top-0 z-50 bg-white shadow-md border-b border-gray-200 p-3 rounded-md">
+          <div className="relative flex items-center border border-gray-300 rounded-lg">
             <input
               type="text"
               placeholder="Search..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full py-2 px-4 border-none outline-none"
+              className="w-full py-2 px-4 border-none outline-none rounded-lg"
+              autoFocus
             />
+            <button
+              className="absolute right-2 p-1"
+              onClick={() => setShowSearch(false)}
+            >
+              <span className="text-gray-500">×</span>
+            </button>
           </div>
           {/* Display filtered tools for mobile */}
           {searchTerm && (
-            <ul className="bg-white shadow-md border border-gray-200 rounded-md mt-2 w-full max-h-80 overflow-auto">
+            <ul className="mt-2 bg-white border border-gray-200 rounded-md w-full max-h-[70vh] overflow-auto">
               {filteredTools.length > 0 ? (
-                filteredTools.map((tool) => (
+                filteredTools.map((tool, index) => (
                   <li
-                    key={tool.slug}
+                    key={`${tool.slug}-${index}`}
                     className="p-2 hover:bg-gray-100 cursor-pointer flex items-center space-x-2"
                     onClick={() => handleSelectTool(tool.slug)}
                   >
                     <span className="text-secondary">{tool.icon}</span>
-                    <span className="bg-gradient-to-r from-primary to-secondary text-transparent bg-clip-text ">
+                    <span className="bg-gradient-to-r from-primary to-secondary text-transparent bg-clip-text">
                       {tool.name}
                     </span>
                   </li>

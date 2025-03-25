@@ -210,7 +210,6 @@ const Base64Decoder = () => {
             <li>Copy to clipboard</li>
             <li>Download as text file</li>
             <li>Preview HTML content</li>
-            <li>Responsive design</li>
           </ul>
         </div>
       </div>

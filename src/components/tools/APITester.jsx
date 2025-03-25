@@ -305,7 +305,6 @@ const APITester = () => {
             <li>Response formatting (raw/pretty)</li>
             <li>Copy and download responses</li>
             <li>Request history tracking</li>
-            <li>Responsive design</li>
           </ul>
         </div>
       </div>
