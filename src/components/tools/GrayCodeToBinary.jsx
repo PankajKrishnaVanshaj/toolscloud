@@ -339,4 +339,4 @@ const GrayCodeToBinary = () => {
   );
 };
 
-export default GrayCode
+export default GrayCodeToBinary
