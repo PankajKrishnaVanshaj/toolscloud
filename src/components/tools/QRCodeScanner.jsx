@@ -11,7 +11,6 @@ const QRCodeScanner = () => {
   const [availableCameras, setAvailableCameras] = useState([]);
   const [selectedFile, setSelectedFile] = useState(null);
   const qrRef = useRef(null);
-  const scannerRegionRef = useRef(null);
   const fileInputRef = useRef(null);
 
   // Initialize QR scanner and get available cameras
@@ -28,9 +27,12 @@ const QRCodeScanner = () => {
       });
 
     return () => {
-      stopScanning();
+      if (qrRef.current && isScanning) {
+        qrRef.current.stop().catch(() => {});
+        qrRef.current = null; // Avoid calling clear() here, just reset the ref
+      }
     };
-  }, []);
+  }, [isScanning]);
 
   // Start camera-based scanning
   const startScanning = () => {
@@ -73,33 +75,45 @@ const QRCodeScanner = () => {
         .stop()
         .then(() => {
           setIsScanning(false);
-          qrRef.current.clear();
+          qrRef.current = null; // Reset ref without calling clear()
         })
         .catch((err) => {
           setError("Error stopping scanner: " + err.message);
+          setIsScanning(false);
         });
+    } else {
+      setIsScanning(false);
     }
   };
 
   // Handle file upload and scan
-  const handleFileChange = (e) => {
+  const handleFileChange = async (e) => {
     const file = e.target.files[0];
-    if (file) {
-      stopScanning(); // Stop any ongoing camera scan
-      setSelectedFile(file);
-      setScanResult(null);
-      setError(null);
+    if (!file) return;
 
-      const qrCodeScanner = new Html5Qrcode("qr-scanner-region");
-      qrCodeScanner
-        .scanFile(file, true)
-        .then((decodedText) => {
-          setScanResult(decodedText);
+    stopScanning(); // Stop any ongoing camera scan
+    setScanResult(null);
+    setError(null);
+
+    // Use a separate hidden div for file scanning
+    const qrCodeScanner = new Html5Qrcode("qr-file-scan-region");
+    try {
+      const decodedText = await qrCodeScanner.scanFile(file, false); // false to avoid rendering
+      setScanResult(decodedText);
+      setSelectedFile(file); // Set file after successful scan
+    } catch (err) {
+      setError("No QR code found in the image or error decoding: " + err.message);
+      setSelectedFile(file); // Show file even if scan fails
+    } finally {
+      // Avoid calling clear() unless necessary
+      const scanRegion = document.getElementById("qr-file-scan-region");
+      if (scanRegion && scanRegion.children.length > 0) {
+        try {
           qrCodeScanner.clear();
-        })
-        .catch((err) => {
-          setError("No QR code found in the image or error decoding: " + err.message);
-        });
+        } catch (clearErr) {
+          console.warn("Error during cleanup:", clearErr);
+        }
+      }
     }
   };
 
@@ -122,8 +136,8 @@ const QRCodeScanner = () => {
   };
 
   return (
-    <div className="min-h-screen  flex items-center justify-center ">
-      <div className="w-full  bg-white rounded-xl shadow-lg p-6 sm:p-8">
+    <div className="min-h-screen flex items-center justify-center">
+      <div className="w-full bg-white rounded-xl shadow-lg p-6 sm:p-8">
         <h1 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-6 flex items-center">
           <FaCamera className="mr-2" /> QR Code Scanner
         </h1>
@@ -172,7 +186,7 @@ const QRCodeScanner = () => {
             <button
               onClick={startScanning}
               disabled={isScanning || !cameraId || selectedFile}
-              className="flex-1 py-2 px-4 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors flex items-center justify-center"
+              className="flex-1 py-2 px-4 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:bg-gray-400过渡-colors flex items-center justify-center"
             >
               <FaCamera className="mr-2" /> Start Camera Scan
             </button>
@@ -200,7 +214,6 @@ const QRCodeScanner = () => {
 
           {/* Scanner Region / File Preview */}
           <div
-            ref={scannerRegionRef}
             id="qr-scanner-region"
             className="relative w-full h-64 bg-gray-200 rounded-lg overflow-hidden flex items-center justify-center"
           >
@@ -216,6 +229,9 @@ const QRCodeScanner = () => {
               </p>
             ) : null}
           </div>
+
+          {/* Hidden div for file scanning */}
+          <div id="qr-file-scan-region" style={{ display: "none" }}></div>
 
           {/* Result and Error Display */}
           {error && (
@@ -241,8 +257,6 @@ const QRCodeScanner = () => {
             <li>Real-time camera scanning with stop control</li>
           </ul>
         </div>
-
-       
       </div>
     </div>
   );

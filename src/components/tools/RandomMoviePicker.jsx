@@ -1,97 +1,82 @@
 "use client";
 import React, { useState, useCallback } from "react";
-import { FaRandom, FaSync, FaFilm } from "react-icons/fa";
+import { FaRandom, FaSync, FaFilm, FaPlus, FaSort } from "react-icons/fa";
 
 const RandomMoviePicker = () => {
   const [movie, setMovie] = useState(null);
-  const [genreFilter, setGenreFilter] = useState("all");
-  const [yearRange, setYearRange] = useState({ min: 1980, max: 2025 });
+  const [filters, setFilters] = useState({
+    genre: "all",
+    minYear: "",
+    maxYear: "",
+    minRating: "",
+    industry: "all",
+  });
+  const [sortBy, setSortBy] = useState("random");
   const [history, setHistory] = useState([]);
+  const [movies, setMovies] = useState([]);
+  const [newMovie, setNewMovie] = useState({
+    title: "",
+    genre: "",
+    year: "",
+    rating: "",
+    industry: "",
+    description: "",
+  });
 
-  const movies = [
-    {
-      title: "The Shawshank Redemption",
-      genre: "Drama",
-      year: 1994,
-      description: "Two imprisoned men bond over years, finding solace and redemption through acts of decency.",
-      rating: 9.3,
-    },
-    {
-      title: "Inception",
-      genre: "Sci-Fi",
-      year: 2010,
-      description: "A thief with the ability to enter dreams must pull off the ultimate heist.",
-      rating: 8.8,
-    },
-    {
-      title: "The Dark Knight",
-      genre: "Action",
-      year: 2008,
-      description: "Batman faces the Joker, a criminal mastermind wreaking havoc in Gotham.",
-      rating: 9.0,
-    },
-    {
-      title: "Pulp Fiction",
-      genre: "Crime",
-      year: 1994,
-      description: "Interwoven stories of crime, violence, and redemption in Los Angeles.",
-      rating: 8.9,
-    },
-    {
-      title: "Forrest Gump",
-      genre: "Romance",
-      year: 1994,
-      description: "A man with a low IQ experiences pivotal moments in history.",
-      rating: 8.8,
-    },
-    {
-      title: "The Matrix",
-      genre: "Sci-Fi",
-      year: 1999,
-      description: "A hacker discovers reality is a simulation and joins a rebellion.",
-      rating: 8.7,
-    },
-    {
-      title: "Titanic",
-      genre: "Romance",
-      year: 1997,
-      description: "A love story unfolds aboard the ill-fated RMS Titanic.",
-      rating: 7.8,
-    },
-    {
-      title: "Jurassic Park",
-      genre: "Adventure",
-      year: 1993,
-      description: "A theme park with cloned dinosaurs goes terribly wrong.",
-      rating: 8.1,
-    },
-    {
-      title: "Back to the Future",
-      genre: "Comedy",
-      year: 1985,
-      description: "A teen travels back in time and must ensure his parents fall in love.",
-      rating: 8.5,
-    },
-    {
-      title: "The Lion King",
-      genre: "Animation",
-      year: 1994,
-      description: "A young lion prince flees his kingdom only to return as king.",
-      rating: 8.5,
-    },
-  ];
+  // Unique filter options
+  const genres = ["all", ...new Set(movies.map((m) => m.genre || "Unknown").filter(Boolean))];
+  const industries = ["all", ...new Set(movies.map((m) => m.industry || "Unknown").filter(Boolean))];
 
-  // Unique genres for filter
-  const genres = ["all", ...new Set(movies.map((m) => m.genre))];
+  // Handle input changes
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setNewMovie((prev) => ({ ...prev, [name]: value }));
+  };
 
-  // Filter movies based on user preferences
+  const handleFilterChange = (e) => {
+    const { name, value } = e.target;
+    setFilters((prev) => ({ ...prev, [name]: value }));
+  };
+
+  // Add new movie
+  const addMovie = (e) => {
+    e.preventDefault();
+    if (newMovie.title.trim()) {
+      setMovies((prev) => [
+        ...prev,
+        {
+          ...newMovie,
+          year: newMovie.year ? parseInt(newMovie.year) : undefined,
+          rating: newMovie.rating ? parseFloat(newMovie.rating) : undefined,
+        },
+      ]);
+      setNewMovie({ title: "", genre: "", year: "", rating: "", industry: "", description: "" });
+    }
+  };
+
+  // Filter and sort movies
   const getFilteredMovies = useCallback(() => {
-    return movies.filter((m) => {
-      const matchesGenre = genreFilter === "all" || m.genre === genreFilter;
-      const matchesYear = m.year >= yearRange.min && m.year <= yearRange.max;
-      return matchesGenre && matchesYear;
+    let filtered = movies.filter((m) => {
+      const matchesGenre = filters.genre === "all" || (m.genre || "Unknown") === filters.genre;
+      const matchesIndustry = filters.industry === "all" || (m.industry || "Unknown") === filters.industry;
+      const matchesMinYear = !filters.minYear || (m.year && m.year >= parseInt(filters.minYear));
+      const matchesMaxYear = !filters.maxYear || (m.year && m.year <= parseInt(filters.maxYear));
+      const matchesRating = !filters.minRating || (m.rating && m.rating >= parseFloat(filters.minRating));
+      
+      return matchesGenre && matchesIndustry && matchesMinYear && matchesMaxYear && matchesRating;
     });
-  }, [genreFilter, yearRange]);
+
+    // Apply sorting
+    if (sortBy === "title") {
+      filtered.sort((a, b) => a.title.localeCompare(b.title));
+    } else if (sortBy === "year") {
+      filtered.sort((a, b) => (b.year || 0) - (a.year || 0));
+    } else if (sortBy === "rating") {
+      filtered.sort((a, b) => (b.rating || 0) - (a.rating || 0));
+    }
+
+    return filtered;
+  }, [filters, sortBy, movies]);
 
   // Pick a random movie
   const pickRandomMovie = useCallback(() => {
@@ -103,33 +88,45 @@ const RandomMoviePicker = () => {
     const randomIndex = Math.floor(Math.random() * filteredMovies.length);
     const selectedMovie = filteredMovies[randomIndex];
     setMovie(selectedMovie);
-    setHistory((prev) => [selectedMovie, ...prev].slice(0, 5)); // Keep last 5 picks
+    setHistory((prev) => [selectedMovie, ...prev].slice(0, 5));
   }, [getFilteredMovies]);
 
-  // Reset filters and history
+  // Reset all
   const reset = () => {
     setMovie(null);
-    setGenreFilter("all");
-    setYearRange({ min: 1980, max: 2025 });
+    setFilters({ genre: "all", minYear: "", maxYear: "", minRating: "", industry: "all" });
+    setSortBy("random");
     setHistory([]);
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4">
+    <div className="min-h-screen flex items-center justify-center bg-gray-100">
       <div className="w-full max-w-3xl bg-white rounded-xl shadow-lg p-6 sm:p-8">
         <h1 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-6 text-center">
-          Random Movie Picker
+          Advanced Movie Picker
         </h1>
 
+        {/* Movie Input Form */}
+        <div className="mb-6 p-4 bg-gray-100 rounded-lg">
+          <h3 className="text-lg font-semibold text-gray-800 mb-2">Add a Movie</h3>
+          <form onSubmit={addMovie} className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <input type="text" name="title" value={newMovie.title} onChange={handleInputChange} placeholder="Movie Title (required)" className="w-full p-2 border rounded-md" required />
+            <input type="text" name="genre" value={newMovie.genre} onChange={handleInputChange} placeholder="Genre" className="w-full p-2 border rounded-md" />
+            <input type="number" name="year" value={newMovie.year} onChange={handleInputChange} placeholder="Year" min="1900" max={new Date().getFullYear()} className="w-full p-2 border rounded-md" />
+            <input type="number" name="rating" value={newMovie.rating} onChange={handleInputChange} placeholder="Rating (0-10)" min="0" max="10" step="0.1" className="w-full p-2 border rounded-md" />
+            <input type="text" name="industry" value={newMovie.industry} onChange={handleInputChange} placeholder="Industry (e.g., Hollywood)" className="w-full p-2 border rounded-md" />
+            <input type="text" name="description" value={newMovie.description} onChange={handleInputChange} placeholder="Description" className="w-full p-2 border rounded-md sm:col-span-2" />
+            <button type="submit" className="py-2 px-4 bg-green-600 text-white rounded-md hover:bg-green-700 sm:col-span-2">
+              <FaPlus className="mr-2 inline" /> Add Movie
+            </button>
+          </form>
+        </div>
+
         {/* Filters */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 mb-6">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Genre</label>
-            <select
-              value={genreFilter}
-              onChange={(e) => setGenreFilter(e.target.value)}
-              className="w-full p-2 border rounded-md focus:ring-2 focus:ring-purple-500"
-            >
+            <select name="genre" value={filters.genre} onChange={handleFilterChange} className="w-full p-2 border rounded-md">
               {genres.map((genre) => (
                 <option key={genre} value={genre}>
                   {genre === "all" ? "All Genres" : genre}
@@ -138,82 +135,62 @@ const RandomMoviePicker = () => {
             </select>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Min Year ({yearRange.min})
-            </label>
-            <input
-              type="number"
-              min="1900"
-              max={yearRange.max}
-              value={yearRange.min}
-              onChange={(e) =>
-                setYearRange((prev) => ({
-                  ...prev,
-                  min: Math.max(1900, Math.min(prev.max, e.target.value)),
-                }))
-              }
-              className="w-full p-2 border rounded-md focus:ring-2 focus:ring-purple-500"
-            />
+            <label className="block text-sm font-medium text-gray-700 mb-1">Industry</label>
+            <select name="industry" value={filters.industry} onChange={handleFilterChange} className="w-full p-2 border rounded-md">
+              {industries.map((industry) => (
+                <option key={industry} value={industry}>
+                  {industry === "all" ? "All Industries" : industry}
+                </option>
+              ))}
+            </select>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Max Year ({yearRange.max})
-            </label>
-            <input
-              type="number"
-              min={yearRange.min}
-              max="2025"
-              value={yearRange.max}
-              onChange={(e) =>
-                setYearRange((prev) => ({
-                  ...prev,
-                  max: Math.min(2025, Math.max(prev.min, e.target.value)),
-                }))
-              }
-              className="w-full p-2 border rounded-md focus:ring-2 focus:ring-purple-500"
-            />
+            <label className="block text-sm font-medium text-gray-700 mb-1">Min Year</label>
+            <input type="number" name="minYear" value={filters.minYear} onChange={handleFilterChange} placeholder="e.g., 1990" className="w-full p-2 border rounded-md" />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Max Year</label>
+            <input type="number" name="maxYear" value={filters.maxYear} onChange={handleFilterChange} placeholder="e.g., 2025" className="w-full p-2 border rounded-md" />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Min Rating</label>
+            <input type="number" name="minRating" value={filters.minRating} onChange={handleFilterChange} placeholder="0-10" min="0" max="10" step="0.1" className="w-full p-2 border rounded-md" />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Sort By</label>
+            <select value={sortBy} onChange={(e) => setSortBy(e.target.value)} className="w-full p-2 border rounded-md">
+              <option value="random">Random</option>
+              <option value="title">Title</option>
+              <option value="year">Year (Newest First)</option>
+              <option value="rating">Rating (Highest First)</option>
+            </select>
           </div>
         </div>
 
         {/* Action Buttons */}
         <div className="flex flex-col sm:flex-row gap-4 mb-6">
-          <button
-            onClick={pickRandomMovie}
-            className="flex-1 py-2 px-4 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition-colors flex items-center justify-center"
-          >
-            <FaRandom className="mr-2" /> Pick Random Movie
+          <button onClick={pickRandomMovie} className="flex-1 py-2 px-4 bg-purple-600 text-white rounded-md hover:bg-purple-700">
+            <FaRandom className="mr-2 inline" /> Pick Movie
           </button>
-          <button
-            onClick={reset}
-            className="flex-1 py-2 px-4 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors flex items-center justify-center"
-          >
-            <FaSync className="mr-2" /> Reset
+          <button onClick={reset} className="flex-1 py-2 px-4 bg-red-600 text-white rounded-md hover:bg-red-700">
+            <FaSync className="mr-2 inline" /> Reset
           </button>
         </div>
 
         {/* Movie Display */}
         {movie ? (
           <div className="bg-gray-50 p-4 rounded-lg shadow-inner text-center">
-            <h2 className="text-xl sm:text-2xl font-semibold mb-2 text-purple-600">
-              {movie.title}
-            </h2>
-            <p className="text-gray-700 mb-1">
-              <span className="font-medium">Genre:</span> {movie.genre}
-            </p>
-            <p className="text-gray-700 mb-1">
-              <span className="font-medium">Year:</span> {movie.year}
-            </p>
-            <p className="text-gray-700 mb-1">
-              <span className="font-medium">Rating:</span> {movie.rating}/10
-            </p>
-            <p className="text-gray-600 italic">{movie.description}</p>
+            <h2 className="text-xl sm:text-2xl font-semibold mb-2 text-purple-600">{movie.title}</h2>
+            {movie.genre && <p className="text-gray-700"><span className="font-medium">Genre:</span> {movie.genre}</p>}
+            {movie.year && <p className="text-gray-700"><span className="font-medium">Year:</span> {movie.year}</p>}
+            {movie.rating && <p className="text-gray-700"><span className="font-medium">Rating:</span> {movie.rating}/10</p>}
+            {movie.industry && <p className="text-gray-700"><span className="font-medium">Industry:</span> {movie.industry}</p>}
+            {movie.description && <p className="text-gray-600 italic mt-2">{movie.description}</p>}
           </div>
         ) : (
           <div className="text-center p-6 bg-gray-50 rounded-lg">
             <FaFilm className="mx-auto text-gray-400 text-3xl mb-2" />
-            <p className="text-gray-500 italic">
-              Set your preferences and pick a random movie!
-            </p>
+            <p className="text-gray-500 italic">Add movies and set filters to find your perfect pick!</p>
           </div>
         )}
 
@@ -223,19 +200,9 @@ const RandomMoviePicker = () => {
             <h3 className="font-semibold text-blue-700 mb-2">Recent Picks</h3>
             <ul className="text-sm text-blue-600 space-y-2 max-h-40 overflow-y-auto">
               {history.map((prevMovie, index) => (
-                <li
-                  key={index}
-                  className="flex justify-between items-center hover:bg-blue-100 p-1 rounded"
-                >
-                  <span>
-                    {prevMovie.title} ({prevMovie.year})
-                  </span>
-                  <button
-                    onClick={() => setMovie(prevMovie)}
-                    className="text-blue-500 hover:text-blue-700"
-                  >
-                    View
-                  </button>
+                <li key={index} className="flex justify-between items-center hover:bg-blue-100 p-1 rounded">
+                  <span>{prevMovie.title} {prevMovie.year ? `(${prevMovie.year})` : ""}</span>
+                  <button onClick={() => setMovie(prevMovie)} className="text-blue-500 hover:text-blue-700">View</button>
                 </li>
               ))}
             </ul>
@@ -246,15 +213,16 @@ const RandomMoviePicker = () => {
         <div className="mt-6 p-4 bg-purple-50 rounded-lg border border-purple-200">
           <h3 className="font-semibold text-purple-700 mb-2">Features</h3>
           <ul className="list-disc list-inside text-purple-600 text-sm space-y-1">
-            <li>Filter by genre and year range</li>
-            <li>View movie ratings</li>
-            <li>History of recent picks (up to 5)</li>
+            <li>Add movies with detailed info</li>
+            <li>Filter by genre, industry, year range, and minimum rating</li>
+            <li>Sort by title, year, or rating</li>
+            <li>History of recent picks</li>
             <li>Quick reset option</li>
           </ul>
         </div>
 
         <p className="text-xs text-gray-500 mt-4 text-center">
-          Note: Movie suggestions are from a curated list. Enjoy your movie night!
+          Total movies: {movies.length} | Filtered: {getFilteredMovies().length}
         </p>
       </div>
     </div>

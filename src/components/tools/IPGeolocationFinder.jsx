@@ -2,6 +2,9 @@
 import React, { useState, useCallback } from "react";
 import { FaSearch, FaMapMarkerAlt, FaSync, FaCopy } from "react-icons/fa";
 
+// Replace this with your actual Google Maps API key
+const GOOGLE_MAPS_API_KEY = "YOUR_ACTUAL_GOOGLE_MAPS_API_KEY_HERE";
+
 const IPGeolocationFinder = () => {
   const [ipAddress, setIpAddress] = useState("");
   const [geoData, setGeoData] = useState(null);
@@ -10,16 +13,21 @@ const IPGeolocationFinder = () => {
   const [history, setHistory] = useState([]);
   const [mapZoom, setMapZoom] = useState(10);
 
-  // Fetch geolocation data
-  const fetchGeoData = useCallback(async (ip) => {
+  // Fetch geolocation data with retry logic
+  const fetchGeoData = useCallback(async (ip, retries = 2) => {
     setLoading(true);
     setError("");
     setGeoData(null);
 
+    const url = ip.trim()
+      ? `http://ip-api.com/json/${ip}?fields=status,message,country,regionName,city,zip,lat,lon,isp,query,timezone,org`
+      : `http://ip-api.com/json/?fields=status,message,country,regionName,city,zip,lat,lon,isp,query,timezone,org`;
+
     try {
-      const response = await fetch(
-        `http://ip-api.com/json/${ip}?fields=status,message,country,regionName,city,zip,lat,lon,isp,query,timezone,org`
-      );
+      const response = await fetch(url);
+      if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.status}`);
+      }
       const data = await response.json();
 
       if (data.status === "success") {
@@ -32,7 +40,12 @@ const IPGeolocationFinder = () => {
         setError(data.message || "Invalid IP address or API error");
       }
     } catch (err) {
-      setError("Failed to fetch geolocation data. Please try again.");
+      if (retries > 0) {
+        console.warn(`Retrying... (${retries} attempts left)`);
+        setTimeout(() => fetchGeoData(ip, retries - 1), 1000); // Retry after 1 second
+      } else {
+        setError(`Failed to fetch geolocation data: ${err.message}. Please try again.`);
+      }
     } finally {
       setLoading(false);
     }
@@ -69,7 +82,7 @@ const IPGeolocationFinder = () => {
 
   return (
     <div className="min-h-screen  flex items-center justify-center ">
-      <div className="w-full  bg-white rounded-xl shadow-lg p-6 sm:p-8">
+      <div className="w-full bg-white rounded-xl shadow-lg p-6 sm:p-8">
         <h1 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-6 text-center">
           IP Geolocation Finder
         </h1>
@@ -181,7 +194,7 @@ const IPGeolocationFinder = () => {
             {/* Embedded Map Preview */}
             <div className="bg-gray-50 p-4 rounded-lg">
               <iframe
-                src={`https://www.google.com/maps/embed/v1/place?key=YOUR_GOOGLE_MAPS_API_KEY&q=${geoData.lat},${geoData.lon}&zoom=${mapZoom}`}
+                src={`https://www.google.com/maps/embed/v1/place?key=${GOOGLE_MAPS_API_KEY}&q=${geoData.lat},${geoData.lon}&zoom=${mapZoom}`}
                 width="100%"
                 height="300"
                 style={{ border: 0 }}
@@ -207,7 +220,9 @@ const IPGeolocationFinder = () => {
                     setGeoData(entry);
                   }}
                 >
-                  <span>{entry.ip} - {entry.city}, {entry.country}</span>
+                  <span>
+                    {entry.ip} - {entry.city}, {entry.country}
+                  </span>
                   <span className="text-xs text-gray-400">{entry.timestamp}</span>
                 </li>
               ))}
@@ -226,8 +241,6 @@ const IPGeolocationFinder = () => {
             <li>Search history (last 5 searches)</li>
           </ul>
         </div>
-
-        
       </div>
     </div>
   );

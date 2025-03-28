@@ -2,6 +2,9 @@
 import React, { useState, useCallback } from "react";
 import { FaSearch, FaSync, FaDownload } from "react-icons/fa";
 
+// Replace with your WHOISXMLAPI key (optional)
+const WHOIS_API_KEY = "YOUR_WHOISXMLAPI_KEY_HERE";
+
 const DomainAvailabilityChecker = () => {
   const [domain, setDomain] = useState("");
   const [results, setResults] = useState([]);
@@ -11,19 +14,46 @@ const DomainAvailabilityChecker = () => {
   const [customTld, setCustomTld] = useState("");
   const [history, setHistory] = useState([]);
 
-  // Simulated domain checking
-  const checkDomainAvailability = useCallback(
-    async (domainName) => {
-      // Mock API response
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+  // Real domain checking using WHOIS API
+  const checkDomainAvailability = useCallback(async (domainName) => {
+    try {
+      const url = WHOIS_API_KEY
+        ? `https://www.whoisxmlapi.com/whoisserver/WhoisService?apiKey=${WHOIS_API_KEY}&domainName=${domainName}&outputFormat=JSON`
+        : `https://api.whoisjs.com/whois/${domainName}`; // Fallback (requires CORS proxy or server-side handling)
+
+      const response = await fetch(url);
+      if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.status}`);
+      }
+      const data = await response.json();
+
+      // WHOISXMLAPI response parsing
+      if (WHOIS_API_KEY) {
+        const available = !data.WhoisRecord?.registryData?.createdDate; // If no creation date, assume available
+        return {
+          domain: domainName,
+          available: available || false,
+          checkedAt: new Date().toLocaleString(),
+        };
+      } 
+      // Fallback parsing (whoisjs or similar)
+      else {
+        const available = data.available || !data.registered; // Adjust based on API response
+        return {
+          domain: domainName,
+          available: available || false,
+          checkedAt: new Date().toLocaleString(),
+        };
+      }
+    } catch (err) {
       return {
         domain: domainName,
-        available: Math.random() > 0.5, // Random availability
+        available: null, // Indicates error
+        error: `Failed to check ${domainName}: ${err.message}`,
         checkedAt: new Date().toLocaleString(),
       };
-    },
-    []
-  );
+    }
+  }, []);
 
   const checkDomain = async (e) => {
     e.preventDefault();
@@ -55,7 +85,7 @@ const DomainAvailabilityChecker = () => {
         { domain, tlds: [...tlds], results: resultsData, timestamp: Date.now() },
       ].slice(-10)); // Keep last 10 searches
     } catch (err) {
-      setError("Failed to check domain availability");
+      setError("An unexpected error occurred");
     } finally {
       setLoading(false);
     }
@@ -89,9 +119,10 @@ const DomainAvailabilityChecker = () => {
   const downloadResults = () => {
     if (results.length) {
       const text = results
-        .map(
-          (r) =>
-            `${r.domain}: ${r.available ? "Available" : "Taken"} (Checked: ${r.checkedAt})`
+        .map((r) =>
+          r.available === null
+            ? `${r.domain}: Error (${r.error})`
+            : `${r.domain}: ${r.available ? "Available" : "Taken"} (Checked: ${r.checkedAt})`
         )
         .join("\n");
       const blob = new Blob([text], { type: "text/plain" });
@@ -104,10 +135,10 @@ const DomainAvailabilityChecker = () => {
 
   return (
     <div className="min-h-screen  flex items-center justify-center ">
-      <div className="w-full  bg-white rounded-xl shadow-lg p-6 sm:p-8">
-        <h1 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-6 text-center">
-          Domain Availability Checker
-        </h1>
+    <div className="w-full  bg-white rounded-xl shadow-lg p-6 sm:p-8">
+      <h1 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-6 text-center">
+        Domain Availability Checker
+      </h1>
 
         {/* Form */}
         <form onSubmit={checkDomain} className="space-y-6">
@@ -211,16 +242,34 @@ const DomainAvailabilityChecker = () => {
                 <li
                   key={index}
                   className={`p-2 rounded-md ${
-                    result.available ? "bg-green-100" : "bg-red-100"
+                    result.available === null
+                      ? "bg-yellow-100"
+                      : result.available
+                      ? "bg-green-100"
+                      : "bg-red-100"
                   }`}
                 >
                   <span className="font-medium">{result.domain}:</span>{" "}
                   <span
-                    className={result.available ? "text-green-600" : "text-red-600"}
+                    className={
+                      result.available === null
+                        ? "text-yellow-600"
+                        : result.available
+                        ? "text-green-600"
+                        : "text-red-600"
+                    }
                   >
-                    {result.available ? "Available" : "Taken"}
+                    {result.available === null
+                      ? "Error"
+                      : result.available
+                      ? "Available"
+                      : "Taken"}
                   </span>{" "}
+                  {result.error && (
+                    <span className="text-sm text-gray-500">({result.error})</span>
+                  )}
                   <span className="text-sm text-gray-500">
+                    {" "}
                     (Checked: {result.checkedAt})
                   </span>
                 </li>
@@ -258,8 +307,6 @@ const DomainAvailabilityChecker = () => {
             <li>Real-time validation and feedback</li>
           </ul>
         </div>
-
-       
       </div>
     </div>
   );

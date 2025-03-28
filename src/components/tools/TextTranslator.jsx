@@ -17,104 +17,83 @@ const TextTranslator = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [history, setHistory] = useState([]);
   const [options, setOptions] = useState({
-    sourceLang: "en",
+    sourceLang: "auto",
     targetLang: "es",
-    autoDetect: true,         // Auto-detect source language
-    preserveFormatting: true, // Preserve line breaks and spacing
-    formality: "default",     // Formal/informal tone (API-dependent)
+    autoDetect: true,
+    preserveFormatting: true,
+    formality: "default",
   });
 
-  // Expanded mock language dictionary (for demo purposes)
-  const mockTranslations = {
-    en: {
-      es: {
-        hello: "hola",
-        world: "mundo",
-        this: "esto",
-        is: "es",
-        a: "un",
-        test: "prueba",
-        good: "bueno",
-        morning: "mañana",
-      },
-      fr: {
-        hello: "bonjour",
-        world: "monde",
-        this: "ceci",
-        is: "est",
-        a: "un",
-        test: "test",
-        good: "bon",
-        morning: "matin",
-      },
-      de: {
-        hello: "hallo",
-        world: "welt",
-        this: "dies",
-        is: "ist",
-        a: "ein",
-        test: "test",
-        good: "gut",
-        morning: "morgen",
-      },
-    },
-    es: {
-      en: {
-        hola: "hello",
-        mundo: "world",
-        esto: "this",
-        es: "is",
-        un: "a",
-        prueba: "test",
-        bueno: "good",
-        mañana: "morning",
-      },
-    },
-  };
+  // LibreTranslate API endpoint (public instance)
+  const API_URL = "https://libretranslate.de/translate";
 
-  // Mock translation function (replace with real API in production, e.g., Google Translate API)
-  const translateText = (text, sourceLang, targetLang) => {
+  // Language options supported by LibreTranslate
+  const languages = [
+    { code: "auto", name: "Auto-Detect" },
+    { code: "en", name: "English" },
+    { code: "es", name: "Spanish" },
+    { code: "fr", name: "French" },
+    { code: "de", name: "German" },
+    { code: "it", name: "Italian" },
+    { code: "pt", name: "Portuguese" },
+    { code: "ru", name: "Russian" },
+    { code: "zh", name: "Chinese" },
+    { code: "ja", name: "Japanese" },
+    { code: "ar", name: "Arabic" },
+  ];
+
+  const translateText = async (text, sourceLang, targetLang) => {
     if (!text.trim()) {
-      return { error: "Please enter some text to translate" };
+      return { error: "Please enter some text to translate", changes: [] };
     }
 
-    let effectiveSourceLang = sourceLang;
-    if (options.autoDetect) {
-      // Simple mock auto-detection (in reality, use language detection API)
-      effectiveSourceLang = text.includes("hola") ? "es" : "en";
-    }
+    const effectiveSourceLang = options.autoDetect ? "auto" : sourceLang;
 
-    const translations = mockTranslations[effectiveSourceLang]?.[targetLang];
-    if (!translations) {
-      return { error: `Translation not available from ${effectiveSourceLang} to ${targetLang}` };
-    }
+    try {
+      const response = await fetch(API_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          q: text,
+          source: effectiveSourceLang,
+          target: targetLang,
+          format: "text",
+        }),
+      });
 
-    let result = text;
-    if (options.preserveFormatting) {
-      const lines = text.split("\n");
-      result = lines.map(line => {
-        const words = line.split(/\s+/).filter(w => w.length > 0);
-        const translatedWords = words.map(word => {
-          const cleanWord = word.toLowerCase().replace(/[^a-záéíóúñ]/gi, "");
-          const translation = translations[cleanWord] || word;
-          return word[0] === word[0].toUpperCase() ? translation.charAt(0).toUpperCase() + translation.slice(1) : translation;
-        });
-        return translatedWords.join(" ");
-      }).join("\n");
-    } else {
-      const words = text.toLowerCase().split(/\s+/).filter(w => w.length > 0);
-      const translatedWords = words.map(word => translations[word] || word);
-      result = translatedWords.join(" ");
-      result = result.charAt(0).toUpperCase() + result.slice(1);
-    }
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
 
-    return {
-      original: text,
-      translated: result,
-      sourceLang: effectiveSourceLang,
-      targetLang,
-      changes: [`Translated from ${effectiveSourceLang} to ${targetLang}`],
-    };
+      const data = await response.json();
+      const detectedLang = data.detectedLanguage?.language || effectiveSourceLang;
+
+      let result = data.translatedText;
+      if (options.preserveFormatting) {
+        const originalLines = text.split("\n");
+        const translatedLines = result.split("\n");
+        result = originalLines
+          .map((line, index) =>
+            translatedLines[index] ? translatedLines[index] : line
+          )
+          .join("\n");
+      }
+
+      return {
+        original: text,
+        translated: result,
+        sourceLang: detectedLang,
+        targetLang,
+        changes: [
+          `Translated from ${detectedLang === "auto" ? "auto-detected" : detectedLang} to ${targetLang}`,
+        ],
+      };
+    } catch (err) {
+      return {
+        error: `Translation failed: ${err.message}`,
+        changes: [],
+      };
+    }
   };
 
   const handleTranslate = useCallback(async () => {
@@ -123,17 +102,23 @@ const TextTranslator = () => {
     setIsLoading(true);
 
     try {
-      await new Promise(resolve => setTimeout(resolve, 500)); // Simulate API delay
-      const result = translateText(inputText, options.sourceLang, options.targetLang);
+      const result = await translateText(inputText, options.sourceLang, options.targetLang);
 
       if (result.error) {
         setError(result.error);
       } else {
         setTranslatedText(result.translated);
-        setHistory(prev => [...prev, { input: inputText, output: result.translated, options: { ...options, sourceLang: result.sourceLang } }].slice(-5));
+        setHistory((prev) => [
+          ...prev,
+          {
+            input: inputText,
+            output: result.translated,
+            options: { ...options, sourceLang: result.sourceLang },
+          },
+        ].slice(-5));
       }
     } catch (err) {
-      setError("An error occurred while translating the text");
+      setError("An unexpected error occurred during translation");
     } finally {
       setIsLoading(false);
     }
@@ -144,7 +129,7 @@ const TextTranslator = () => {
     setTranslatedText("");
     setError("");
     setOptions({
-      sourceLang: "en",
+      sourceLang: "auto",
       targetLang: "es",
       autoDetect: true,
       preserveFormatting: true,
@@ -153,7 +138,7 @@ const TextTranslator = () => {
   };
 
   const handleOptionChange = (option, value) => {
-    setOptions(prev => ({ ...prev, [option]: value }));
+    setOptions((prev) => ({ ...prev, [option]: value }));
   };
 
   const exportTranslatedText = () => {
@@ -166,16 +151,8 @@ const TextTranslator = () => {
     URL.revokeObjectURL(link.href);
   };
 
-  // Expanded language options (for demo; expand with real API)
-  const languages = [
-    { code: "en", name: "English" },
-    { code: "es", name: "Spanish" },
-    { code: "fr", name: "French" },
-    { code: "de", name: "German" },
-  ];
-
   return (
-    <div className="min-h-screen flex items-center justify-center ">
+    <div className="min-h-screen flex items-center justify-center">
       <div className="bg-white p-8 rounded-2xl shadow-xl w-full">
         <h1 className="text-4xl font-bold mb-8 text-center text-gray-900">
           Advanced Text Translator
@@ -211,8 +188,10 @@ const TextTranslator = () => {
                   disabled={options.autoDetect}
                   className={`w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500 ${options.autoDetect ? "opacity-50" : ""}`}
                 >
-                  {languages.map(lang => (
-                    <option key={lang.code} value={lang.code}>{lang.name}</option>
+                  {languages.map((lang) => (
+                    <option key={lang.code} value={lang.code}>
+                      {lang.name}
+                    </option>
                   ))}
                 </select>
               </div>
@@ -223,8 +202,10 @@ const TextTranslator = () => {
                   onChange={(e) => handleOptionChange("targetLang", e.target.value)}
                   className="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
-                  {languages.map(lang => (
-                    <option key={lang.code} value={lang.code}>{lang.name}</option>
+                  {languages.filter((lang) => lang.code !== "auto").map((lang) => (
+                    <option key={lang.code} value={lang.code}>
+                      {lang.name}
+                    </option>
                   ))}
                 </select>
               </div>
@@ -306,7 +287,9 @@ const TextTranslator = () => {
         {translatedText && (
           <div className="mt-8 p-6 bg-blue-50 rounded-lg">
             <h2 className="text-xl font-semibold text-gray-800 text-center">
-              Translated Text ({translateText(inputText, options.sourceLang, options.targetLang).sourceLang} → {options.targetLang})
+              Translated Text (
+              {translateText(inputText, options.sourceLang, options.targetLang).then((res) => res.sourceLang)} →{" "}
+              {options.targetLang})
             </h2>
             <p className="mt-3 text-lg text-gray-700 break-words whitespace-pre-wrap max-h-64 overflow-auto">
               {translatedText}
@@ -314,12 +297,16 @@ const TextTranslator = () => {
             <div className="mt-4 text-sm text-gray-600">
               <p className="font-medium">Details:</p>
               <ul className="list-disc list-inside mt-2">
-                {translateText(inputText, options.sourceLang, options.targetLang).changes.map((change, index) => (
-                  <li key={index}>{change}</li>
-                ))}
+                {translateText(inputText, options.sourceLang, options.targetLang)
+                  .then((res) => res.changes)
+                  .then((changes) =>
+                    changes.map((change, index) => <li key={index}>{change}</li>)
+                  )}
                 {options.autoDetect && <li>Auto-detected source language</li>}
                 {options.preserveFormatting && <li>Preserved original formatting</li>}
-                {options.formality !== "default" && <li>Applied {options.formality} tone</li>}
+                {options.formality !== "default" && (
+                  <li>Applied {options.formality} tone</li>
+                )}
               </ul>
             </div>
             <button
@@ -339,23 +326,28 @@ const TextTranslator = () => {
               <FaHistory className="mr-2" /> Recent Translations (Last 5)
             </h3>
             <ul className="mt-2 text-sm text-gray-600 space-y-2">
-              {history.slice().reverse().map((entry, index) => (
-                <li key={index} className="flex items-center justify-between">
-                  <span>
-                    "{entry.output.slice(0, 30)}{entry.output.length > 30 ? "..." : ""}" ({entry.options.sourceLang} → {entry.options.targetLang})
-                  </span>
-                  <button
-                    onClick={() => {
-                      setInputText(entry.input);
-                      setTranslatedText(entry.output);
-                      setOptions(entry.options);
-                    }}
-                    className="text-blue-500 hover:text-blue-700"
-                  >
-                    <FaUndo />
-                  </button>
-                </li>
-              ))}
+              {history
+                .slice()
+                .reverse()
+                .map((entry, index) => (
+                  <li key={index} className="flex items-center justify-between">
+                    <span>
+                      "{entry.output.slice(0, 30)}
+                      {entry.output.length > 30 ? "..." : ""}" ({entry.options.sourceLang} →{" "}
+                      {entry.options.targetLang})
+                    </span>
+                    <button
+                      onClick={() => {
+                        setInputText(entry.input);
+                        setTranslatedText(entry.output);
+                        setOptions(entry.options);
+                      }}
+                      className="text-blue-500 hover:text-blue-700"
+                    >
+                      <FaUndo />
+                    </button>
+                  </li>
+                ))}
             </ul>
           </div>
         )}
@@ -369,6 +361,7 @@ const TextTranslator = () => {
             <li>Preserve formatting and adjust formality</li>
             <li>Export translations and track history</li>
             <li>Supports up to 10000 characters</li>
+            <li>Powered by LibreTranslate API</li>
           </ul>
         </div>
       </div>

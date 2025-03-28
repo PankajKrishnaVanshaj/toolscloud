@@ -96,7 +96,7 @@ const VirtualRulerTool = () => {
       onMouseMove={handleMouseMove}
       onMouseUp={handleMouseUp}
     >
-      <div className=" mx-auto bg-white rounded-xl shadow-lg p-6 mb-4">
+      <div className="w-full mx-auto bg-white rounded-xl shadow-lg p-6 mb-4">
         <h1 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-6 text-center">
           Virtual Ruler Tool
         </h1>

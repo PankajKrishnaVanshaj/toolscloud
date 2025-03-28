@@ -1,6 +1,6 @@
 "use client";
 import React, { useState, useCallback } from "react";
-import { FaPlus, FaTrash, FaCalendarCheck, FaDownload } from "react-icons/fa";
+import { FaPlus, FaTrash, FaCalendarCheck, FaDownload, FaSync } from "react-icons/fa";
 import html2canvas from "html2canvas"; // For downloading schedule
 
 const TimezoneMeetingScheduler = () => {
