@@ -6,9 +6,9 @@ const DepreciationCalculator = () => {
   const [cost, setCost] = useState(10000);
   const [salvageValue, setSalvageValue] = useState(1000);
   const [usefulLife, setUsefulLife] = useState(5);
-  const [method, setMethod] = useState("straight-line"); // New: Selectable method
+  const [method, setMethod] = useState("straight-line");
   const [results, setResults] = useState(null);
-  const [showChart, setShowChart] = useState(false); // New: Toggle chart
+  const [showChart, setShowChart] = useState(false);
 
   const calculateDepreciation = useCallback(() => {
     if (cost <= 0 || salvageValue < 0 || usefulLife <= 0 || salvageValue >= cost) {
@@ -47,7 +47,7 @@ const DepreciationCalculator = () => {
       if (ddbBookValue <= salvageValue) break;
     }
 
-    // Sum-of-the-Years'-Digits Method (New)
+    // Sum-of-the-Years'-Digits Method
     const sumOfYears = (usefulLife * (usefulLife + 1)) / 2;
     schedules["sum-of-years"] = [];
     let sydBookValue = cost;
@@ -75,7 +75,6 @@ const DepreciationCalculator = () => {
     calculateDepreciation();
   }, [cost, salvageValue, usefulLife, calculateDepreciation]);
 
-  // Reset inputs
   const reset = () => {
     setCost(10000);
     setSalvageValue(1000);
@@ -84,7 +83,6 @@ const DepreciationCalculator = () => {
     setShowChart(false);
   };
 
-  // Download as CSV
   const downloadCSV = () => {
     if (!results || !results[method]) return;
     const schedule = results[method].schedule;
@@ -102,8 +100,8 @@ const DepreciationCalculator = () => {
   };
 
   return (
-    <div className="min-h-screen  flex items-center justify-center ">
-      <div className="w-full  bg-white rounded-xl shadow-lg p-6 sm:p-8">
+    <div className="min-h-screen flex items-center justify-center">
+      <div className="w-full bg-white rounded-xl shadow-lg p-6 sm:p-8">
         <h1 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-6 text-center">
           Depreciation Calculator
         </h1>
@@ -198,12 +196,12 @@ const DepreciationCalculator = () => {
             {/* Method-Specific Info */}
             {method === "straight-line" && (
               <p className="mb-2">
-                Annual Depreciation: ${results.straightLine.annual.toFixed(2)}
+                Annual Depreciation: ${results["straight-line"].annual.toFixed(2)}
               </p>
             )}
             {method === "double-declining" && (
               <p className="mb-2">
-                Depreciation Rate: {results.doubleDeclining.rate.toFixed(2)}%
+                Depreciation Rate: ${results["double-declining"].rate.toFixed(2)}%
               </p>
             )}
 
@@ -231,7 +229,7 @@ const DepreciationCalculator = () => {
               </table>
             </div>
 
-            {/* Simple Chart (using Tailwind for styling) */}
+            {/* Simple Chart */}
             {showChart && (
               <div className="mt-6 p-4 bg-gray-50 rounded-lg">
                 <h3 className="text-md font-semibold mb-2">Depreciation Trend</h3>

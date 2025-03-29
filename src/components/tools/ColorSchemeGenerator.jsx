@@ -6,21 +6,25 @@ const ColorSchemeGenerator = () => {
   const [baseColor, setBaseColor] = useState("#FF6B6B");
   const [schemeType, setSchemeType] = useState("monochromatic");
   const [schemeColors, setSchemeColors] = useState([]);
-  const [variation, setVariation] = useState(20); // For monochromatic
-  const [saturationAdjust, setSaturationAdjust] = useState(0); // New: Saturation tweak
-  const [lightnessAdjust, setLightnessAdjust] = useState(0); // New: Lightness tweak
-  const [colorCount, setColorCount] = useState(3); // Adjustable color count
+  const [variation, setVariation] = useState(20);
+  const [saturationAdjust, setSaturationAdjust] = useState(0);
+  const [lightnessAdjust, setLightnessAdjust] = useState(0);
+  const [colorCount, setColorCount] = useState(3);
+  const [error, setError] = useState(null);
 
   // Convert HEX to RGB
   const hexToRgb = (hex) => {
     const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-    return result
-      ? {
-          r: parseInt(result[1], 16),
-          g: parseInt(result[2], 16),
-          b: parseInt(result[3], 16),
-        }
-      : { r: 0, g: 0, b: 0 };
+    if (!result) {
+      setError("Invalid HEX color code. Using default #000000.");
+      return { r: 0, g: 0, b: 0 };
+    }
+    setError(null);
+    return {
+      r: parseInt(result[1], 16),
+      g: parseInt(result[2], 16),
+      b: parseInt(result[3], 16),
+    };
   };
 
   // Convert RGB to HEX
@@ -72,6 +76,8 @@ const ColorSchemeGenerator = () => {
   // Convert HSL to RGB
   const hslToRgb = (h, s, l) => {
     h /= 360;
+    s = Math.max(0, Math.min(1, s));
+    l = Math.max(0, Math.min(1, l));
     const c = (1 - Math.abs(2 * l - 1)) * s;
     const x = c * (1 - Math.abs(((h * 6) % 2) - 1));
     const m = l - c / 2;
@@ -119,47 +125,41 @@ const ColorSchemeGenerator = () => {
     let colors = [];
 
     const applyAdjustments = (h, s, l) =>
-      rgbToHex(hslToRgb(h, adjustedS, Math.max(0.1, Math.min(0.9, l))));
+      rgbToHex(...Object.values(hslToRgb(h, s, l)));
 
     switch (schemeType) {
       case "monochromatic":
         colors = Array.from({ length: colorCount }, (_, i) => {
           const step = (variation / 100) * (i - Math.floor(colorCount / 2));
-          return applyAdjustments(hsl.h, hsl.s, hsl.l + step);
+          return applyAdjustments(hsl.h, adjustedS, adjustedL + step);
         });
         break;
       case "complementary":
-        colors = [
-          applyAdjustments(hsl.h, hsl.s, hsl.l),
-          applyAdjustments((hsl.h + 180) % 360, hsl.s, hsl.l),
-        ];
+        colors = Array.from({ length: Math.min(colorCount, 2) }, (_, i) =>
+          applyAdjustments((hsl.h + 180 * i) % 360, adjustedS, adjustedL)
+        );
         break;
       case "analogous":
         colors = Array.from({ length: colorCount }, (_, i) =>
-          applyAdjustments((hsl.h + 30 * (i - Math.floor(colorCount / 2) + 1)) % 360, hsl.s, hsl.l)
+          applyAdjustments((hsl.h + 30 * (i - Math.floor(colorCount / 2))) % 360, adjustedS, adjustedL)
         );
         break;
       case "triadic":
-        colors = [
-          applyAdjustments(hsl.h, hsl.s, hsl.l),
-          applyAdjustments((hsl.h + 120) % 360, hsl.s, hsl.l),
-          applyAdjustments((hsl.h + 240) % 360, hsl.s, hsl.l),
-        ];
+        colors = Array.from({ length: Math.min(colorCount, 3) }, (_, i) =>
+          applyAdjustments((hsl.h + 120 * i) % 360, adjustedS, adjustedL)
+        );
         break;
       case "tetradic":
-        colors = [
-          applyAdjustments(hsl.h, hsl.s, hsl.l),
-          applyAdjustments((hsl.h + 90) % 360, hsl.s, hsl.l),
-          applyAdjustments((hsl.h + 180) % 360, hsl.s, hsl.l),
-          applyAdjustments((hsl.h + 270) % 360, hsl.s, hsl.l),
-        ];
+        colors = Array.from({ length: Math.min(colorCount, 4) }, (_, i) =>
+          applyAdjustments((hsl.h + 90 * i) % 360, adjustedS, adjustedL)
+        );
         break;
       case "split-complementary":
-        colors = [
-          applyAdjustments(hsl.h, hsl.s, hsl.l),
-          applyAdjustments((hsl.h + 150) % 360, hsl.s, hsl.l),
-          applyAdjustments((hsl.h + 210) % 360, hsl.s, hsl.l),
-        ];
+        colors = Array.from({ length: Math.min(colorCount, 3) }, (_, i) =>
+          i === 0
+            ? applyAdjustments(hsl.h, adjustedS, adjustedL)
+            : applyAdjustments((hsl.h + 150 + 60 * (i - 1)) % 360, adjustedS, adjustedL)
+        );
         break;
     }
     setSchemeColors(colors);
@@ -202,14 +202,32 @@ const ColorSchemeGenerator = () => {
     setSaturationAdjust(0);
     setLightnessAdjust(0);
     setColorCount(3);
+    setError(null);
+  };
+
+  // Determine max color count based on scheme type
+  const getMaxColorCount = () => {
+    switch (schemeType) {
+      case "complementary": return 2;
+      case "triadic":
+      case "split-complementary": return 3;
+      case "tetradic": return 4;
+      case "monochromatic":
+      case "analogous": return 6;
+      default: return 6;
+    }
   };
 
   return (
-    <div className="min-h-screen  flex items-center justify-center ">
-      <div className="w-full  bg-white rounded-xl shadow-lg p-6 sm:p-8">
+    <div className="min-h-screen flex items-center justify-center">
+      <div className="w-full bg-white rounded-xl shadow-lg p-6 sm:p-8">
         <h1 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-6">
           Color Scheme Generator
         </h1>
+
+        {error && (
+          <p className="text-red-600 text-sm mb-4">{error}</p>
+        )}
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Controls */}
@@ -230,6 +248,7 @@ const ColorSchemeGenerator = () => {
                   value={baseColor}
                   onChange={(e) => setBaseColor(e.target.value)}
                   className="flex-1 p-2 border rounded-md focus:ring-2 focus:ring-blue-500 uppercase"
+                  maxLength="7"
                 />
               </div>
             </div>
@@ -240,7 +259,10 @@ const ColorSchemeGenerator = () => {
               </label>
               <select
                 value={schemeType}
-                onChange={(e) => setSchemeType(e.target.value)}
+                onChange={(e) => {
+                  setSchemeType(e.target.value);
+                  setColorCount(Math.min(colorCount, getMaxColorCount()));
+                }}
                 className="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500"
               >
                 <option value="monochromatic">Monochromatic</option>
@@ -259,7 +281,7 @@ const ColorSchemeGenerator = () => {
               <input
                 type="range"
                 min="2"
-                max={schemeType === "monochromatic" || schemeType === "analogous" ? "6" : "4"}
+                max={getMaxColorCount()}
                 value={colorCount}
                 onChange={(e) => setColorCount(parseInt(e.target.value))}
                 className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-500"
@@ -277,6 +299,7 @@ const ColorSchemeGenerator = () => {
                 value={variation}
                 onChange={(e) => setVariation(parseInt(e.target.value))}
                 className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-500"
+                disabled={schemeType !== "monochromatic"}
               />
             </div>
 
@@ -369,7 +392,7 @@ const ColorSchemeGenerator = () => {
           <h3 className="font-semibold text-blue-700 mb-2">Features</h3>
           <ul className="list-disc list-inside text-blue-600 text-sm space-y-1">
             <li>Multiple scheme types including Split Complementary</li>
-            <li>Adjustable number of colors</li>
+            <li>Adjustable number of colors (scheme-specific limits)</li>
             <li>Fine-tune with variation, saturation, and lightness</li>
             <li>Real-time preview and color swatches</li>
             <li>Export as CSS variables or JSON</li>

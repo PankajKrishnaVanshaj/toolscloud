@@ -9,12 +9,12 @@ const CapitalGainsTaxCalculator = () => {
     purchasePrice: 0,
     salePrice: 0,
     holdingPeriod: "long",
-    state: "none", // New: State selection
-    includeNIIT: false, // New: Net Investment Income Tax
+    state: "none",
+    includeNIIT: false,
   });
   const [results, setResults] = useState(null);
 
-  // 2025 U.S. Capital Gains Tax Brackets (hypothetical, updated for March 19, 2025)
+  // 2025 U.S. Capital Gains Tax Brackets (hypothetical, updated for March 29, 2025)
   const taxBrackets = {
     single: [
       { max: 47000, rate: 0 },
@@ -46,6 +46,9 @@ const CapitalGainsTaxCalculator = () => {
       return;
     }
 
+    // Calculate total income (needed for NIIT and long-term brackets)
+    const totalIncome = Number(taxableIncome) + capitalGain;
+    
     let federalTaxRate = 0;
     let federalTax = 0;
 
@@ -55,7 +58,6 @@ const CapitalGainsTaxCalculator = () => {
       federalTax = capitalGain * (federalTaxRate / 100);
     } else {
       // Long-term gains
-      const totalIncome = Number(taxableIncome) + capitalGain;
       const brackets = taxBrackets[filingStatus];
       for (const bracket of brackets) {
         if (totalIncome <= bracket.max) {
@@ -68,7 +70,7 @@ const CapitalGainsTaxCalculator = () => {
 
     // State tax
     const stateTaxRate = stateTaxRates[state];
-    const stateTax = holdingPeriod === "short" ? capitalGain * (stateTaxRate / 100) : 0; // Long-term often exempt
+    const stateTax = holdingPeriod === "short" ? capitalGain * (stateTaxRate / 100) : 0;
 
     // Net Investment Income Tax (3.8% for high earners)
     const niit = includeNIIT && totalIncome > (filingStatus === "single" ? 200000 : 250000) ? capitalGain * 0.038 : 0;
@@ -112,8 +114,8 @@ const CapitalGainsTaxCalculator = () => {
   };
 
   return (
-    <div className="min-h-screen  flex items-center justify-center ">
-      <div className="w-full  bg-white rounded-xl shadow-lg p-6 sm:p-8">
+    <div className="min-h-screen flex items-center justify-center">
+      <div className="w-full bg-white rounded-xl shadow-lg p-6 sm:p-8">
         <h1 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-6 text-center">
           Capital Gains Tax Calculator
         </h1>
@@ -258,8 +260,6 @@ const CapitalGainsTaxCalculator = () => {
             <FaSync className="mr-2" /> Reset
           </button>
         </div>
-
-       
 
         {/* Features */}
         <div className="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">

@@ -1,7 +1,7 @@
 "use client";
 import React, { useState, useRef, useEffect, useCallback } from "react";
 import { FaDownload, FaSync, FaUpload } from "react-icons/fa";
-import html2canvas from "html2canvas"; // For downloading results
+import html2canvas from "html2canvas";
 
 const ColorBlindnessSimulator = () => {
   const [inputType, setInputType] = useState("color");
@@ -96,15 +96,15 @@ const ColorBlindnessSimulator = () => {
 
   // Process image
   const processImage = useCallback(() => {
-    if (!imageSrc) return;
+    const img = imageRef.current;
+    if (!img || !img.complete || img.naturalWidth === 0) return; // Ensure image is loaded
 
     setIsProcessing(true);
     const canvas = canvasRef.current;
     const ctx = canvas.getContext("2d");
-    const img = imageRef.current;
 
-    canvas.width = img.width;
-    canvas.height = img.height;
+    canvas.width = img.naturalWidth;
+    canvas.height = img.naturalHeight;
     ctx.drawImage(img, 0, 0);
 
     const types = Object.keys(selectedTypes).filter((type) => selectedTypes[type]);
@@ -133,7 +133,7 @@ const ColorBlindnessSimulator = () => {
     setSimulatedImages(results);
     setSimulatedColors({});
     setIsProcessing(false);
-  }, [imageSrc, selectedTypes]);
+  }, [selectedTypes]); // Removed imageSrc from dependencies
 
   // Handle image upload
   const handleImageUpload = (e) => {
@@ -142,7 +142,6 @@ const ColorBlindnessSimulator = () => {
       const reader = new FileReader();
       reader.onload = (event) => {
         setImageSrc(event.target.result);
-        setSimulatedColors({});
       };
       reader.readAsDataURL(file);
     }
@@ -175,17 +174,31 @@ const ColorBlindnessSimulator = () => {
     });
   };
 
+  // Effect to handle processing based on input type
   useEffect(() => {
     if (inputType === "color") {
       processColor();
-    } else if (inputType === "image" && imageSrc) {
-      processImage();
     }
-  }, [inputType, inputColor, imageSrc, processColor, processImage]);
+  }, [inputType, inputColor, processColor]);
+
+  // Effect to handle image load and processing
+  useEffect(() => {
+    if (inputType === "image" && imageSrc) {
+      const img = imageRef.current;
+      if (img) {
+        img.onload = () => {
+          processImage();
+        };
+        if (img.complete && img.naturalWidth !== 0) {
+          processImage(); // Process immediately if already loaded
+        }
+      }
+    }
+  }, [inputType, imageSrc, processImage]);
 
   return (
-    <div className="min-h-screen  flex items-center justify-center ">
-      <div className="w-full  bg-white rounded-xl shadow-lg p-6 sm:p-8">
+    <div className="min-h-screen flex items-center justify-center">
+      <div className="w-full bg-white rounded-xl shadow-lg p-6 sm:p-8">
         <h1 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-6">
           Color Blindness Simulator
         </h1>
@@ -321,8 +334,7 @@ const ColorBlindnessSimulator = () => {
               onClick={downloadResults}
               disabled={
                 (inputType === "color" && !Object.keys(simulatedColors).length) ||
-                (inputType === "image" && !Object.keys(simulatedImages).length) ||
-                isProcessing
+                (inputType === "image hunting ground && !isProcessing...")
               }
               className="flex-1 py-2 px-4 bg-green-600 text-white rounded-md hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors flex items-center justify-center"
             >

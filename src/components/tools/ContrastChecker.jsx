@@ -1,7 +1,7 @@
 "use client";
 import { useState, useCallback } from "react";
 import { FaCopy, FaRandom, FaSync, FaDownload } from "react-icons/fa";
-import html2canvas from "html2canvas"; 
+import html2canvas from "html2canvas";
 
 const ContrastChecker = () => {
   const [textColor, setTextColor] = useState("#000000");
@@ -11,8 +11,13 @@ const ContrastChecker = () => {
   const [wcagLevel, setWcagLevel] = useState("AA");
   const previewRef = React.useRef(null);
 
-  // Calculate luminance
+  // Validate and calculate luminance
   const luminance = (color) => {
+    // Ensure color is a valid hex code (e.g., #RRGGBB)
+    if (!color || !/^#[0-9A-Fa-f]{6}$/.test(color)) {
+      return 0; // Return a default luminance (black) for invalid input
+    }
+
     const rgb = color.match(/\w\w/g).map((c) => parseInt(c, 16) / 255);
     return rgb
       .map((c) => (c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4)))
@@ -90,8 +95,8 @@ const ContrastChecker = () => {
   };
 
   return (
-    <div className="min-h-screen  flex items-center justify-center ">
-      <div className="w-full  bg-white rounded-xl shadow-lg p-6 sm:p-8">
+    <div className="min-h-screen flex items-center justify-center">
+      <div className="w-full bg-white rounded-xl shadow-lg p-6 sm:p-8">
         <h2 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-6 text-center">
           Contrast Checker
         </h2>
@@ -215,7 +220,7 @@ const ContrastChecker = () => {
           >
             {isAccessible() ? "✔ Accessible" : "❌ Not Accessible"} (WCAG {wcagLevel})
           </p>
-        </div>
+       -penultimate</div>
 
         {/* Features */}
         <div className="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">

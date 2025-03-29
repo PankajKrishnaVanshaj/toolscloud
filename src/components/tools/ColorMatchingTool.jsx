@@ -6,37 +6,50 @@ const ColorMatchingTool = () => {
   const [baseColor, setBaseColor] = useState("#FF6B6B");
   const [matchType, setMatchType] = useState("complementary");
   const [matches, setMatches] = useState([]);
-  const [savedMatches, setSavedMatches] = useState([]);
+  const [savedMatches, setSavedMatches] = useState(() => {
+    return JSON.parse(localStorage.getItem("savedMatches")) || [];
+  });
   const [adjustment, setAdjustment] = useState({ hue: 0, saturation: 0, lightness: 0 });
+  const [error, setError] = useState(null);
 
   // Convert HEX to RGB
   const hexToRgb = (hex) => {
     const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-    return result
-      ? {
-          r: parseInt(result[1], 16),
-          g: parseInt(result[2], 16),
-          b: parseInt(result[3], 16),
-        }
-      : { r: 0, g: 0, b: 0 };
+    if (!result) {
+      setError("Invalid HEX color code. Using default #000000.");
+      return { r: 0, g: 0, b: 0 };
+    }
+    setError(null);
+    return {
+      r: parseInt(result[1], 16),
+      g: parseInt(result[2], 16),
+      b: parseInt(result[3], 16),
+    };
   };
 
-  // Convert RGB to HEX
-  const rgbToHex = (r, g, b) =>
-    "#" +
-    [r, g, b]
-      .map((x) => {
-        const hex = Math.round(Math.max(0, Math.min(255, x))).toString(16);
-        return hex.length === 1 ? "0" + hex : hex;
-      })
-      .join("")
-      .toUpperCase();
+  // Convert RGB to HEX with NaN handling
+  const rgbToHex = (r, g, b) => {
+    const safeValue = (x) => {
+      if (isNaN(x) || x === undefined || x === null) return 0;
+      return Math.round(Math.max(0, Math.min(255, x)));
+    };
+    return (
+      "#" +
+      [safeValue(r), safeValue(g), safeValue(b)]
+        .map((x) => {
+          const hex = x.toString(16);
+          return hex.length === 1 ? "0" + hex : hex;
+        })
+        .join("")
+        .toUpperCase()
+    );
+  };
 
   // Convert RGB to HSL
   const rgbToHsl = (r, g, b) => {
-    r /= 255;
-    g /= 255;
-    b /= 255;
+    r = Math.max(0, Math.min(255, r)) / 255;
+    g = Math.max(0, Math.min(255, g)) / 255;
+    b = Math.max(0, Math.min(255, b)) / 255;
     const max = Math.max(r, g, b);
     const min = Math.min(r, g, b);
     let h,
@@ -64,31 +77,39 @@ const ColorMatchingTool = () => {
     return { h: h * 360, s, l };
   };
 
-  // Convert HSL to RGB
+  // Convert HSL to RGB with NaN protection
   const hslToRgb = (h, s, l) => {
-    h /= 360;
+    h = isNaN(h) ? 0 : (h % 360 + 360) % 360; // Ensure hue is valid
+    s = isNaN(s) ? 0 : Math.max(0, Math.min(1, s));
+    l = isNaN(l) ? 0.5 : Math.max(0, Math.min(1, l));
+
+    if (s === 0) {
+      const val = Math.round(l * 255);
+      return { r: val, g: val, b: val }; // Grayscale case
+    }
+
     const c = (1 - Math.abs(2 * l - 1)) * s;
-    const x = c * (1 - Math.abs(((h * 6) % 2) - 1));
+    const x = c * (1 - Math.abs(((h / 60) % 2) - 1));
     const m = l - c / 2;
     let r, g, b;
 
-    if (h < 1 / 6) {
+    if (h < 60) {
       r = c;
       g = x;
       b = 0;
-    } else if (h < 2 / 6) {
+    } else if (h < 120) {
       r = x;
       g = c;
       b = 0;
-    } else if (h < 3 / 6) {
+    } else if (h < 180) {
       r = 0;
       g = c;
       b = x;
-    } else if (h < 4 / 6) {
+    } else if (h < 240) {
       r = 0;
       g = x;
       b = c;
-    } else if (h < 5 / 6) {
+    } else if (h < 300) {
       r = x;
       g = 0;
       b = c;
@@ -110,9 +131,9 @@ const ColorMatchingTool = () => {
     const rgb = hexToRgb(baseColor);
     let hsl = rgbToHsl(rgb.r, rgb.g, rgb.b);
     hsl = {
-      h: (hsl.h + adjustment.hue) % 360,
-      s: Math.max(0, Math.min(1, hsl.s + adjustment.saturation / 100)),
-      l: Math.max(0, Math.min(1, hsl.l + adjustment.lightness / 100)),
+      h: (hsl.h + (isNaN(adjustment.hue) ? 0 : adjustment.hue)) % 360,
+      s: Math.max(0, Math.min(1, hsl.s + (isNaN(adjustment.saturation) ? 0 : adjustment.saturation / 100))),
+      l: Math.max(0, Math.min(1, hsl.l + (isNaN(adjustment.lightness) ? 0 : adjustment.lightness / 100))),
     };
     let newMatches = [];
 
@@ -156,10 +177,18 @@ const ColorMatchingTool = () => {
           rgbToHex(hslToRgb((hsl.h + 210) % 360, hsl.s, hsl.l)),
         ];
         break;
+      default:
+        newMatches = [];
     }
     setMatches(newMatches);
   }, [baseColor, matchType, adjustment]);
 
+  // Save savedMatches to localStorage
+  useEffect(() => {
+    localStorage.setItem("savedMatches", JSON.stringify(savedMatches));
+  }, [savedMatches]);
+
+  // Generate matches on state changes
   useEffect(() => {
     generateMatches();
   }, [generateMatches]);
@@ -176,23 +205,32 @@ const ColorMatchingTool = () => {
     setSavedMatches(savedMatches.filter((match) => match !== color));
   };
 
-  // Reset adjustments
-  const resetAdjustments = () => {
+  // Reset everything
+  const resetAll = () => {
+    setBaseColor("#FF6B6B");
+    setMatchType("complementary");
     setAdjustment({ hue: 0, saturation: 0, lightness: 0 });
+    setSavedMatches([]);
+    setError(null);
   };
 
   // Copy all matches
   const copyAllMatches = () => {
     const text = [baseColor, ...matches].join("\n");
     navigator.clipboard.writeText(text);
+    alert("Palette copied to clipboard!");
   };
 
   return (
-    <div className="min-h-screen  flex items-center justify-center ">
-      <div className="w-full  bg-white rounded-xl shadow-lg p-6 sm:p-8">
+    <div className="min-h-screen flex items-center justify-center">
+      <div className="w-full bg-white rounded-xl shadow-lg p-6 sm:p-8">
         <h1 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-6">
           Color Matching Tool
         </h1>
+
+        {error && (
+          <p className="text-red-600 text-sm mb-4">{error}</p>
+        )}
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Controls and Matches */}
@@ -214,6 +252,7 @@ const ColorMatchingTool = () => {
                   value={baseColor}
                   onChange={(e) => setBaseColor(e.target.value)}
                   className="flex-1 p-2 border rounded-md focus:ring-2 focus:ring-blue-500 uppercase"
+                  maxLength="7"
                 />
               </div>
             </div>
@@ -270,7 +309,7 @@ const ColorMatchingTool = () => {
                 </div>
               ))}
               <button
-                onClick={resetAdjustments}
+                onClick={() => setAdjustment({ hue: 0, saturation: 0, lightness: 0 })}
                 className="mt-2 text-sm text-blue-500 hover:underline flex items-center gap-1"
               >
                 <FaSync /> Reset Adjustments
@@ -292,8 +331,9 @@ const ColorMatchingTool = () => {
                 {matches.map((color, index) => (
                   <div key={index} className="flex flex-col items-center">
                     <div
-                      className="w-16 h-16 rounded-lg shadow-md transition-transform hover:scale-105"
+                      className="w-16 h-16 rounded-lg shadow-md transition-transform hover:scale-105 cursor-pointer"
                       style={{ backgroundColor: color }}
+                      onClick={() => setBaseColor(color)}
                     />
                     <p className="text-xs mt-1 font-mono">{color}</p>
                     <div className="flex gap-2 mt-1">
@@ -320,7 +360,15 @@ const ColorMatchingTool = () => {
 
           {/* Saved Matches */}
           <div className="space-y-4">
-            <h2 className="text-lg font-semibold">Saved Matches</h2>
+            <div className="flex justify-between items-center">
+              <h2 className="text-lg font-semibold">Saved Matches</h2>
+              <button
+                onClick={resetAll}
+                className="text-red-500 text-sm hover:underline flex items-center gap-1"
+              >
+                <FaSync /> Reset All
+              </button>
+            </div>
             {savedMatches.length === 0 ? (
               <p className="text-gray-500 text-sm italic">No saved matches yet</p>
             ) : (
@@ -373,9 +421,9 @@ const ColorMatchingTool = () => {
           <ul className="list-disc list-inside text-blue-600 text-sm space-y-1">
             <li>Multiple match types: Complementary, Analogous, Triadic, Shades, Tints, Monochromatic, Split-Complementary</li>
             <li>Fine-tune with Hue, Saturation, and Lightness adjustments</li>
-            <li>Save and reuse colors</li>
+            <li>Save and reuse colors (persisted across sessions)</li>
             <li>Copy individual colors or entire palette</li>
-            <li>Interactive palette preview</li>
+            <li>Interactive palette preview with clickable colors</li>
           </ul>
         </div>
       </div>

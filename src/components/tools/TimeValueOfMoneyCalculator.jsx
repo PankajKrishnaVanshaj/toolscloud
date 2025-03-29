@@ -8,11 +8,10 @@ const TimeValueOfMoneyCalculator = () => {
   const [interestRate, setInterestRate] = useState(5);
   const [periods, setPeriods] = useState(10);
   const [calculateType, setCalculateType] = useState("FV");
-  const [compounding, setCompounding] = useState("annual"); // New: compounding frequency
+  const [compounding, setCompounding] = useState("annual");
   const [result, setResult] = useState(null);
-  const [showDetails, setShowDetails] = useState(false); // Toggle detailed breakdown
+  const [showDetails, setShowDetails] = useState(false);
 
-  // Calculate compounding periods per year
   const getCompoundingFactor = () => {
     switch (compounding) {
       case "daily": return 365;
@@ -32,23 +31,19 @@ const TimeValueOfMoneyCalculator = () => {
 
     switch (calculateType) {
       case "FV":
-        // FV = PV * (1 + r/n)^(n*t)
         calculatedResult = presentValue * Math.pow(1 + effectiveRate, totalPeriods);
         setFutureValue(calculatedResult.toFixed(2));
         break;
       case "PV":
-        // PV = FV / (1 + r/n)^(n*t)
         calculatedResult = futureValue / Math.pow(1 + effectiveRate, totalPeriods);
         setPresentValue(calculatedResult.toFixed(2));
         break;
       case "Rate":
-        // r = n * [(FV/PV)^(1/(n*t)) - 1]
         calculatedResult =
           nper * (Math.pow(futureValue / presentValue, 1 / totalPeriods) - 1) * 100;
         setInterestRate(calculatedResult.toFixed(2));
         break;
       case "Periods":
-        // t = ln(FV/PV) / (n * ln(1 + r/n))
         calculatedResult =
           Math.log(futureValue / presentValue) / (nper * Math.log(1 + effectiveRate));
         setPeriods(Math.round(calculatedResult));
@@ -57,23 +52,28 @@ const TimeValueOfMoneyCalculator = () => {
         break;
     }
 
-    setResult(calculatedResult.toFixed(2));
+    // Always set result to the calculated value
+    setResult(calculatedResult ? calculatedResult.toFixed(calculateType === "Periods" ? 0 : 2) : null);
   }, [presentValue, futureValue, interestRate, periods, calculateType, compounding]);
 
   useEffect(() => {
-    if (
+    // Adjusted validation based on calculateType
+    const isValid =
       presentValue > 0 &&
       interestRate >= 0 &&
       periods > 0 &&
-      (calculateType !== "FV" || futureValue > 0)
-    ) {
+      (calculateType === "FV" || // FV doesn't need futureValue as input
+        (calculateType === "PV" && futureValue > 0) ||
+        (calculateType === "Rate" && futureValue > 0) ||
+        (calculateType === "Periods" && futureValue > 0));
+
+    if (isValid) {
       calculateTVM();
     } else {
       setResult(null);
     }
   }, [presentValue, futureValue, interestRate, periods, calculateType, compounding, calculateTVM]);
 
-  // Reset all fields
   const reset = () => {
     setPresentValue(1000);
     setFutureValue("");
@@ -85,12 +85,11 @@ const TimeValueOfMoneyCalculator = () => {
     setShowDetails(false);
   };
 
-  // Generate compound interest breakdown
   const getBreakdown = () => {
     const breakdown = [];
     const nper = getCompoundingFactor();
     const ratePerPeriod = interestRate / 100 / nper;
-    let currentValue = presentValue;
+    let currentValue = Number(presentValue);
 
     for (let i = 1; i <= periods * nper; i++) {
       currentValue = currentValue * (1 + ratePerPeriod);
@@ -105,8 +104,8 @@ const TimeValueOfMoneyCalculator = () => {
   };
 
   return (
-    <div className="min-h-screen  flex items-center justify-center ">
-      <div className="w-full  bg-white rounded-xl shadow-lg p-6 sm:p-8">
+    <div className="min-h-screen flex items-center justify-center">
+      <div className="w-full bg-white rounded-xl shadow-lg p-6 sm:p-8">
         <h1 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-6 text-center">
           Time Value of Money Calculator
         </h1>
@@ -115,9 +114,7 @@ const TimeValueOfMoneyCalculator = () => {
           {/* Calculate Type and Compounding */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Calculate
-              </label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Calculate</label>
               <select
                 value={calculateType}
                 onChange={(e) => setCalculateType(e.target.value)}
@@ -209,14 +206,14 @@ const TimeValueOfMoneyCalculator = () => {
           </div>
 
           {/* Result */}
-          {result && (
+          {result !== null && (
             <div className="bg-gray-50 p-4 rounded-md text-center">
               <h2 className="text-lg font-semibold mb-2">Result</h2>
               <p className="text-xl font-bold text-green-600">
                 {calculateType === "FV" && `Future Value: $${Number(result).toLocaleString()}`}
                 {calculateType === "PV" && `Present Value: $${Number(result).toLocaleString()}`}
                 {calculateType === "Rate" && `Interest Rate: ${result}%`}
-                {calculateType === "Periods" && `Periods: ${Math.round(result)} years`}
+                {calculateType === "Periods" && `Periods: ${result} years`}
               </p>
             </div>
           )}
