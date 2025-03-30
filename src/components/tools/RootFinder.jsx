@@ -7,62 +7,141 @@ const RootFinder = () => {
   const [result, setResult] = useState(null);
   const [errors, setErrors] = useState({});
   const [showSteps, setShowSteps] = useState(false);
-  const [method, setMethod] = useState("quadratic"); // New: method selection
-  const [precision, setPrecision] = useState(4); // New: precision control
+  const [method, setMethod] = useState("quadratic");
+  const [precision, setPrecision] = useState(4);
 
-  // Calculate roots of ax² + bx + c = 0
-  const findRoots = useCallback(
-    (a, b, c) => {
-      const steps = [`Finding roots of ${a}x² + ${b}x + ${c} = 0:`];
-      const aNum = parseFloat(a);
-      const bNum = parseFloat(b);
-      const cNum = parseFloat(c);
+  // Quadratic Formula Method
+  const quadraticFormula = useCallback((a, b, c) => {
+    const steps = [`Using Quadratic Formula for ${a}x² + ${b}x + ${c} = 0:`];
+    const aNum = parseFloat(a);
+    const bNum = parseFloat(b);
+    const cNum = parseFloat(c);
 
-      if (isNaN(aNum) || isNaN(bNum) || isNaN(cNum)) {
-        return { error: "All coefficients must be valid numbers" };
+    const discriminant = bNum * bNum - 4 * aNum * cNum;
+    steps.push(`Discriminant (Δ) = b² - 4ac = ${bNum}² - 4 * ${aNum} * ${cNum} = ${discriminant}`);
+
+    let roots;
+    if (discriminant > 0) {
+      const root1 = (-bNum + Math.sqrt(discriminant)) / (2 * aNum);
+      const root2 = (-bNum - Math.sqrt(discriminant)) / (2 * aNum);
+      roots = [root1.toFixed(precision), root2.toFixed(precision)];
+      steps.push(`Δ > 0: Two real roots`);
+      steps.push(`x = [-${bNum} ± √${discriminant}] / (2 * ${aNum})`);
+      steps.push(`x₁ = ${roots[0]}, x₂ = ${roots[1]}`);
+    } else if (discriminant === 0) {
+      const root = (-bNum / (2 * aNum)).toFixed(precision);
+      roots = [root];
+      steps.push(`Δ = 0: One real root`);
+      steps.push(`x = -${bNum} / (2 * ${aNum}) = ${root}`);
+    } else {
+      const realPart = (-bNum / (2 * aNum)).toFixed(precision);
+      const imagPart = (Math.sqrt(-discriminant) / (2 * aNum)).toFixed(precision);
+      roots = [`${realPart} + ${imagPart}i`, `${realPart} - ${imagPart}i`];
+      steps.push(`Δ < 0: Two complex roots`);
+      steps.push(`x = [-${bNum} ± √(${discriminant})] / (2 * ${aNum})`);
+      steps.push(`x₁ = ${roots[0]}, x₂ = ${roots[1]}`);
+    }
+
+    const vertexX = (-bNum / (2 * aNum)).toFixed(precision);
+    const vertexY = (aNum * vertexX * vertexX + bNum * vertexX + cNum).toFixed(precision);
+    steps.push(`Vertex: (${vertexX}, ${vertexY})`);
+
+    return { roots, steps, vertex: { x: vertexX, y: vertexY } };
+  }, [precision]);
+
+  // Factoring Method
+  const factoringMethod = useCallback((a, b, c) => {
+    const steps = [`Factoring ${a}x² + ${b}x + ${c} = 0:`];
+    const aNum = parseFloat(a);
+    const bNum = parseFloat(b);
+    const cNum = parseFloat(c);
+
+    // Try to find factors
+    const product = aNum * cNum;
+    let factors = null;
+    for (let i = -Math.abs(product); i <= Math.abs(product); i++) {
+      if (i === 0) continue;
+      const j = product / i;
+      if (Number.isInteger(j) && i + j === bNum) {
+        factors = [i, j];
+        break;
       }
-      if (aNum === 0) {
-        return { error: "Coefficient 'a' cannot be zero (not a quadratic)" };
-      }
+    }
 
-      const discriminant = bNum * bNum - 4 * aNum * cNum;
-      steps.push(
-        `Discriminant (Δ) = b² - 4ac = ${bNum}² - 4 * ${aNum} * ${cNum} = ${discriminant}`
-      );
+    let roots;
+    if (factors) {
+      steps.push(`Find factors of ac (${product}) that add to b (${bNum}): ${factors[0]} and ${factors[1]}`);
+      steps.push(`Rewrite: ${aNum}x² + ${factors[0]}x + ${factors[1]}x + ${cNum} = 0`);
+      steps.push(`Group: (${aNum}x² + ${factors[0]}x) + (${factors[1]}x + ${cNum}) = 0`);
+      
+      const gcd1 = gcd(Math.abs(aNum), Math.abs(factors[0]));
+      const gcd2 = gcd(Math.abs(factors[1]), Math.abs(cNum));
+      const factor1 = `${aNum / gcd1}x + ${factors[0] / gcd1}`;
+      const factor2 = `${factors[1] / gcd2}x + ${cNum / gcd2}`;
+      
+      steps.push(`Factor: ${gcd1}(${factor1}) + ${gcd2}(${factor2}) = 0`);
+      roots = [(-factors[0] / gcd1 / aNum).toFixed(precision), (-cNum / factors[1]).toFixed(precision)];
+      steps.push(`Roots from factors: x = ${roots[0]}, x = ${roots[1]}`);
+    } else {
+      steps.push("Cannot factor easily with integers. Using Quadratic Formula instead.");
+      return quadraticFormula(a, b, c);
+    }
 
-      let roots;
-      if (discriminant > 0) {
-        const root1 = (-bNum + Math.sqrt(discriminant)) / (2 * aNum);
-        const root2 = (-bNum - Math.sqrt(discriminant)) / (2 * aNum);
-        roots = [root1.toFixed(precision), root2.toFixed(precision)];
-        steps.push(`Δ > 0: Two real roots`);
-        steps.push(`x = [-${bNum} ± √${discriminant}] / (2 * ${aNum})`);
-        steps.push(`x₁ = ${roots[0]}, x₂ = ${roots[1]}`);
-      } else if (discriminant === 0) {
-        const root = (-bNum / (2 * aNum)).toFixed(precision);
-        roots = [root];
-        steps.push(`Δ = 0: One real root`);
-        steps.push(`x = -${bNum} / (2 * ${aNum}) = ${root}`);
-      } else {
-        const realPart = (-bNum / (2 * aNum)).toFixed(precision);
-        const imagPart = (Math.sqrt(-discriminant) / (2 * aNum)).toFixed(precision);
-        roots = [`${realPart} + ${imagPart}i`, `${realPart} - ${imagPart}i`];
-        steps.push(`Δ < 0: Two complex roots`);
-        steps.push(`x = [-${bNum} ± √(${discriminant})] / (2 * ${aNum})`);
-        steps.push(`x₁ = ${roots[0]}, x₂ = ${roots[1]}`);
-      }
+    const vertexX = (-bNum / (2 * aNum)).toFixed(precision);
+    const vertexY = (aNum * vertexX * vertexX + bNum * vertexX + cNum).toFixed(precision);
+    steps.push(`Vertex: (${vertexX}, ${vertexY})`);
 
-      // Additional info
-      const vertexX = (-bNum / (2 * aNum)).toFixed(precision);
-      const vertexY = (aNum * vertexX * vertexX + bNum * vertexX + cNum).toFixed(precision);
-      steps.push(`Vertex: (${vertexX}, ${vertexY})`);
+    return { roots, steps, vertex: { x: vertexX, y: vertexY } };
+  }, [precision, quadraticFormula]);
 
-      return { roots, steps, vertex: { x: vertexX, y: vertexY } };
-    },
-    [precision]
-  );
+  // Completing the Square Method
+  const completingSquare = useCallback((a, b, c) => {
+    const steps = [`Completing the square for ${a}x² + ${b}x + ${c} = 0:`];
+    const aNum = parseFloat(a);
+    const bNum = parseFloat(b);
+    const cNum = parseFloat(c);
 
-  // Handle input changes with validation
+    steps.push(`Divide by a (${aNum}): x² + ${bNum / aNum}x + ${cNum / aNum} = 0`);
+    steps.push(`Move constant: x² + ${bNum / aNum}x = ${-cNum / aNum}`);
+    const halfB = (bNum / (2 * aNum));
+    const squareTerm = halfB * halfB;
+    steps.push(`Add (${halfB})² = ${squareTerm} to both sides:`);
+    steps.push(`x² + ${bNum / aNum}x + ${squareTerm} = ${-cNum / aNum} + ${squareTerm}`);
+    steps.push(`Perfect square: (x + ${halfB})² = ${(-cNum / aNum + squareTerm).toFixed(precision)}`);
+
+    const rightSide = -cNum / aNum + squareTerm;
+    let roots;
+    if (rightSide >= 0) {
+      const sqrtTerm = Math.sqrt(rightSide);
+      roots = [
+        (-halfB + sqrtTerm).toFixed(precision),
+        (-halfB - sqrtTerm).toFixed(precision)
+      ].sort((x, y) => y - x); // Sort for consistency
+      steps.push(`x + ${halfB} = ±${sqrtTerm.toFixed(precision)}`);
+      steps.push(`x = ${roots[0]}, x = ${roots[1]}`);
+    } else {
+      const imagPart = Math.sqrt(-rightSide).toFixed(precision);
+      roots = [`${-halfB.toFixed(precision)} + ${imagPart}i`, `${-halfB.toFixed(precision)} - ${imagPart}i`];
+      steps.push(`x + ${halfB} = ±√(${rightSide}) = ±${imagPart}i`);
+      steps.push(`x = ${roots[0]}, x = ${roots[1]}`);
+    }
+
+    const vertexX = (-bNum / (2 * aNum)).toFixed(precision);
+    const vertexY = (aNum * vertexX * vertexX + bNum * vertexX + cNum).toFixed(precision);
+    steps.push(`Vertex: (${vertexX}, ${vertexY})`);
+
+    return { roots, steps, vertex: { x: vertexX, y: vertexY } };
+  }, [precision]);
+
+  // Helper function for GCD (used in factoring)
+  const gcd = (a, b) => {
+    while (b) {
+      [a, b] = [b, a % b];
+    }
+    return a;
+  };
+
+  // Handle input changes
   const handleInputChange = (field) => (e) => {
     const value = e.target.value;
     setInputs((prev) => ({ ...prev, [field]: value }));
@@ -77,7 +156,6 @@ const RootFinder = () => {
     }
   };
 
-  // Check if inputs are valid
   const isValid = useMemo(() => {
     return (
       inputs.a &&
@@ -91,7 +169,6 @@ const RootFinder = () => {
     );
   }, [inputs, errors]);
 
-  // Calculate roots
   const calculate = () => {
     setErrors({});
     setResult(null);
@@ -101,7 +178,21 @@ const RootFinder = () => {
       return;
     }
 
-    const calcResult = findRoots(inputs.a, inputs.b, inputs.c);
+    let calcResult;
+    switch (method) {
+      case "quadratic":
+        calcResult = quadraticFormula(inputs.a, inputs.b, inputs.c);
+        break;
+      case "factoring":
+        calcResult = factoringMethod(inputs.a, inputs.b, inputs.c);
+        break;
+      case "completing":
+        calcResult = completingSquare(inputs.a, inputs.b, inputs.c);
+        break;
+      default:
+        calcResult = quadraticFormula(inputs.a, inputs.b, inputs.c);
+    }
+
     if (calcResult.error) {
       setErrors({ general: calcResult.error });
     } else {
@@ -109,7 +200,6 @@ const RootFinder = () => {
     }
   };
 
-  // Reset state
   const reset = () => {
     setInputs({ a: "", b: "", c: "" });
     setErrors({});
@@ -142,7 +232,6 @@ const RootFinder = () => {
                   onChange={handleInputChange(field)}
                   className="w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                   placeholder={`e.g., ${field === "a" ? "1" : field === "b" ? "-5" : "6"}`}
-                  aria-label={`${field} coefficient`}
                 />
                 {errors[field] && (
                   <p className="text-red-600 text-xs mt-1">{errors[field]}</p>
@@ -163,12 +252,8 @@ const RootFinder = () => {
                 className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
               >
                 <option value="quadratic">Quadratic Formula</option>
-                <option value="factoring" disabled>
-                  Factoring (Coming Soon)
-                </option>
-                <option value="completing" disabled>
-                  Completing the Square (Coming Soon)
-                </option>
+                <option value="factoring">Factoring</option>
+                <option value="completing">Completing the Square</option>
               </select>
             </div>
             <div>
@@ -247,6 +332,7 @@ const RootFinder = () => {
           <h3 className="font-semibold text-green-700 mb-2">Features</h3>
           <ul className="list-disc list-inside text-green-600 text-sm space-y-1">
             <li>Finds real and complex roots of quadratic equations</li>
+            <li>Supports Quadratic Formula, Factoring, and Completing the Square</li>
             <li>Step-by-step solution display</li>
             <li>Calculates vertex of the parabola</li>
             <li>Adjustable precision for results</li>

@@ -1,7 +1,7 @@
 "use client";
 import React, { useState, useCallback } from "react";
 import { FaCalculator, FaSync, FaDownload } from "react-icons/fa";
-import html2canvas from "html2canvas"; // For downloading results
+import html2canvas from "html2canvas";
 
 const HeatTransferCalculator = () => {
   const [mode, setMode] = useState("conduction");
@@ -10,20 +10,19 @@ const HeatTransferCalculator = () => {
     convection: { h: 10, A: 1, dT: 20 },
     radiation: { e: 0.9, A: 1, T1: 300, T2: 280 },
   });
-  const [unitSystem, setUnitSystem] = useState("SI"); // SI or Imperial
+  const [unitSystem, setUnitSystem] = useState("SI");
   const [result, setResult] = useState(null);
   const [error, setError] = useState("");
   const [history, setHistory] = useState([]);
   const calculatorRef = React.useRef(null);
 
-  // Constants
-  const sigma = 5.670374e-8; // Stefan-Boltzmann constant (W/m²K⁴)
+  const sigma = 5.670374e-8;
 
   const convertUnits = (value, fromUnit, toUnit, type) => {
     if (fromUnit === toUnit) return value;
     const conversions = {
       length: { m: 1, ft: 3.28084 },
-      area: { 'm²': 1, 'ft²': 10.7639 },
+      area: { "m²": 1, "ft²": 10.7639 },
       tempDiff: { K: 1, F: 5 / 9 },
       temp: { K: (v) => v - 273.15, C: (v) => v, F: (v) => (v - 273.15) * 9 / 5 + 32 },
       conductivity: { "W/m·K": 1, "BTU/h·ft·F": 0.577789 },
@@ -105,11 +104,16 @@ const HeatTransferCalculator = () => {
         default:
           throw new Error("Unknown mode");
       }
-      setHistory((prev) => [...prev, result].slice(-5)); // Keep last 5 results
+      const newResult = {
+        mode: mode === "conduction" ? "Conduction" : mode === "convection" ? "Convection" : "Radiation",
+        Q,
+        unit: unitSystem === "SI" ? "W" : "BTU/h",
+      };
+      setHistory((prev) => [...prev, newResult].slice(-5));
     } catch (err) {
       setError(err.message);
     }
-  }, [mode, inputs, unitSystem, result]);
+  }, [mode, inputs, unitSystem]);
 
   const handleInputChange = (field, value) => {
     setInputs((prev) => ({
@@ -146,17 +150,16 @@ const HeatTransferCalculator = () => {
     num.toLocaleString("en-US", { maximumFractionDigits: digits });
 
   return (
-    <div className="min-h-screen  flex items-center justify-center ">
+    <div className="min-h-screen flex items-center justify-center">
       <div
         ref={calculatorRef}
-        className="w-full  bg-white rounded-xl shadow-lg p-6 sm:p-8"
+        className="w-full bg-white rounded-xl shadow-lg p-6 sm:p-8"
       >
         <h1 className="text-2xl sm:text-3xl font-bold text-center mb-6 text-gray-800">
           Heat Transfer Calculator
         </h1>
 
         <div className="space-y-6">
-          {/* Mode and Unit Selection */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -193,7 +196,6 @@ const HeatTransferCalculator = () => {
             </div>
           </div>
 
-          {/* Inputs */}
           {mode === "conduction" && (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {[
@@ -307,7 +309,6 @@ const HeatTransferCalculator = () => {
             </div>
           )}
 
-          {/* Action Buttons */}
           <div className="flex flex-col sm:flex-row gap-4">
             <button
               onClick={calculateHeatTransfer}
@@ -330,7 +331,6 @@ const HeatTransferCalculator = () => {
             </button>
           </div>
 
-          {/* Results */}
           {result && (
             <div className="p-4 bg-gray-50 rounded-lg">
               <h2 className="text-lg font-semibold mb-2">{result.mode} Heat Transfer:</h2>
@@ -342,28 +342,29 @@ const HeatTransferCalculator = () => {
             </div>
           )}
 
-          {/* Error */}
           {error && (
             <div className="p-4 bg-red-50 rounded-lg text-red-700">
               <p>{error}</p>
             </div>
           )}
 
-          {/* History */}
           {history.length > 0 && (
             <div className="p-4 bg-blue-50 rounded-lg">
               <h3 className="font-semibold text-blue-700 mb-2">Calculation History</h3>
               <ul className="text-sm text-blue-600 space-y-1 max-h-32 overflow-y-auto">
-                {history.slice().reverse().map((item, index) => (
-                  <li key={index}>
-                    {item.mode}: {formatNumber(item.Q)} {item.unit}
-                  </li>
-                ))}
+                {history
+                  .slice()
+                  .reverse()
+                  .filter((item) => item !== null && item !== undefined)
+                  .map((item, index) => (
+                    <li key={index}>
+                      {item.mode}: {formatNumber(item.Q)} {item.unit}
+                    </li>
+                  ))}
               </ul>
             </div>
           )}
 
-          {/* Features */}
           <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
             <h3 className="font-semibold text-blue-700 mb-2">Features</h3>
             <ul className="list-disc list-inside text-blue-600 text-sm space-y-1">

@@ -218,8 +218,8 @@ const DivisibilityTester = () => {
   };
 
   return (
-    <div className="min-h-screen  flex items-center justify-center ">
-      <div className="w-full  bg-white rounded-xl shadow-lg p-6 sm:p-8">
+    <div className="min-h-screen flex items-center justify-center">
+      <div className="w-full bg-white rounded-xl shadow-lg p-6 sm:p-8">
         <h1 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-6 text-center">
           Divisibility Tester
         </h1>
@@ -315,7 +315,33 @@ const DivisibilityTester = () => {
         {result && (
           <div className="mt-6 p-4 bg-blue-50 rounded-md">
             <h2 className="text-lg font-semibold text-gray-700 mb-2">Result:</h2>
-            {testMode === "single" ? (
+            {Array.isArray(result) ? (
+              result.map(({ divisor, isDivisible, steps }, index) => (
+                <div key={index} className="mb-4">
+                  <p className="text-lg flex items-center gap-2">
+                    {number} is {isDivisible ? "" : "not "}divisible by {divisor}
+                    {isDivisible ? (
+                      <FaCheck className="text-green-500" />
+                    ) : (
+                      <FaTimes className="text-red-500" />
+                    )}
+                  </p>
+                  <button
+                    onClick={() => setShowSteps(showSteps === divisor ? false : divisor)}
+                    className="text-sm text-blue-600 hover:underline"
+                  >
+                    {showSteps === divisor ? "Hide Steps" : "Show Steps"}
+                  </button>
+                  {showSteps === divisor && (
+                    <ul className="mt-2 text-sm list-disc list-inside">
+                      {steps.map((step, i) => (
+                        <li key={i}>{step}</li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+              ))
+            ) : (
               <div>
                 <p className="text-center text-xl flex items-center justify-center gap-2">
                   {number} is {result.isDivisible ? "" : "not "}divisible by {divisor}
@@ -338,34 +364,6 @@ const DivisibilityTester = () => {
                     ))}
                   </ul>
                 )}
-              </div>
-            ) : (
-              <div>
-                {result.map(({ divisor, isDivisible, steps }, index) => (
-                  <div key={index} className="mb-4">
-                    <p className="text-lg flex items-center gap-2">
-                      {number} is {isDivisible ? "" : "not "}divisible by {divisor}
-                      {isDivisible ? (
-                        <FaCheck className="text-green-500" />
-                      ) : (
-                        <FaTimes className="text-red-500" />
-                      )}
-                    </p>
-                    <button
-                      onClick={() => setShowSteps(showSteps === divisor ? false : divisor)}
-                      className="text-sm text-blue-600 hover:underline"
-                    >
-                      {showSteps === divisor ? "Hide Steps" : "Show Steps"}
-                    </button>
-                    {showSteps === divisor && (
-                      <ul className="mt-2 text-sm list-disc list-inside">
-                        {steps.map((step, i) => (
-                          <li key={i}>{step}</li>
-                        ))}
-                      </ul>
-                    )}
-                  </div>
-                ))}
               </div>
             )}
           </div>

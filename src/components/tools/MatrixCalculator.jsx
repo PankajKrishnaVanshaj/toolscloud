@@ -1,7 +1,7 @@
 "use client";
 import React, { useState, useEffect, useCallback } from "react";
 import { FaDownload, FaSync, FaInfoCircle } from "react-icons/fa";
-import html2canvas from "html2canvas"; // For downloading result
+import html2canvas from "html2canvas";
 
 const MatrixCalculator = () => {
   const [operation, setOperation] = useState("addition");
@@ -11,10 +11,9 @@ const MatrixCalculator = () => {
   const [result, setResult] = useState(null);
   const [error, setError] = useState("");
   const [showDetails, setShowDetails] = useState(false);
-  const [precision, setPrecision] = useState(2); // Decimal precision
+  const [precision, setPrecision] = useState(2);
   const resultRef = React.useRef(null);
 
-  // Update matrices when size changes
   useEffect(() => {
     const [rows, cols] = size.split("x").map(Number);
     const newMatrix = Array(rows).fill().map(() => Array(cols).fill(0));
@@ -24,7 +23,6 @@ const MatrixCalculator = () => {
     setError("");
   }, [size]);
 
-  // Handle matrix input changes
   const updateMatrix = useCallback((matrix, setMatrix, row, col, value) => {
     const newMatrix = matrix.map((r, i) =>
       r.map((v, j) => (i === row && j === col ? (value === "" ? 0 : parseFloat(value)) : v))
@@ -32,14 +30,12 @@ const MatrixCalculator = () => {
     setMatrix(newMatrix);
   }, []);
 
-  // Matrix operations
   const calculateMatrix = useCallback(() => {
     setError("");
     setResult(null);
 
     const [rows, cols] = size.split("x").map(Number);
 
-    // Validate inputs
     for (let i = 0; i < rows; i++) {
       for (let j = 0; j < cols; j++) {
         if (isNaN(matrixA[i][j]) || (operation !== "determinant" && isNaN(matrixB[i][j]))) {
@@ -114,6 +110,8 @@ const MatrixCalculator = () => {
   }, [matrixA, matrixB, operation, size, precision]);
 
   const calculate = () => {
+    setResult(null); // Clear result before calculation
+    setError("");
     const calcResult = calculateMatrix();
     if (calcResult?.error) {
       setError(calcResult.error);
@@ -145,13 +143,12 @@ const MatrixCalculator = () => {
   };
 
   return (
-    <div className="min-h-screen  flex items-center justify-center ">
-      <div className="w-full  bg-white rounded-xl shadow-lg p-6 sm:p-8">
+    <div className="min-h-screen flex items-center justify-center">
+      <div className="w-full bg-white rounded-xl shadow-lg p-6 sm:p-8">
         <h1 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-6 text-center">
           Matrix Calculator
         </h1>
 
-        {/* Settings */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Operation</label>
@@ -193,10 +190,8 @@ const MatrixCalculator = () => {
           </div>
         </div>
 
-        {/* Input Section */}
         <div className="space-y-6">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-            {/* Matrix A */}
             <div>
               <h3 className="text-lg font-semibold text-gray-700 mb-2">Matrix A</h3>
               <div className={`grid grid-cols-${size === "2x2" ? 2 : 3} gap-2`}>
@@ -214,7 +209,6 @@ const MatrixCalculator = () => {
               </div>
             </div>
 
-            {/* Matrix B (hidden for determinant and transpose) */}
             {operation !== "determinant" && operation !== "transpose" && (
               <div>
                 <h3 className="text-lg font-semibold text-gray-700 mb-2">Matrix B</h3>
@@ -235,7 +229,6 @@ const MatrixCalculator = () => {
             )}
           </div>
 
-          {/* Controls */}
           <div className="flex flex-col sm:flex-row gap-4">
             <button
               onClick={calculate}
@@ -259,23 +252,25 @@ const MatrixCalculator = () => {
           </div>
         </div>
 
-        {/* Error Display */}
         {error && (
           <div className="mt-6 p-4 bg-red-50 rounded-lg border border-red-200">
             <p className="text-red-700">{error}</p>
           </div>
         )}
 
-        {/* Result Display */}
         {result && (
           <div ref={resultRef} className="mt-6 p-4 bg-blue-50 rounded-lg">
             <h2 className="text-lg font-semibold text-gray-700 mb-2">Result:</h2>
             {operation === "determinant" ? (
-              <p className="text-center text-xl">Determinant = {result.determinant.toFixed(precision)}</p>
+              result.determinant !== undefined ? (
+                <p className="text-center text-xl">Determinant = {result.determinant.toFixed(precision)}</p>
+              ) : (
+                <p className="text-center text-xl text-red-600">Error: Determinant not calculated</p>
+              )
             ) : (
               <div className="flex justify-center">
                 <div className={`grid grid-cols-${size === "2x2" ? 2 : 3} gap-2`}>
-                  {result.matrix.map((row, i) =>
+                  {result.matrix?.map((row, i) =>
                     row.map((val, j) => (
                       <div
                         key={`R-${i}-${j}`}
@@ -298,7 +293,7 @@ const MatrixCalculator = () => {
               </button>
             </div>
 
-            {showDetails && (
+            {showDetails && result.steps && (
               <div className="mt-4 text-sm">
                 <p className="font-semibold">Calculation Steps:</p>
                 <ul className="list-disc list-inside mt-2 space-y-1">
@@ -311,7 +306,6 @@ const MatrixCalculator = () => {
           </div>
         )}
 
-        {/* Features */}
         <div className="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
           <h3 className="font-semibold text-blue-700 mb-2">Features</h3>
           <ul className="list-disc list-inside text-blue-600 text-sm space-y-1">

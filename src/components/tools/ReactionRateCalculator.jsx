@@ -54,6 +54,7 @@ const ReactionRateCalculator = () => {
       }
 
       const resultData = {
+        reactionType: "rate",
         rate: rate > 0 ? rate : 0,
         rateConstant: rateConstant > 0 ? rateConstant : 0,
         order,
@@ -61,7 +62,7 @@ const ReactionRateCalculator = () => {
         kUnit,
       };
       setResult(resultData);
-      setHistory((prev) => [...prev, resultData].slice(-5)); // Keep last 5 calculations
+      setHistory((prev) => [...prev, resultData].slice(-5));
     } catch (err) {
       setError("Calculation error: " + err.message);
     }
@@ -72,7 +73,7 @@ const ReactionRateCalculator = () => {
     setResult(null);
 
     const T = parseFloat(temperature);
-    const Ea = parseFloat(activationEnergy) * (units.energy === "kJ/mol" ? 1000 : 1); // Convert to J/mol if needed
+    const Ea = parseFloat(activationEnergy) * (units.energy === "kJ/mol" ? 1000 : 1);
     const A = parseFloat(preExpFactor);
 
     if (isNaN(T) || isNaN(Ea) || isNaN(A) || T <= 0 || A <= 0) {
@@ -83,6 +84,7 @@ const ReactionRateCalculator = () => {
     try {
       const k = A * Math.exp(-Ea / (R * T));
       const resultData = {
+        reactionType: "constant",
         rateConstant: k,
         temperature: T,
         activationEnergy: Ea / (units.energy === "kJ/mol" ? 1000 : 1),
@@ -115,7 +117,7 @@ const ReactionRateCalculator = () => {
 
   const downloadResults = () => {
     if (!result) return;
-    const text = reactionType === "rate"
+    const text = result.reactionType === "rate"
       ? `Reaction Rate Calculation\nRate: ${formatNumber(result.rate)} ${result.rateUnit}\nRate Constant (k): ${formatNumber(result.rateConstant)} ${result.kUnit}\nOrder: ${result.order}`
       : `Rate Constant Calculation (Arrhenius)\nRate Constant (k): ${formatNumber(result.rateConstant)} ${result.kUnit}\nTemperature: ${formatNumber(result.temperature)} K\nActivation Energy: ${formatNumber(result.activationEnergy)} ${units.energy}\nPre-exponential Factor: ${formatNumber(result.preExpFactor)} ${result.kUnit}`;
     const blob = new Blob([text], { type: "text/plain" });
@@ -125,20 +127,23 @@ const ReactionRateCalculator = () => {
     link.click();
   };
 
-  const formatNumber = (num, digits = 4) =>
-    num < 1e-6 || num > 1e6
+  const formatNumber = (num, digits = 4) => {
+    if (num === undefined || num === null || isNaN(num)) {
+      return "N/A";
+    }
+    return num < 1e-6 || num > 1e6
       ? num.toExponential(digits)
       : num.toLocaleString("en-US", { maximumFractionDigits: digits });
+  };
 
   return (
-    <div className="min-h-screen  flex items-center justify-center ">
-      <div className="w-full  bg-white rounded-xl shadow-lg p-6 sm:p-8">
+    <div className="min-h-screen flex items-center justify-center">
+      <div className="w-full bg-white rounded-xl shadow-lg p-6 sm:p-8">
         <h1 className="text-2xl sm:text-3xl font-bold text-center mb-6 text-gray-800">
           Reaction Rate Calculator
         </h1>
 
         <div className="space-y-6">
-          {/* Calculation Type */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Calculation Type
@@ -156,7 +161,6 @@ const ReactionRateCalculator = () => {
             </select>
           </div>
 
-          {/* Unit Selection */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -202,7 +206,6 @@ const ReactionRateCalculator = () => {
             </div>
           </div>
 
-          {/* Inputs */}
           {reactionType === "rate" ? (
             <>
               <div>
@@ -297,7 +300,6 @@ const ReactionRateCalculator = () => {
             </>
           )}
 
-          {/* Action Buttons */}
           <div className="flex flex-col sm:flex-row gap-4">
             <button
               onClick={handleCalculate}
@@ -320,11 +322,10 @@ const ReactionRateCalculator = () => {
             </button>
           </div>
 
-          {/* Results */}
           {result && (
             <div className="p-4 bg-gray-50 rounded-lg">
               <h2 className="text-lg font-semibold mb-2 text-gray-700">Results:</h2>
-              {reactionType === "rate" ? (
+              {result.reactionType === "rate" ? (
                 <>
                   <p>
                     Rate: {formatNumber(result.rate)} {result.rateUnit}
@@ -351,21 +352,19 @@ const ReactionRateCalculator = () => {
             </div>
           )}
 
-          {/* Error */}
           {error && (
             <div className="p-4 bg-red-50 rounded-lg text-red-700">
               <p>{error}</p>
             </div>
           )}
 
-          {/* History */}
           {history.length > 0 && (
             <div className="p-4 bg-blue-50 rounded-lg">
               <h3 className="font-semibold text-blue-700 mb-2">Calculation History</h3>
               <ul className="text-sm text-blue-600 space-y-1 max-h-32 overflow-y-auto">
                 {history.slice().reverse().map((item, index) => (
                   <li key={index}>
-                    {reactionType === "rate"
+                    {item.reactionType === "rate"
                       ? `Rate: ${formatNumber(item.rate)} ${item.rateUnit}, k: ${formatNumber(item.rateConstant)} ${item.kUnit}, Order: ${item.order}`
                       : `k: ${formatNumber(item.rateConstant)} ${item.kUnit}, T: ${formatNumber(item.temperature)} K`}
                   </li>
@@ -374,7 +373,6 @@ const ReactionRateCalculator = () => {
             </div>
           )}
 
-          {/* Info */}
           <div className="mt-4 p-4 bg-yellow-50 rounded-lg border border-yellow-200">
             <details>
               <summary className="cursor-pointer font-medium text-yellow-700">

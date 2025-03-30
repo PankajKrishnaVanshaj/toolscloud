@@ -7,18 +7,16 @@ const EntropyCalculator = () => {
   const [probabilities, setProbabilities] = useState("");
   const [temperature, setTemperature] = useState("");
   const [particles, setParticles] = useState("");
-  const [volume, setVolume] = useState("0.0224"); // Default volume in m³
-  const [mass, setMass] = useState("2.016e-27"); // Default hydrogen molecule mass
-  const [base, setBase] = useState("2"); // Log base for Shannon entropy
+  const [volume, setVolume] = useState("0.0224");
+  const [mass, setMass] = useState("2.016e-27");
+  const [base, setBase] = useState("2");
   const [result, setResult] = useState(null);
   const [error, setError] = useState("");
   const [history, setHistory] = useState([]);
 
-  // Constants
-  const k = 1.380649e-23; // Boltzmann constant (J/K)
-  const h = 6.62607015e-34; // Planck constant (J·s)
+  const k = 1.380649e-23;
+  const h = 6.62607015e-34;
 
-  // Preset examples
   const presets = [
     { name: "Coin Flip", type: "shannon", probs: "0.5, 0.5" },
     { name: "6-sided Die", type: "shannon", probs: "0.1667, 0.1667, 0.1667, 0.1667, 0.1667, 0.1667" },
@@ -65,7 +63,7 @@ const EntropyCalculator = () => {
       const unit = base === "2" ? "bits" : base === "e" ? "nats" : "units";
       const newResult = { shannon: entropy, unit };
       setResult(newResult);
-      setHistory((prev) => [...prev, { type, ...newResult }].slice(-5)); // Keep last 5
+      setHistory((prev) => [...prev, { type, ...newResult }].slice(-5));
     } catch (err) {
       setError("Error calculating Shannon entropy: " + err.message);
     }
@@ -88,7 +86,7 @@ const EntropyCalculator = () => {
     }
 
     try {
-      const lambda = h / Math.sqrt(2 * Math.PI * m * k * T); // Thermal wavelength
+      const lambda = h / Math.sqrt(2 * Math.PI * m * k * T);
       const term = V / (N * Math.pow(lambda, 3));
 
       if (term <= 0) {
@@ -117,18 +115,20 @@ const EntropyCalculator = () => {
   };
 
   const formatNumber = (num, digits = 4) => {
+    if (num === undefined || num === null || isNaN(num)) {
+      return "N/A";
+    }
     return num.toLocaleString("en-US", { maximumFractionDigits: digits });
   };
 
   return (
-    <div className="min-h-screen  flex items-center justify-center ">
-      <div className="w-full  bg-white rounded-xl shadow-lg p-6 sm:p-8">
+    <div className="min-h-screen flex items-center justify-center">
+      <div className="w-full bg-white rounded-xl shadow-lg p-6 sm:p-8">
         <h1 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-6 text-center">
           Entropy Calculator
         </h1>
 
         <div className="space-y-6">
-          {/* Entropy Type */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Entropy Type
@@ -146,7 +146,6 @@ const EntropyCalculator = () => {
             </select>
           </div>
 
-          {/* Inputs */}
           {type === "shannon" ? (
             <>
               <div>
@@ -228,7 +227,6 @@ const EntropyCalculator = () => {
             </div>
           )}
 
-          {/* Presets */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Presets</label>
             <div className="flex flex-wrap gap-2">
@@ -259,7 +257,6 @@ const EntropyCalculator = () => {
             </div>
           </div>
 
-          {/* Action Buttons */}
           <div className="flex flex-col sm:flex-row gap-4">
             <button
               onClick={calculateEntropy}
@@ -275,7 +272,6 @@ const EntropyCalculator = () => {
             </button>
           </div>
 
-          {/* Result */}
           {result && (
             <div className="p-4 bg-green-50 rounded-lg border border-green-200">
               <h2 className="text-lg font-semibold text-green-700 mb-2">Result:</h2>
@@ -287,30 +283,31 @@ const EntropyCalculator = () => {
             </div>
           )}
 
-          {/* Error */}
           {error && (
             <div className="p-4 bg-red-50 rounded-lg border border-red-200">
               <p className="text-red-700">{error}</p>
             </div>
           )}
 
-          {/* History */}
           {history.length > 0 && (
             <div className="p-4 bg-gray-50 rounded-lg">
               <h3 className="font-semibold text-gray-700 mb-2">Calculation History</h3>
               <ul className="text-sm text-gray-600 space-y-1 max-h-32 overflow-y-auto">
-                {history.slice().reverse().map((entry, index) => (
-                  <li key={index}>
-                    {entry.type === "shannon"
-                      ? `Shannon: ${formatNumber(entry.shannon)} ${entry.unit}`
-                      : `Thermodynamic: ${formatNumber(entry.thermodynamic)} ${entry.unit}`}
-                  </li>
-                ))}
+                {history
+                  .slice()
+                  .reverse()
+                  .filter((entry) => entry && (entry.shannon !== undefined || entry.thermodynamic !== undefined))
+                  .map((entry, index) => (
+                    <li key={index}>
+                      {entry.type === "shannon"
+                        ? `Shannon: ${formatNumber(entry.shannon)} ${entry.unit}`
+                        : `Thermodynamic: ${formatNumber(entry.thermodynamic)} ${entry.unit}`}
+                    </li>
+                  ))}
               </ul>
             </div>
           )}
 
-          {/* Info */}
           <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
             <h3 className="font-semibold text-blue-700 mb-2 flex items-center">
               <FaInfoCircle className="mr-2" /> About

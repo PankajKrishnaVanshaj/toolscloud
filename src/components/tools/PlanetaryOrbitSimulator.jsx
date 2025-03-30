@@ -79,13 +79,13 @@ const PlanetaryOrbitSimulator = () => {
         newPlanets[i].y += (newPlanets[i].vy * dt) / scale;
 
         // Bounce off edges
-        if (newPlanets[i].x < p1.radius || newPlanets[i].x > canvasWidth - p1.radius) {
+        if (newPlanets[i].x < newPlanets[i].radius || newPlanets[i].x > canvasWidth - newPlanets[i].radius) {
           newPlanets[i].vx *= -0.9; // Dampened bounce
-          newPlanets[i].x = Math.max(p1.radius, Math.min(canvasWidth - p1.radius, newPlanets[i].x));
+          newPlanets[i].x = Math.max(newPlanets[i].radius, Math.min(canvasWidth - newPlanets[i].radius, newPlanets[i].x));
         }
-        if (newPlanets[i].y < p1.radius || newPlanets[i].y > canvasHeight - p1.radius) {
+        if (newPlanets[i].y < newPlanets[i].radius || newPlanets[i].y > canvasHeight - newPlanets[i].radius) {
           newPlanets[i].vy *= -0.9;
-          newPlanets[i].y = Math.max(p1.radius, Math.min(canvasHeight - p1.radius, newPlanets[i].y));
+          newPlanets[i].y = Math.max(newPlanets[i].radius, Math.min(canvasHeight - newPlanets[i].radius, newPlanets[i].y));
         }
 
         // Update trail
@@ -193,14 +193,13 @@ const PlanetaryOrbitSimulator = () => {
     num.toLocaleString("en-US", { maximumFractionDigits: digits });
 
   return (
-    <div className="min-h-screen  flex items-center justify-center ">
-      <div className="w-full  bg-white rounded-xl shadow-lg p-6 sm:p-8">
+    <div className="min-h-screen flex items-center justify-center">
+      <div className="w-full bg-white rounded-xl shadow-lg p-6 sm:p-8">
         <h1 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-6 text-center">
           Planetary Orbit Simulator
         </h1>
 
         <div className="space-y-6">
-          {/* Canvas */}
           <div className="flex justify-center">
             <canvas
               ref={canvasRef}
@@ -213,7 +212,6 @@ const PlanetaryOrbitSimulator = () => {
             Scale: 1 px = 1 billion meters | Green: Velocity | Colored Trails: Orbits
           </p>
 
-          {/* Planet Controls */}
           <div className="space-y-4">
             {planets.map((p, i) => (
               <div key={i} className="border p-4 rounded-lg bg-gray-50 relative">
@@ -301,7 +299,6 @@ const PlanetaryOrbitSimulator = () => {
             </button>
           </div>
 
-          {/* Simulation Controls */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -354,7 +351,6 @@ const PlanetaryOrbitSimulator = () => {
             </div>
           </div>
 
-          {/* Info */}
           <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
             <h3 className="font-semibold text-blue-700 mb-2">Features</h3>
             <ul className="list-disc list-inside text-blue-600 text-sm space-y-1">

@@ -11,15 +11,15 @@ const ProbabilityCalculator = () => {
   const [event2Favorable, setEvent2Favorable] = useState("");
   const [event2Total, setEvent2Total] = useState("");
   const [combinedType, setCombinedType] = useState("and");
-  const [isDependent, setIsDependent] = useState(false); // New: Dependent events
+  const [isDependent, setIsDependent] = useState(false);
   const [n, setN] = useState("");
   const [k, setK] = useState("");
   const [permCombType, setPermCombType] = useState("permutation");
-  const [withReplacement, setWithReplacement] = useState(false); // New: Replacement option
+  const [withReplacement, setWithReplacement] = useState(false);
   const [result, setResult] = useState(null);
   const [error, setError] = useState("");
   const [showDetails, setShowDetails] = useState(false);
-  const [history, setHistory] = useState([]); // New: Calculation history
+  const [history, setHistory] = useState([]);
 
   // Factorial function
   const factorial = useCallback((num) => {
@@ -71,9 +71,9 @@ const ProbabilityCalculator = () => {
       const p2 = isDependent ? e2Favorable / (e1Total - e1Favorable) : e2Favorable / e2Total;
       let probability;
       if (combinedType === "and") {
-        probability = isDependent ? p1 * p2 : p1 * p2; // Dependent or independent
+        probability = isDependent ? p1 * p2 : p1 * p2;
       } else {
-        probability = p1 + p2 - (p1 * p2); // P(A or B)
+        probability = p1 + p2 - (p1 * p2);
       }
       return {
         probability: probability.toFixed(4),
@@ -88,22 +88,32 @@ const ProbabilityCalculator = () => {
     } else if (mode === "perm_comb") {
       const nVal = parseInt(n);
       const kVal = parseInt(k);
-      if (isNaN(nVal) || isNaN(kVal) || nVal < 0 || kVal < 0 || (!withReplacement && kVal > nVal)) {
-        return { error: "Enter valid total (n) and selection (k) values" };
+      if (
+        isNaN(nVal) ||
+        isNaN(kVal) ||
+        nVal < 0 ||
+        kVal < 0 ||
+        (!withReplacement && kVal > nVal) ||
+        (withReplacement && permCombType === "combination" && nVal === 0 && kVal > 0)
+      ) {
+        return { error: "Enter valid total (n) and selection (k) values (n ≥ 1 for combinations with replacement)" };
       }
       let count;
       if (permCombType === "permutation") {
         if (withReplacement) {
-          count = Math.pow(nVal, kVal); // n^k
+          count = Math.pow(nVal, kVal);
         } else {
-          count = factorial(nVal) / factorial(nVal - kVal); // P(n,k)
+          count = factorial(nVal) / factorial(nVal - kVal);
         }
       } else {
         if (withReplacement) {
-          count = factorial(nVal + kVal - 1) / (factorial(kVal) * factorial(nVal - 1)); // C(n+k-1,k)
+          count = factorial(nVal + kVal - 1) / (factorial(kVal) * factorial(nVal - 1));
         } else {
-          count = factorial(nVal) / (factorial(kVal) * factorial(nVal - kVal)); // C(n,k)
+          count = factorial(nVal) / (factorial(kVal) * factorial(nVal - kVal));
         }
+      }
+      if (isNaN(count) || !isFinite(count)) {
+        return { error: "Calculation resulted in an invalid number (e.g., overflow or division by zero)" };
       }
       return {
         count: Math.round(count),
@@ -137,7 +147,7 @@ const ProbabilityCalculator = () => {
       return;
     }
     setResult(calcResult);
-    setHistory((prev) => [...prev, { ...calcResult, mode, timestamp: new Date().toLocaleString() }].slice(-5)); // Keep last 5
+    setHistory((prev) => [...prev, { ...calcResult, mode, timestamp: new Date().toLocaleString() }].slice(-5));
   };
 
   const reset = () => {
@@ -160,8 +170,8 @@ const ProbabilityCalculator = () => {
   };
 
   return (
-    <div className="min-h-screen  flex items-center justify-center ">
-      <div className="w-full  bg-white rounded-xl shadow-lg p-6 sm:p-8">
+    <div className="min-h-screen flex items-center justify-center">
+      <div className="w-full bg-white rounded-xl shadow-lg p-6 sm:p-8">
         <h1 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-6 text-center">
           Probability Calculator
         </h1>
@@ -302,7 +312,7 @@ const ProbabilityCalculator = () => {
                     Combination
                   </button>
                 </div>
-                <label className="flex items-center gap-2 text-sm text-gray-700">
+                <label className="flex items-center gap-2 text-sm text-gray-phenomenal700">
                   <input
                     type="checkbox"
                     checked={withReplacement}
@@ -344,21 +354,21 @@ const ProbabilityCalculator = () => {
           <div className="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
             <h2 className="text-lg font-semibold text-blue-700 mb-2 text-center">Result</h2>
             <div className="space-y-2">
-              {result.probability && mode === "single" && (
+              {mode === "single" && result.probability && (
                 <p className="text-center text-xl text-blue-600">
                   Probability: {result.probability} ({result.percentage}%)
                 </p>
               )}
-              {result.probability && mode === "combined" && (
+              {mode === "combined" && result.probability && result.type && (
                 <p className="text-center text-xl text-blue-600">
                   Probability of {result.type.toUpperCase()}: {result.probability} (
                   {result.percentage}%)
                 </p>
               )}
-              {result.count !== undefined && mode === "perm_comb" && (
+              {mode === "perm_comb" && result.count !== undefined && (
                 <p className="text-center text-xl text-blue-600">
                   {result.type === "permutation" ? "Permutations" : "Combinations"}:{" "}
-                  {result.count.toLocaleString()}
+                  {Number.isFinite(result.count) ? result.count.toLocaleString() : "Invalid"}
                 </p>
               )}
               <div className="text-center">
@@ -420,7 +430,7 @@ const ProbabilityCalculator = () => {
                               <li>With Replacement: P(n,k) = nᵏ</li>
                               <li>
                                 P({result.n},{result.k}) = {result.n}⁽{result.k}⁾ ={" "}
-                                {result.count.toLocaleString()}
+                                {Number.isFinite(result.count) ? result.count.toLocaleString() : "Invalid"}
                               </li>
                             </>
                           ) : (
@@ -428,9 +438,9 @@ const ProbabilityCalculator = () => {
                               <li>Without Replacement: P(n,k) = n! / (n-k)!</li>
                               <li>
                                 P({result.n},{result.k}) = {result.n}! / ({result.n}-{result.k})! ={" "}
-                                {factorial(result.n).toLocaleString()} /{" "}
-                                {factorial(result.n - result.k).toLocaleString()} ={" "}
-                                {result.count.toLocaleString()}
+                                {Number.isFinite(factorial(result.n)) ? factorial(result.n).toLocaleString() : "Invalid"} /{" "}
+                                {Number.isFinite(factorial(result.n - result.k)) ? factorial(result.n - result.k).toLocaleString() : "Invalid"} ={" "}
+                                {Number.isFinite(result.count) ? result.count.toLocaleString() : "Invalid"}
                               </li>
                             </>
                           )
@@ -440,10 +450,10 @@ const ProbabilityCalculator = () => {
                             <li>
                               C({result.n},{result.k}) = ({result.n}+{result.k}-1)! / ({result.k}! ×{" "}
                               ({result.n}-1)!) ={" "}
-                              {factorial(result.n + result.k - 1).toLocaleString()} / (
-                              {factorial(result.k).toLocaleString()} ×{" "}
-                              {factorial(result.n - 1).toLocaleString()}) ={" "}
-                              {result.count.toLocaleString()}
+                              {Number.isFinite(factorial(result.n + result.k - 1)) ? factorial(result.n + result.k - 1).toLocaleString() : "Invalid"} / (
+                              {Number.isFinite(factorial(result.k)) ? factorial(result.k).toLocaleString() : "Invalid"} ×{" "}
+                              {Number.isFinite(factorial(result.n - 1)) ? factorial(result.n - 1).toLocaleString() : "Invalid"}) ={" "}
+                              {Number.isFinite(result.count) ? result.count.toLocaleString() : "Invalid"}
                             </li>
                           </>
                         ) : (
@@ -451,10 +461,10 @@ const ProbabilityCalculator = () => {
                             <li>Without Replacement: C(n,k) = n! / (k!(n-k)!)</li>
                             <li>
                               C({result.n},{result.k}) = {result.n}! / ({result.k}! × ({result.n}-
-                              {result.k})!) = {factorial(result.n).toLocaleString()} / (
-                              {factorial(result.k).toLocaleString()} ×{" "}
-                              {factorial(result.n - result.k).toLocaleString()}) ={" "}
-                              {result.count.toLocaleString()}
+                              {result.k})!) = {Number.isFinite(factorial(result.n)) ? factorial(result.n).toLocaleString() : "Invalid"} / (
+                              {Number.isFinite(factorial(result.k)) ? factorial(result.k).toLocaleString() : "Invalid"} ×{" "}
+                              {Number.isFinite(factorial(result.n - result.k)) ? factorial(result.n - result.k).toLocaleString() : "Invalid"}) ={" "}
+                              {Number.isFinite(result.count) ? result.count.toLocaleString() : "Invalid"}
                             </li>
                           </>
                         )}
@@ -479,7 +489,7 @@ const ProbabilityCalculator = () => {
                     ? `P = ${entry.probability} (${entry.percentage}%)`
                     : entry.mode === "combined"
                     ? `P(${entry.type.toUpperCase()}) = ${entry.probability} (${entry.percentage}%)`
-                    : `${entry.type} = ${entry.count.toLocaleString()}`}
+                    : `${entry.type} = ${Number.isFinite(entry.count) ? entry.count.toLocaleString() : "Invalid"}`}
                 </li>
               ))}
             </ul>
