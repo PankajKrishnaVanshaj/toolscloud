@@ -79,6 +79,7 @@ const BinaryNOTCalculator = () => {
       decimalInput: decimalInput,
       notResult: notResult,
       binaryResult: binaryResult,
+      mask: mask, // Add mask to result object
     });
   }, [binaryInput, bitLength, inputFormat]);
 
@@ -125,8 +126,8 @@ NOT Hex: ${result.notResult.toString(16).toUpperCase().padStart(Math.ceil(bitLen
   };
 
   return (
-    <div className="min-h-screen  flex items-center justify-center ">
-      <div className="w-full  bg-white rounded-xl shadow-lg p-6 sm:p-8">
+    <div className="min-h-screen flex items-center justify-center">
+      <div className="w-full bg-white rounded-xl shadow-lg p-6 sm:p-8">
         <h1 className="text-2xl sm:text-3xl font-bold text-center mb-6 text-gray-800">
           Binary NOT Calculator
         </h1>
@@ -244,7 +245,7 @@ NOT Hex: ${result.notResult.toString(16).toUpperCase().padStart(Math.ceil(bitLen
                   <p>Step 1: Input Binary: {result.input}</p>
                   <p>Step 2: Decimal Value: {result.decimalInput}</p>
                   <p>Step 3: Bitwise NOT (~{result.decimalInput}): {~result.decimalInput & 0xFFFFFFFF}</p>
-                  <p>Step 4: Mask to {bitLength}-bit ({mask.toString(2).padStart(bitLength, "0")}): {result.notResult}</p>
+                  <p>Step 4: Mask to {bitLength}-bit ({result.mask.toString(2).padStart(bitLength, "0")}): {result.notResult}</p>
                   <p>Step 5: Result Binary: {result.binaryResult}</p>
                 </div>
               )}

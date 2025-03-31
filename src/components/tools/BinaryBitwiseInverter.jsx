@@ -1,7 +1,7 @@
 "use client";
 import React, { useState, useEffect, useCallback } from "react";
 import { FaSync, FaCopy, FaDownload } from "react-icons/fa";
-import { saveAs } from "file-saver"; // For downloading output as text file
+import { saveAs } from "file-saver";
 
 const BinaryBitwiseInverter = () => {
   const [input, setInput] = useState("");
@@ -9,11 +9,10 @@ const BinaryBitwiseInverter = () => {
   const [bitLength, setBitLength] = useState(8);
   const [output, setOutput] = useState({ binary: "", decimal: "", hex: "" });
   const [error, setError] = useState("");
-  const [signed, setSigned] = useState(false); // Signed vs unsigned toggle
-  const [showSteps, setShowSteps] = useState(false); // Show calculation steps
+  const [signed, setSigned] = useState(false);
+  const [showSteps, setShowSteps] = useState(false);
   const bitLengths = [8, 16, 32, 64];
 
-  // Validate and convert input based on format
   const validateAndConvertInput = useCallback((value, format) => {
     try {
       let num;
@@ -40,7 +39,6 @@ const BinaryBitwiseInverter = () => {
     }
   }, []);
 
-  // Invert bits with signed/unsigned handling
   const invertBits = useCallback(
     (num) => {
       if (num === null) return null;
@@ -57,25 +55,26 @@ const BinaryBitwiseInverter = () => {
     [bitLength, signed]
   );
 
-  // Format output with signed handling
   const formatOutput = useCallback(
     (inverted) => {
       if (inverted === null) {
         return { binary: "", decimal: "", hex: "" };
       }
-      const binary = inverted >= 0
-        ? inverted.toString(2).padStart(bitLength, "0")
-        : (inverted >>> 0).toString(2).padStart(bitLength, "0");
+      // Workaround: Use bit shifting instead of exponentiation for 2^n
+      const bitMask = (1n << BigInt(bitLength)) - 1n;
+      const unsignedInverted = inverted < 0 ? (bitMask + 1n + inverted) & bitMask : inverted;
+      const binary = unsignedInverted.toString(2).padStart(bitLength, "0").slice(-bitLength);
       const decimal = inverted.toString(10);
-      const hex = inverted >= 0
-        ? inverted.toString(16).toUpperCase().padStart(Math.ceil(bitLength / 4), "0")
-        : (inverted >>> 0).toString(16).toUpperCase().padStart(Math.ceil(bitLength / 4), "0");
+      const hex = unsignedInverted
+        .toString(16)
+        .toUpperCase()
+        .padStart(Math.ceil(bitLength / 4), "0")
+        .slice(-Math.ceil(bitLength / 4));
       return { binary, decimal, hex };
     },
     [bitLength]
   );
 
-  // Update output
   const updateOutput = useCallback(() => {
     setError("");
     const num = validateAndConvertInput(input, inputFormat);
@@ -87,20 +86,17 @@ const BinaryBitwiseInverter = () => {
     updateOutput();
   }, [input, inputFormat, bitLength, signed, updateOutput]);
 
-  // Copy output to clipboard
   const copyToClipboard = (value) => {
     navigator.clipboard.writeText(value);
     alert("Copied to clipboard!");
   };
 
-  // Download output as text file
   const downloadOutput = () => {
     const text = `Input: ${input} (${inputFormat})\nBit Length: ${bitLength}\nSigned: ${signed}\n\nOutput:\nBinary: ${output.binary}\nDecimal: ${output.decimal}\nHexadecimal: ${output.hex}`;
     const blob = new Blob([text], { type: "text/plain;charset=utf-8" });
     saveAs(blob, `bitwise-inverter-output-${Date.now()}.txt`);
   };
 
-  // Clear all inputs
   const handleClear = () => {
     setInput("");
     setOutput({ binary: "", decimal: "", hex: "" });
@@ -110,13 +106,12 @@ const BinaryBitwiseInverter = () => {
   };
 
   return (
-    <div className="min-h-screen  flex items-center justify-center ">
-      <div className="w-full  bg-white rounded-xl shadow-lg p-6 sm:p-8">
+    <div className="min-h-screen flex items-center justify-center">
+      <div className="w-full bg-white rounded-xl shadow-lg p-6 sm:p-8">
         <h1 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-6 text-center">
           Binary Bitwise Inverter
         </h1>
 
-        {/* Input Section */}
         <div className="space-y-6">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
@@ -186,7 +181,6 @@ const BinaryBitwiseInverter = () => {
             </div>
           </div>
 
-          {/* Action Buttons */}
           <div className="flex flex-col sm:flex-row gap-4">
             <button
               onClick={handleClear}
@@ -203,7 +197,6 @@ const BinaryBitwiseInverter = () => {
             </button>
           </div>
 
-          {/* Output Section */}
           <div className="p-4 bg-gray-50 rounded-lg">
             <h2 className="text-lg font-semibold mb-2 text-gray-800">Inverted Result:</h2>
             <div className="space-y-3 text-sm">
@@ -243,14 +236,13 @@ const BinaryBitwiseInverter = () => {
               <div className="mt-4 p-2 bg-gray-100 rounded-md text-sm">
                 <h3 className="font-medium text-gray-700">Calculation Steps:</h3>
                 <p>1. Input ({inputFormat}): {input}</p>
-                <p>2. Converted to Decimal: {validateAndConvertInput(input, inputFormat)}</p>
-                <p>3. Inverted with ~: {invertBits(validateAndConvertInput(input, inputFormat))}</p>
+                <p>2. Converted to Decimal: {validateAndConvertInput(input, inputFormat)?.toString() || "N/A"}</p>
+                <p>3. Inverted with ~: {invertBits(validateAndConvertInput(input, inputFormat))?.toString() || "N/A"}</p>
                 <p>4. Formatted to {bitLength} bits</p>
               </div>
             )}
           </div>
 
-          {/* Error Section */}
           {error && (
             <div className="p-4 bg-red-50 rounded-lg text-red-700">
               <p>{error}</p>
@@ -258,7 +250,6 @@ const BinaryBitwiseInverter = () => {
           )}
         </div>
 
-        {/* Features Section */}
         <div className="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
           <h3 className="font-semibold text-blue-700 mb-2">Features</h3>
           <ul className="list-disc list-inside text-blue-600 text-sm space-y-1">

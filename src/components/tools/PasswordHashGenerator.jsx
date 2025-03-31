@@ -99,8 +99,8 @@ const PasswordHashGenerator = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4">
-      <div className="w-full max-w-3xl bg-white rounded-xl shadow-lg p-6 sm:p-8">
+    <div className="min-h-screen  flex items-center justify-center ">
+      <div className="bg-white rounded-xl shadow-lg p-6 sm:p-8 w-full ">
         <h1 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-6 text-center">
           Password Hash Generator
         </h1>

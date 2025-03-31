@@ -1,6 +1,6 @@
 "use client";
 import React, { useState, useCallback, useRef } from "react";
-import QrCodeReader from "qrcode-reader";
+import jsQR from "jsqr";
 import { useDropzone } from "react-dropzone";
 import { FaDownload, FaCopy, FaSync, FaUpload } from "react-icons/fa";
 
@@ -11,11 +11,11 @@ const QRCodeToBinary = () => {
   const [error, setError] = useState("");
   const [byteFormat, setByteFormat] = useState(8);
   const [previewUrl, setPreviewUrl] = useState("");
-  const [separator, setSeparator] = useState(" "); // Space, comma, etc.
+  const [separator, setSeparator] = useState(" ");
   const [isProcessing, setIsProcessing] = useState(false);
   const fileInputRef = useRef(null);
 
-  // Decode QR Code
+  // Decode QR Code using jsQR
   const decodeQRCode = useCallback((file) => {
     setError("");
     setQrContent("");
@@ -29,19 +29,25 @@ const QRCodeToBinary = () => {
       img.src = reader.result;
       img.onload = () => {
         setPreviewUrl(reader.result);
-        const qr = new QrCodeReader();
-        qr.callback = (err, value) => {
-          if (err) {
-            setError("Failed to decode QR code: " + err.message);
-            setIsProcessing(false);
-            return;
-          }
-          const content = value.result;
-          setQrContent(content);
-          convertToBinary(content);
-          setIsProcessing(false);
-        };
-        qr.decode(img);
+        const canvas = document.createElement("canvas");
+        const context = canvas.getContext("2d");
+        canvas.width = img.width;
+        canvas.height = img.height;
+        context.drawImage(img, 0, 0, img.width, img.height);
+        const imageData = context.getImageData(0, 0, img.width, img.height);
+        const code = jsQR(imageData.data, imageData.width, imageData.height);
+
+        if (code) {
+          setQrContent(code.data);
+          convertToBinary(code.data);
+        } else {
+          setError("Failed to decode QR code: No QR code found in the image");
+        }
+        setIsProcessing(false);
+      };
+      img.onerror = () => {
+        setError("Failed to load image");
+        setIsProcessing(false);
       };
     };
     reader.readAsDataURL(file);
@@ -110,8 +116,8 @@ const QRCodeToBinary = () => {
   };
 
   return (
-    <div className="min-h-screen  flex items-center justify-center ">
-      <div className="w-full  bg-white rounded-xl shadow-lg p-6 sm:p-8">
+    <div className="min-h-screen flex items-center justify-center">
+      <div className="w-full bg-white rounded-xl shadow-lg p-6 sm:p-8">
         <h1 className="text-2xl sm:text-3xl font-bold text-center mb-6 text-gray-800">
           QR Code to Binary Converter
         </h1>

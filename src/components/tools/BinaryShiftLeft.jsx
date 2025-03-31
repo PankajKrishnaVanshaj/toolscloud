@@ -1,7 +1,7 @@
 "use client";
 import React, { useState, useCallback } from "react";
 import { FaSync, FaCopy, FaDownload } from "react-icons/fa";
-import { saveAs } from "file-saver"; // For downloading results as text file
+import { saveAs } from "file-saver";
 
 const BinaryShiftLeft = () => {
   const [binaryInput, setBinaryInput] = useState("");
@@ -10,7 +10,7 @@ const BinaryShiftLeft = () => {
   const [result, setResult] = useState(null);
   const [error, setError] = useState("");
   const [showSteps, setShowSteps] = useState(true);
-  const [inputBase, setInputBase] = useState("binary"); // New: Allow decimal/hex input
+  const [inputBase, setInputBase] = useState("binary");
 
   const validateInput = (input, base) => {
     if (base === "binary") return /^[01]+$/.test(input);
@@ -34,7 +34,7 @@ const BinaryShiftLeft = () => {
     setError("");
     setResult(null);
 
-    if (!binaryInput) {
+    if (!binaryInput.trim()) {
       setError("Please enter a number");
       return;
     }
@@ -61,19 +61,23 @@ const BinaryShiftLeft = () => {
       steps.push(decimalToBinary(current, bitLength));
     }
 
-    setResult({
+    const newResult = {
       input: binaryOriginal,
       decimalInput: decimal,
       shiftAmount,
       resultDecimal: shiftedDecimal,
-      resultBinary,
+      resultBinary: binaryResult, // Fixed typo: was `resultBinary` without colon
       resultHex: shiftedDecimal.toString(16).toUpperCase().padStart(Math.ceil(bitLength / 4), "0"),
       steps,
-    });
+    };
+
+    console.log("Setting result:", newResult); // Debug log
+    setResult(newResult);
   }, [binaryInput, shiftAmount, bitLength, inputBase]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    console.log("Form submitted"); // Debug log
     performShiftLeft();
   };
 
@@ -108,14 +112,13 @@ ${showSteps && result.steps.length > 0 ? "Steps:\n" + result.steps.map((step, i)
   };
 
   return (
-    <div className="min-h-screen  flex items-center justify-center ">
-      <div className="w-full  bg-white rounded-xl shadow-lg p-6 sm:p-8">
+    <div className="min-h-screen flex items-center justify-center">
+      <div className="w-full bg-white rounded-xl shadow-lg p-6 sm:p-8">
         <h1 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-6 text-center">
           Binary Shift Left Converter
         </h1>
 
         <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Input Section */}
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -172,7 +175,6 @@ ${showSteps && result.steps.length > 0 ? "Steps:\n" + result.steps.map((step, i)
             </div>
           </div>
 
-          {/* Action Buttons */}
           <div className="flex flex-col sm:flex-row gap-4">
             <button
               type="submit"
@@ -190,14 +192,12 @@ ${showSteps && result.steps.length > 0 ? "Steps:\n" + result.steps.map((step, i)
           </div>
         </form>
 
-        {/* Error Section */}
         {error && (
           <div className="mt-6 p-4 bg-red-50 rounded-lg text-red-700">
             <p>{error}</p>
           </div>
         )}
 
-        {/* Results Section */}
         {result && (
           <div className="mt-6 p-4 bg-gray-50 rounded-lg">
             <h2 className="text-lg font-semibold mb-4 text-gray-800">Results:</h2>
@@ -256,7 +256,6 @@ ${showSteps && result.steps.length > 0 ? "Steps:\n" + result.steps.map((step, i)
           </div>
         )}
 
-        {/* Features & Info */}
         <div className="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
           <h3 className="font-semibold text-blue-700 mb-2">Features</h3>
           <ul className="list-disc list-inside text-blue-600 text-sm space-y-1">

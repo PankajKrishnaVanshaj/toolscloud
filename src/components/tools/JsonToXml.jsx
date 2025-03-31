@@ -9,29 +9,35 @@ const JsonToXml = () => {
   const [xmlOutput, setXmlOutput] = useState("");
   const [formatOutput, setFormatOutput] = useState(true);
   const [rootNode, setRootNode] = useState("root");
+  const [arrayItemNode, setArrayItemNode] = useState("item"); // New: Custom tag for array items
   const [isProcessing, setIsProcessing] = useState(false);
 
   // Function to convert JSON to XML
-  const jsonToXml = useCallback((json, rootName = "root") => {
+  const jsonToXml = useCallback((json, rootName = "root", itemName = "item") => {
     if (typeof json !== "object" || json === null) {
       return "";
     }
 
     let xml = "";
-    for (let key in json) {
-      if (json.hasOwnProperty(key)) {
-        if (Array.isArray(json[key])) {
-          json[key].forEach((item) => {
-            xml += `<${key}>${jsonToXml(item)}</${key}>`;
-          });
-        } else if (typeof json[key] === "object") {
-          xml += `<${key}>${jsonToXml(json[key])}</${key}>`;
-        } else {
-          xml += `<${key}>${json[key]}</${key}>`;
+    if (Array.isArray(json)) {
+      // Handle arrays with a custom item tag
+      xml = json.map((item) => `<${itemName}>${jsonToXml(item, rootName, itemName)}</${itemName}>`).join("");
+    } else {
+      // Handle objects
+      for (let key in json) {
+        if (json.hasOwnProperty(key)) {
+          if (Array.isArray(json[key])) {
+            xml += json[key].map((item) => `<${key}>${jsonToXml(item, rootName, itemName)}</${key}>`).join("");
+          } else if (typeof json[key] === "object") {
+            xml += `<${key}>${jsonToXml(json[key], rootName, itemName)}</${key}>`;
+          } else {
+            xml += `<${key}>${json[key]}</${key}>`;
+          }
         }
       }
     }
-    return `<${rootName}>${xml}</${rootName}>`;
+    // Only wrap with rootName if this is the top-level call
+    return xml && rootName ? `<${rootName}>${xml}</${rootName}>` : xml;
   }, []);
 
   // Handle conversion
@@ -39,21 +45,25 @@ const JsonToXml = () => {
     setIsProcessing(true);
     try {
       const parsedJson = JSON.parse(jsonInput);
-      let xml = jsonToXml(parsedJson, rootNode || "root");
+      let xml = jsonToXml(parsedJson, rootNode || "root", arrayItemNode || "item");
 
       if (formatOutput) {
-        xml = prettier.format(xml, {
-          parser: "xml",
-          plugins: [xmlPlugin],
-          printWidth: 80,
-        });
+        try {
+          xml = await prettier.format(xml, {
+            parser: "xml",
+            plugins: [xmlPlugin],
+            printWidth: 80,
+          });
+        } catch (formatError) {
+          console.error("Prettier formatting failed:", formatError);
+        }
       }
-      setXmlOutput(xml);
+      setXmlOutput(xml || "");
     } catch (error) {
       setXmlOutput("Invalid JSON format. Please check your input.");
     }
     setIsProcessing(false);
-  }, [jsonInput, formatOutput, rootNode, jsonToXml]);
+  }, [jsonInput, formatOutput, rootNode, arrayItemNode, jsonToXml]);
 
   // Handle file upload
   const handleFileUpload = useCallback((e) => {
@@ -84,6 +94,7 @@ const JsonToXml = () => {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+    URL.revokeObjectURL(url);
   };
 
   // Handle copy to clipboard
@@ -98,11 +109,12 @@ const JsonToXml = () => {
     setJsonInput("");
     setXmlOutput("");
     setRootNode("root");
+    setArrayItemNode("item");
     setFormatOutput(true);
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center ">
+    <div className="min-h-screen flex items-center justify-center">
       <div className="w-full bg-white rounded-xl shadow-lg p-6 sm:p-8">
         <h1 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-6">
           JSON to XML Converter
@@ -133,6 +145,19 @@ const JsonToXml = () => {
               disabled={isProcessing}
             />
           </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Array Item Node Name
+            </label>
+            <input
+              type="text"
+              value={arrayItemNode}
+              onChange={(e) => setArrayItemNode(e.target.value)}
+              placeholder="e.g., item"
+              className="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500"
+              disabled={isProcessing}
+            />
+          </div>
           <div className="flex items-center">
             <label className="flex items-center">
               <input
@@ -149,7 +174,6 @@ const JsonToXml = () => {
 
         {/* JSON Input and XML Output */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* JSON Input */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               JSON Input
@@ -162,8 +186,6 @@ const JsonToXml = () => {
               disabled={isProcessing}
             />
           </div>
-
-          {/* XML Output */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               XML Output
@@ -198,11 +220,11 @@ const JsonToXml = () => {
           >
             <FaSync className="mr-2" /> Clear
           </button>
-          {xmlOutput && !xmlOutput.includes("Invalid") && (
+          {xmlOutput && typeof xmlOutput === "string" && !xmlOutput.includes("Invalid") && (
             <>
               <button
                 onClick={handleDownload}
-                className="flex-1 py-2 px共和-4 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors flex items-center justify-center"
+                className="flex-1 py-2 px-4 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors flex items-center justify-center"
               >
                 <FaDownload className="mr-2" /> Download XML
               </button>
@@ -221,6 +243,7 @@ const JsonToXml = () => {
           <h3 className="font-semibold text-blue-700 mb-2">Features</h3>
           <ul className="list-disc list-inside text-blue-600 text-sm space-y-1">
             <li>Convert JSON to XML with custom root node</li>
+            <li>Customizable array item node name</li>
             <li>Optional XML formatting with Prettier</li>
             <li>File upload support for JSON files</li>
             <li>Download XML output or copy to clipboard</li>

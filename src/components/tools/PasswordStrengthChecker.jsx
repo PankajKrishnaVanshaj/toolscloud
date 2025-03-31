@@ -1,5 +1,5 @@
 "use client";
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { FaEye, FaEyeSlash, FaSync, FaCopy, FaCheck } from "react-icons/fa";
 
 const PasswordStrengthChecker = () => {
@@ -8,16 +8,16 @@ const PasswordStrengthChecker = () => {
   const [copied, setCopied] = useState(false);
   const [suggestions, setSuggestions] = useState([]);
 
-  // Enhanced strength calculation
-  const getStrength = useCallback((password) => {
+  // Enhanced strength calculation (without state updates)
+  const getStrength = useCallback((pwd) => {
     let score = 0;
     const checks = {
-      length: password.length >= 8,
-      uppercase: /[A-Z]/.test(password),
-      lowercase: /[a-z]/.test(password),
-      number: /\d/.test(password),
-      special: /[!@#$%^&*(),.?":{}|<>]/.test(password),
-      variety: password.length > 12 && new Set(password).size >= 8, // Unique characters
+      length: pwd.length >= 8,
+      uppercase: /[A-Z]/.test(pwd),
+      lowercase: /[a-z]/.test(pwd),
+      number: /\d/.test(pwd),
+      special: /[!@#$%^&*(),.?":{}|<>]/.test(pwd),
+      variety: pwd.length > 12 && new Set(pwd).size >= 8,
     };
 
     score = Object.values(checks).filter(Boolean).length;
@@ -28,24 +28,29 @@ const PasswordStrengthChecker = () => {
     if (!checks.number) suggestionsList.push("Include a number");
     if (!checks.special) suggestionsList.push("Use a special character");
     if (!checks.variety) suggestionsList.push("Increase character variety");
-    setSuggestions(suggestionsList);
 
     switch (score) {
       case 0:
       case 1:
-        return { label: "Weak", color: "text-red-500", bgColor: "bg-red-500", progress: 25 };
+        return { label: "Weak", color: "text-red-500", bgColor: "bg-red-500", progress: 25, suggestions: suggestionsList };
       case 2:
       case 3:
-        return { label: "Fair", color: "text-yellow-500", bgColor: "bg-yellow-500", progress: 50 };
+        return { label: "Fair", color: "text-yellow-500", bgColor: "bg-yellow-500", progress: 50, suggestions: suggestionsList };
       case 4:
       case 5:
-        return { label: "Good", color: "text-blue-500", bgColor: "bg-blue-500", progress: 75 };
+        return { label: "Good", color: "text-blue-500", bgColor: "bg-blue-500", progress: 75, suggestions: suggestionsList };
       case 6:
-        return { label: "Strong", color: "text-green-500", bgColor: "bg-green-500", progress: 100 };
+        return { label: "Strong", color: "text-green-500", bgColor: "bg-green-500", progress: 100, suggestions: suggestionsList };
       default:
-        return { label: "Weak", color: "text-red-500", bgColor: "bg-red-500", progress: 25 };
+        return { label: "Weak", color: "text-red-500", bgColor: "bg-red-500", progress: 25, suggestions: suggestionsList };
     }
   }, []);
+
+  // Update suggestions via useEffect to avoid render loop
+  useEffect(() => {
+    const strengthData = getStrength(password);
+    setSuggestions(strengthData.suggestions);
+  }, [password, getStrength]);
 
   const strength = getStrength(password);
 
@@ -65,8 +70,8 @@ const PasswordStrengthChecker = () => {
   };
 
   return (
-    <div className="min-h-screen  flex items-center justify-center ">
-      <div className="w-full  bg-white shadow-lg rounded-xl p-6 sm:p-8">
+    <div className="min-h-screen flex items-center justify-center">
+      <div className="w-full bg-white shadow-lg rounded-xl p-6 sm:p-8">
         <h2 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-6">
           Password Strength Checker
         </h2>
