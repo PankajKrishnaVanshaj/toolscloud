@@ -1,9 +1,8 @@
-// app/components/PDFBookmarkManager.jsx
 "use client";
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import { Document, Page } from "react-pdf";
 import "react-pdf/dist/esm/Page/AnnotationLayer.css";
-import { FaDownload, FaSync, FaTrash, FaPlus } from "react-icons/fa";
+import { FaDownload, FaSync, FaTrash, FaPlus, FaUpload } from "react-icons/fa";
 
 const PDFBookmarkManager = () => {
   const [file, setFile] = useState(null);
