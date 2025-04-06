@@ -1,179 +1,224 @@
-"use client";
-import React, { useState, useRef, useEffect, useCallback } from "react";
-import { FaDownload, FaSync, FaUpload, FaCropAlt } from "react-icons/fa";
+import React, { useState, useCallback, useRef, useEffect } from 'react';
+import { FaUpload, FaDownload, FaSync, FaCrop } from 'react-icons/fa';
 
 const ImageCropper = () => {
   const [image, setImage] = useState(null);
-  const [cropArea, setCropArea] = useState({ x: 50, y: 50, width: 150, height: 150 });
-  const [dragging, setDragging] = useState(false);
-  const [resizing, setResizing] = useState(null); // null, "se", "nw", "ne", "sw"
-  const [aspectRatio, setAspectRatio] = useState(null); // null for freeform, or ratio like 1 for square
-  const imgRef = useRef(null);
-  const containerRef = useRef(null);
+  const [croppedImage, setCroppedImage] = useState(null);
+  const [crop, setCrop] = useState({ x: 0, y: 0, width: 200, height: 200 });
+  const [interaction, setInteraction] = useState({ type: null, startX: 0, startY: 0 });
   const canvasRef = useRef(null);
+  const previewCanvasRef = useRef(null);
   const fileInputRef = useRef(null);
-  const startPosRef = useRef({ x: 0, y: 0 });
+  const imageRef = useRef(null);
+  const containerRef = useRef(null);
 
   // Handle image upload
   const handleImageUpload = useCallback((e) => {
     const file = e.target.files[0];
-    if (file) {
+    if (file && file.type.startsWith('image/')) {
       const reader = new FileReader();
-      reader.onload = (event) => setImage(event.target.result);
+      reader.onload = (event) => {
+        setImage(event.target.result);
+        setCroppedImage(null);
+        setCrop({ x: 0, y: 0, width: 200, height: 200 });
+      };
       reader.readAsDataURL(file);
+    } else {
+      alert('Please upload an image file');
     }
   }, []);
 
-  // Mouse/Touch Down handlers
-  const handleMouseDown = (e) => {
-    e.preventDefault();
-    setDragging(true);
-    startPosRef.current = { x: e.clientX, y: e.clientY };
-  };
+  // Perform crop
+  const performCrop = useCallback(() => {
+    if (!image || !canvasRef.current || !previewCanvasRef.current || !imageRef.current) return;
 
-  const handleResizeMouseDown = (corner) => (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setResizing(corner);
-    startPosRef.current = { x: e.clientX, y: e.clientY };
-  };
+    const img = new Image();
+    img.src = image;
 
-  // Mouse/Touch Move handler
-  const handleMouseMove = useCallback(
-    (e) => {
-      if (!imgRef.current) return;
+    img.onload = () => {
+      const canvas = canvasRef.current;
+      const previewCanvas = previewCanvasRef.current;
+      
+      if (!canvas || !previewCanvas) return;
 
-      const imgRect = imgRef.current.getBoundingClientRect();
+      const ctx = canvas.getContext('2d');
+      const previewCtx = previewCanvas.getContext('2d');
+      
+      if (!ctx || !previewCtx) return;
 
-      if (dragging) {
-        const dx = e.clientX - startPosRef.current.x;
-        const dy = e.clientY - startPosRef.current.y;
+      canvas.width = img.width;
+      canvas.height = img.height;
+      previewCanvas.width = crop.width;
+      previewCanvas.height = crop.height;
 
-        setCropArea((prev) => {
-          const newX = Math.max(0, Math.min(prev.x + dx, imgRect.width - prev.width));
-          const newY = Math.max(0, Math.min(prev.y + dy, imgRect.height - prev.height));
-          return { ...prev, x: newX, y: newY };
-        });
+      ctx.drawImage(img, 0, 0);
+      previewCtx.drawImage(
+        canvas,
+        crop.x,
+        crop.y,
+        crop.width,
+        crop.height,
+        0,
+        0,
+        crop.width,
+        crop.height
+      );
 
-        startPosRef.current = { x: e.clientX, y: e.clientY };
-      } else if (resizing) {
-        const dx = e.clientX - startPosRef.current.x;
-        const dy = e.clientY - startPosRef.current.y;
+      setCroppedImage(previewCanvas.toDataURL('image/png'));
+    };
+    
+    img.onerror = () => {
+      console.error('Failed to load image');
+    };
+  }, [image, crop]);
 
-        setCropArea((prev) => {
-          let newX = prev.x;
-          let newY = prev.y;
-          let newWidth = prev.width;
-          let newHeight = prev.height;
-
-          if (resizing === "se") {
-            newWidth = Math.max(50, Math.min(prev.width + dx, imgRect.width - prev.x));
-            newHeight = aspectRatio ? newWidth / aspectRatio : Math.max(50, Math.min(prev.height + dy, imgRect.height - prev.y));
-          } else if (resizing === "nw") {
-            newWidth = Math.max(50, Math.min(prev.width - dx, prev.x + prev.width));
-            newX = prev.x + (prev.width - newWidth);
-            newHeight = aspectRatio ? newWidth / aspectRatio : Math.max(50, Math.min(prev.height - dy, prev.y + prev.height));
-            newY = prev.y + (prev.height - newHeight);
-          } else if (resizing === "ne") {
-            newWidth = Math.max(50, Math.min(prev.width + dx, imgRect.width - prev.x));
-            newHeight = aspectRatio ? newWidth / aspectRatio : Math.max(50, Math.min(prev.height - dy, prev.y + prev.height));
-            newY = prev.y + (prev.height - newHeight);
-          } else if (resizing === "sw") {
-            newWidth = Math.max(50, Math.min(prev.width - dx, prev.x + prev.width));
-            newX = prev.x + (prev.width - newWidth);
-            newHeight = aspectRatio ? newWidth / aspectRatio : Math.max(50, Math.min(prev.height + dy, imgRect.height - prev.y));
-          }
-
-          return { x: Math.max(0, newX), y: Math.max(0, newY), width: newWidth, height: newHeight };
-        });
-
-        startPosRef.current = { x: e.clientX, y: e.clientY };
-      }
-    },
-    [dragging, resizing, aspectRatio]
-  );
-
-  // Mouse/Touch Up handler
-  const handleMouseUp = () => {
-    setDragging(false);
-    setResizing(null);
-  };
-
-  // Touch event handlers
+  // Only perform crop when canvas refs are ready
   useEffect(() => {
-    const handleTouchMove = (e) => {
-      if (dragging || resizing) {
-        e.preventDefault();
-        const touch = e.touches[0];
-        handleMouseMove({ clientX: touch.clientX, clientY: touch.clientY });
+    if (image && canvasRef.current && previewCanvasRef.current) {
+      performCrop();
+    }
+  }, [image, crop, performCrop]);
+
+  // Get scaled mouse coordinates
+  const getScaledCoordinates = (e) => {
+    if (!imageRef.current) return { x: 0, y: 0 };
+    
+    const rect = imageRef.current.getBoundingClientRect();
+    const scaleX = imageRef.current.naturalWidth / rect.width;
+    const scaleY = imageRef.current.naturalHeight / rect.height;
+    
+    return {
+      x: Math.round((e.clientX - rect.left) * scaleX),
+      y: Math.round((e.clientY - rect.top) * scaleY),
+    };
+  };
+
+  // Check if point is in resize handle
+  const getResizeHandle = (x, y) => {
+    const handleSize = 10;
+    const handles = {
+      nw: { x: crop.x, y: crop.y },
+      ne: { x: crop.x + crop.width, y: crop.y },
+      sw: { x: crop.x, y: crop.y + crop.height },
+      se: { x: crop.x + crop.width, y: crop.y + crop.height },
+    };
+
+    for (const [key, pos] of Object.entries(handles)) {
+      if (Math.abs(x - pos.x) <= handleSize && Math.abs(y - pos.y) <= handleSize) {
+        return key;
       }
-    };
+    }
+    return null;
+  };
 
-    const handleTouchEnd = () => {
-      setDragging(false);
-      setResizing(null);
-    };
+  // Handle mouse down
+  const handleMouseDown = useCallback((e) => {
+    const pos = getScaledCoordinates(e);
+    const resizeHandle = getResizeHandle(pos.x, pos.y);
+    
+    if (resizeHandle || (pos.x >= crop.x && pos.x <= crop.x + crop.width && 
+        pos.y >= crop.y && pos.y <= crop.y + crop.height)) {
+      setInteraction({
+        type: resizeHandle || 'drag',
+        startX: pos.x,
+        startY: pos.y,
+      });
+    }
+    e.preventDefault();
+  }, [crop]);
 
-    document.addEventListener("mousemove", handleMouseMove);
-    document.addEventListener("mouseup", handleMouseUp);
-    document.addEventListener("touchmove", handleTouchMove, { passive: false });
-    document.addEventListener("touchend", handleTouchEnd);
-    document.addEventListener("touchcancel", handleTouchEnd);
+  // Handle mouse move
+  const handleMouseMove = useCallback((e) => {
+    if (!interaction.type || !imageRef.current) return;
 
-    return () => {
-      document.removeEventListener("mousemove", handleMouseMove);
-      document.removeEventListener("mouseup", handleMouseUp);
-      document.removeEventListener("touchmove", handleTouchMove);
-      document.removeEventListener("touchend", handleTouchEnd);
-      document.removeEventListener("touchcancel", handleTouchEnd);
-    };
-  }, [dragging, resizing, handleMouseMove]);
+    const pos = getScaledCoordinates(e);
+    const dx = pos.x - interaction.startX;
+    const dy = pos.y - interaction.startY;
+    const imgWidth = imageRef.current.naturalWidth;
+    const imgHeight = imageRef.current.naturalHeight;
+
+    setCrop((prev) => {
+      let newCrop = { ...prev };
+
+      switch (interaction.type) {
+        case 'drag':
+          newCrop.x = Math.max(0, Math.min(prev.x + dx, imgWidth - prev.width));
+          newCrop.y = Math.max(0, Math.min(prev.y + dy, imgHeight - prev.height));
+          break;
+        case 'nw':
+          newCrop.x = Math.max(0, Math.min(prev.x + dx, prev.x + prev.width - 10));
+          newCrop.y = Math.max(0, Math.min(prev.y + dy, prev.y + prev.height - 10));
+          newCrop.width = Math.max(10, prev.width - dx);
+          newCrop.height = Math.max(10, prev.height - dy);
+          break;
+        case 'ne':
+          newCrop.y = Math.max(0, Math.min(prev.y + dy, prev.y + prev.height - 10));
+          newCrop.width = Math.max(10, Math.min(prev.width + dx, imgWidth - prev.x));
+          newCrop.height = Math.max(10, prev.height - dy);
+          break;
+        case 'sw':
+          newCrop.x = Math.max(0, Math.min(prev.x + dx, prev.x + prev.width - 10));
+          newCrop.width = Math.max(10, prev.width - dx);
+          newCrop.height = Math.max(10, Math.min(prev.height + dy, imgHeight - prev.y));
+          break;
+        case 'se':
+          newCrop.width = Math.max(10, Math.min(prev.width + dx, imgWidth - prev.x));
+          newCrop.height = Math.max(10, Math.min(prev.height + dy, imgHeight - prev.y));
+          break;
+        default:
+          break;
+      }
+
+      return newCrop;
+    });
+
+    setInteraction((prev) => ({ ...prev, startX: pos.x, startY: pos.y }));
+  }, [interaction]);
+
+  // Handle mouse up
+  const handleMouseUp = () => {
+    setInteraction({ type: null, startX: 0, startY: 0 });
+  };
+
+  // Handle crop size changes from inputs
+  const handleCropSizeChange = (dimension, value) => {
+    const numValue = Math.max(10, parseInt(value) || 10);
+    setCrop((prev) => {
+      const img = imageRef.current;
+      if (!img) return prev;
+
+      const newCrop = { ...prev };
+      if (dimension === 'width') {
+        newCrop.width = Math.min(numValue, img.naturalWidth - newCrop.x);
+      } else {
+        newCrop.height = Math.min(numValue, img.naturalHeight - newCrop.y);
+      }
+      return newCrop;
+    });
+  };
 
   // Download cropped image
-  const downloadCroppedImage = useCallback(() => {
-    if (!imgRef.current || !canvasRef.current) return;
+  const handleDownload = () => {
+    if (croppedImage) {
+      const link = document.createElement('a');
+      link.download = `cropped-image-${Date.now()}.png`;
+      link.href = croppedImage;
+      link.click();
+    }
+  };
 
-    const img = imgRef.current;
-    const canvas = canvasRef.current;
-    const ctx = canvas.getContext("2d");
-
-    const naturalWidth = img.naturalWidth;
-    const naturalHeight = img.naturalHeight;
-    const displayedWidth = img.getBoundingClientRect().width;
-    const displayedHeight = img.getBoundingClientRect().height;
-
-    const scaleX = naturalWidth / displayedWidth;
-    const scaleY = naturalHeight / displayedHeight;
-
-    const scaledX = cropArea.x * scaleX;
-    const scaledY = cropArea.y * scaleY;
-    const scaledWidth = cropArea.width * scaleX;
-    const scaledHeight = cropArea.height * scaleY;
-
-    canvas.width = scaledWidth;
-    canvas.height = scaledHeight;
-
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.drawImage(img, scaledX, scaledY, scaledWidth, scaledHeight, 0, 0, canvas.width, canvas.height);
-
-    const link = document.createElement("a");
-    link.download = `cropped-image-${Date.now()}.png`;
-    link.href = canvas.toDataURL("image/png");
-    link.click();
-  }, [cropArea]);
-
-  // Reset function
-  const reset = () => {
+  // Reset everything
+  const handleReset = () => {
     setImage(null);
-    setCropArea({ x: 50, y: 50, width: 150, height: 150 });
-    setAspectRatio(null);
-    if (fileInputRef.current) fileInputRef.current.value = "";
+    setCroppedImage(null);
+    setCrop({ x: 0, y: 0, width: 200, height: 200 });
+    if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
   return (
-    <div className="min-h-screen  flex items-center justify-center ">
+    <div className="min-h-screen flex items-center justify-center">
       <div className="w-full bg-white rounded-xl shadow-lg p-6 sm:p-8">
-        <h2 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-6">Image Cropper</h2>
+        <h1 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-6">Image Cropper</h1>
 
         {/* File Upload */}
         <div className="mb-6">
@@ -188,87 +233,90 @@ const ImageCropper = () => {
 
         {image && (
           <div className="space-y-6">
-            {/* Image with Crop Area */}
-            <div ref={containerRef} className="relative flex justify-center">
-              <img
-                ref={imgRef}
-                src={image}
-                alt="Uploaded"
-                className="max-w-full h-auto rounded-lg shadow-md max-h-96 object-contain"
-              />
-              <div
-                className="absolute border-2 border-blue-500 bg-blue-200 bg-opacity-20"
-                style={{
-                  left: cropArea.x,
-                  top: cropArea.y,
-                  width: cropArea.width,
-                  height: cropArea.height,
-                  cursor: "move",
-                }}
-                onMouseDown={handleMouseDown}
-                onTouchStart={(e) => {
-                  const touch = e.touches[0];
-                  startPosRef.current = { x: touch.clientX, y: touch.clientY };
-                  setDragging(true);
-                }}
-              >
-                {/* Resize Handles */}
-                <div
-                  className="absolute top-0 left-0 w-4 h-4 bg-blue-500 cursor-nw-resize"
-                  onMouseDown={handleResizeMouseDown("nw")}
-                  onTouchStart={handleResizeMouseDown("nw")}
+            {/* Crop Area and Preview */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="relative" ref={containerRef}>
+                <img
+                  ref={imageRef}
+                  src={image}
+                  alt="Original"
+                  className="max-w-full h-auto rounded-lg shadow-md max-h-96 object-contain"
+                  onMouseDown={handleMouseDown}
+                  onMouseMove={handleMouseMove}
+                  onMouseUp={handleMouseUp}
+                  onMouseLeave={handleMouseUp}
+                  style={{ userSelect: 'none' }}
                 />
-                <div
-                  className="absolute top-0 right-0 w-4 h-4 bg-blue-500 cursor-ne-resize"
-                  onMouseDown={handleResizeMouseDown("ne")}
-                  onTouchStart={handleResizeMouseDown("ne")}
-                />
-                <div
-                  className="absolute bottom-0 left-0 w-4 h-4 bg-blue-500 cursor-sw-resize"
-                  onMouseDown={handleResizeMouseDown("sw")}
-                  onTouchStart={handleResizeMouseDown("sw")}
-                />
-                <div
-                  className="absolute bottom-0 right-0 w-4 h-4 bg-blue-500 cursor-se-resize"
-                  onMouseDown={handleResizeMouseDown("se")}
-                  onTouchStart={handleResizeMouseDown("se")}
+                {imageRef.current && (
+                  <div
+                    className="absolute border-2 border-blue-500 border-dashed"
+                    style={{
+                      left: `${(crop.x / imageRef.current.naturalWidth) * 100}%`,
+                      top: `${(crop.y / imageRef.current.naturalHeight) * 100}%`,
+                      width: `${(crop.width / imageRef.current.naturalWidth) * 100}%`,
+                      height: `${(crop.height / imageRef.current.naturalHeight) * 100}%`,
+                      background: 'rgba(0, 0, 255, 0.1)',
+                    }}
+                  >
+                    <div className="absolute w-3 h-3 bg-blue-500 rounded-full -top-1 -left-1 cursor-nw-resize" />
+                    <div className="absolute w-3 h-3 bg-blue-500 rounded-full -top-1 -right-1 cursor-ne-resize" />
+                    <div className="absolute w-3 h-3 bg-blue-500 rounded-full -bottom-1 -left-1 cursor-sw-resize" />
+                    <div className="absolute w-3 h-3 bg-blue-500 rounded-full -bottom-1 -right-1 cursor-se-resize" />
+                  </div>
+                )}
+              </div>
+              <div>
+                <p className="text-sm text-gray-600 mb-2">Cropped Preview</p>
+                <canvas
+                  ref={previewCanvasRef}
+                  className="max-w-full h-auto rounded-lg shadow-md"
                 />
               </div>
             </div>
             <canvas ref={canvasRef} className="hidden" />
 
-            {/* Controls */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {/* Crop Controls */}
+            <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Aspect Ratio</label>
-                <select
-                  value={aspectRatio || "free"}
-                  onChange={(e) => setAspectRatio(e.target.value === "free" ? null : parseFloat(e.target.value))}
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Crop Width (px)
+                </label>
+                <input
+                  type="number"
+                  min="10"
+                  value={crop.width}
+                  onChange={(e) => handleCropSizeChange('width', e.target.value)}
                   className="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500"
-                >
-                  <option value="free">Freeform</option>
-                  <option value="1">1:1 (Square)</option>
-                  <option value="1.33">4:3</option>
-                  <option value="0.75">3:4</option>
-                  <option value="1.78">16:9</option>
-                  <option value="0.56">9:16</option>
-                </select>
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Crop Height (px)
+                </label>
+                <input
+                  type="number"
+                  min="10"
+                  value={crop.height}
+                  onChange={(e) => handleCropSizeChange('height', e.target.value)}
+                  className="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500"
+                />
               </div>
             </div>
 
             {/* Action Buttons */}
             <div className="flex flex-col sm:flex-row gap-4">
               <button
-                onClick={downloadCroppedImage}
-                className="flex-1 py-2 px-4 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors flex items-center justify-center"
-              >
-                <FaDownload className="mr-2" /> Download
-              </button>
-              <button
-                onClick={reset}
+                onClick={handleReset}
                 className="flex-1 py-2 px-4 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors flex items-center justify-center"
               >
                 <FaSync className="mr-2" /> Reset
+              </button>
+              <button
+                onClick={handleDownload}
+                disabled={!croppedImage}
+                className="flex-1 py-2 px-4 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors flex items-center justify-center"
+              >
+                <FaDownload className="mr-2" /> Download
               </button>
             </div>
           </div>
@@ -285,12 +333,11 @@ const ImageCropper = () => {
         <div className="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
           <h3 className="font-semibold text-blue-700 mb-2">Features</h3>
           <ul className="list-disc list-inside text-blue-600 text-sm space-y-1">
-            <li>Draggable and resizable crop area</li>
-            <li>Multiple resize handles (all corners)</li>
-            <li>Aspect ratio presets</li>
-            <li>Touch support for mobile devices</li>
+            <li>Drag to position crop area</li>
+            <li>Resize crop area using corner handles</li>
+            <li>Adjust crop size manually with inputs</li>
+            <li>Real-time preview of cropped area</li>
             <li>Download cropped image as PNG</li>
-            <li>Responsive design with Tailwind CSS</li>
           </ul>
         </div>
       </div>

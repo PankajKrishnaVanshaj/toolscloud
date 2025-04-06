@@ -1,94 +1,153 @@
-"use client";
-import React, { useState, useRef, useCallback } from "react";
-import { FaDownload, FaSync, FaUpload, FaFont } from "react-icons/fa";
-import html2canvas from "html2canvas"; // For downloading the result
+import React, { useState, useCallback, useRef, useEffect } from 'react';
+import { FaUpload, FaDownload, FaSync, FaTextHeight, FaImage } from 'react-icons/fa';
 
 const ImageWatermarker = () => {
   const [image, setImage] = useState(null);
-  const [watermarkText, setWatermarkText] = useState("Watermark");
+  const [watermarkedImage, setWatermarkedImage] = useState(null);
+  const [watermarkType, setWatermarkType] = useState('text');
+  const [textWatermark, setTextWatermark] = useState('Watermark');
+  const [imageWatermark, setImageWatermark] = useState(null);
+  const [position, setPosition] = useState({ xPercent: 50, yPercent: 50 });
   const [opacity, setOpacity] = useState(0.5);
-  const [color, setColor] = useState("#ffffff");
-  const [fontSize, setFontSize] = useState(32);
-  const [position, setPosition] = useState({ x: 50, y: 50 });
-  const [rotation, setRotation] = useState(0);
-  const [fontFamily, setFontFamily] = useState("Arial");
-  const [size, setSize] = useState(200); // Initial width for watermark
-  const watermarkRef = useRef(null);
+  const [fontSize, setFontSize] = useState(30);
+  const [color, setColor] = useState('#ffffff');
+  const [watermarkSize, setWatermarkSize] = useState({ width: 100, height: 100 });
+  const canvasRef = useRef(null);
   const imageRef = useRef(null);
   const fileInputRef = useRef(null);
+  const watermarkInputRef = useRef(null);
 
-  // Handle file upload
-  const handleFileChange = useCallback((e) => {
+  // Handle main image upload
+  const handleImageUpload = useCallback((e) => {
     const file = e.target.files[0];
-    if (file) {
-      setImage(URL.createObjectURL(file));
+    if (file && file.type.startsWith('image/')) {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        setImage(event.target.result);
+        setWatermarkedImage(null);
+      };
+      reader.readAsDataURL(file);
+    } else {
+      alert('Please upload an image file');
     }
   }, []);
 
-  // Dragging functionality
-  const handleDragStart = (e) => {
-    e.dataTransfer.setDragImage(new Image(), 0, 0);
+  // Handle watermark image upload
+  const handleWatermarkImageUpload = useCallback((e) => {
+    const file = e.target.files[0];
+    if (file && file.type.startsWith('image/')) {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        setImageWatermark(event.target.result);
+      };
+      reader.readAsDataURL(file);
+    } else {
+      alert('Please upload an image file for watermark');
+    }
+  }, []);
+
+  // Calculate actual pixel position from percentages
+  const calculatePixelPosition = useCallback(() => {
+    if (!imageRef.current) return { x: 0, y: 0 };
+    
+    return {
+      x: Math.round((position.xPercent / 100) * imageRef.current.naturalWidth),
+      y: Math.round((position.yPercent / 100) * imageRef.current.naturalHeight),
+    };
+  }, [position.xPercent, position.yPercent]);
+
+  // Apply watermark
+  const applyWatermark = useCallback(() => {
+    if (!image || !canvasRef.current || !imageRef.current) return;
+
+    const canvas = canvasRef.current;
+    const ctx = canvas.getContext('2d');
+    const img = new Image();
+    img.src = image;
+
+    img.onload = () => {
+      canvas.width = img.width;
+      canvas.height = img.height;
+      ctx.drawImage(img, 0, 0);
+
+      const { x, y } = calculatePixelPosition();
+      ctx.globalAlpha = opacity;
+
+      if (watermarkType === 'text') {
+        ctx.font = `${fontSize}px Arial`;
+        ctx.fillStyle = color;
+        ctx.textAlign = 'center';
+        ctx.fillText(textWatermark, x, y);
+      } else if (imageWatermark) {
+        const watermarkImg = new Image();
+        watermarkImg.src = imageWatermark;
+        watermarkImg.onload = () => {
+          const wmWidth = Math.min(watermarkSize.width, canvas.width);
+          const wmHeight = Math.min(watermarkSize.height, canvas.height);
+          ctx.drawImage(watermarkImg, x - wmWidth / 2, y - wmHeight / 2, wmWidth, wmHeight);
+          setWatermarkedImage(canvas.toDataURL('image/png'));
+        };
+        return;
+      }
+
+      setWatermarkedImage(canvas.toDataURL('image/png'));
+    };
+  }, [image, watermarkType, textWatermark, imageWatermark, position, opacity, fontSize, color, watermarkSize, calculatePixelPosition]);
+
+  useEffect(() => {
+    if (image) {
+      applyWatermark();
+    }
+  }, [image, watermarkType, textWatermark, imageWatermark, position, opacity, fontSize, color, watermarkSize, applyWatermark]);
+
+  // Handle watermark size changes
+  const handleWatermarkSizeChange = (dimension, value) => {
+    const numValue = Math.max(10, parseInt(value) || 10); // Default to 10 if parsing fails
+    setWatermarkSize((prev) => ({
+      ...prev,
+      [dimension]: numValue,
+    }));
   };
 
-  const handleDrag = (e) => {
-    if (e.clientX === 0 && e.clientY === 0) return;
-    const rect = imageRef.current.getBoundingClientRect();
-    const newX = Math.max(0, Math.min(e.clientX - rect.left, rect.width - size));
-    const newY = Math.max(0, Math.min(e.clientY - rect.top, rect.height - fontSize));
-    setPosition({ x: newX, y: newY });
-  };
-
-  // Resizing functionality
-  const handleResizeStart = (e) => {
-    e.preventDefault();
-    window.addEventListener("mousemove", handleResizing);
-    window.addEventListener("mouseup", handleResizeEnd);
-  };
-
-  const handleResizing = (e) => {
-    const rect = watermarkRef.current.getBoundingClientRect();
-    const newSize = Math.max(50, e.clientX - rect.left);
-    setSize(newSize);
-  };
-
-  const handleResizeEnd = () => {
-    window.removeEventListener("mousemove", handleResizing);
-    window.removeEventListener("mouseup", handleResizeEnd);
+  // Handle position changes
+  const handlePositionChange = (dimension, value) => {
+    const numValue = Math.max(0, Math.min(100, parseInt(value) || 0)); // Ensure value stays between 0-100
+    setPosition((prev) => ({
+      ...prev,
+      [dimension]: numValue,
+    }));
   };
 
   // Download watermarked image
-  const handleDownload = useCallback(() => {
-    if (!imageRef.current) return;
-
-    html2canvas(imageRef.current.parentElement, {
-      useCORS: true,
-      backgroundColor: null,
-    }).then((canvas) => {
-      const link = document.createElement("a");
+  const handleDownload = () => {
+    if (watermarkedImage) {
+      const link = document.createElement('a');
       link.download = `watermarked-image-${Date.now()}.png`;
-      link.href = canvas.toDataURL("image/png");
+      link.href = watermarkedImage;
       link.click();
-    });
-  }, []);
+    }
+  };
 
-  // Reset all settings
-  const reset = () => {
+  // Reset everything
+  const handleReset = () => {
     setImage(null);
-    setWatermarkText("Watermark");
+    setWatermarkedImage(null);
+    setWatermarkType('text');
+    setTextWatermark('Watermark');
+    setImageWatermark(null);
+    setPosition({ xPercent: 50, yPercent: 50 });
     setOpacity(0.5);
-    setColor("#ffffff");
-    setFontSize(32);
-    setPosition({ x: 50, y: 50 });
-    setRotation(0);
-    setFontFamily("Arial");
-    setSize(200);
-    if (fileInputRef.current) fileInputRef.current.value = "";
+    setFontSize(30);
+    setColor('#ffffff');
+    setWatermarkSize({ width: 100, height: 100 });
+    if (fileInputRef.current) fileInputRef.current.value = '';
+    if (watermarkInputRef.current) watermarkInputRef.current.value = '';
   };
 
   return (
-    <div className="min-h-screen  flex items-center justify-center ">
-      <div className="w-full  bg-white rounded-xl shadow-lg p-6 sm:p-8">
-        <h2 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-6">Image Watermarker</h2>
+    <div className="min-h-screen flex items-center justify-center">
+      <div className="w-full bg-white rounded-xl shadow-lg p-6 sm:p-8">
+        <h1 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-6">Image Watermarker</h1>
 
         {/* File Upload */}
         <div className="mb-6">
@@ -96,93 +155,143 @@ const ImageWatermarker = () => {
             type="file"
             accept="image/*"
             ref={fileInputRef}
-            onChange={handleFileChange}
+            onChange={handleImageUpload}
             className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
           />
         </div>
 
         {image && (
           <div className="space-y-6">
-            {/* Image Preview with Watermark */}
+            {/* Preview */}
             <div className="relative flex justify-center">
               <img
-                src={image}
-                alt="Selected"
                 ref={imageRef}
+                src={watermarkedImage || image}
+                alt="Watermarked Preview"
                 className="max-w-full h-auto rounded-lg shadow-md max-h-96 object-contain"
-                crossOrigin="anonymous"
               />
-              <div
-                ref={watermarkRef}
-                className="absolute cursor-move select-none"
-                draggable
-                onDragStart={handleDragStart}
-                onDrag={handleDrag}
-                style={{
-                  left: `${position.x}px`,
-                  top: `${position.y}px`,
-                  width: `${size}px`,
-                  color,
-                  fontSize: `${fontSize}px`,
-                  opacity,
-                  fontFamily,
-                  transform: `rotate(${rotation}deg)`,
-                  border: "1px dashed #ccc",
-                  padding: "8px",
-                  backgroundColor: "rgba(0, 0, 0, 0.2)",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  textAlign: "center",
-                  wordWrap: "break-word",
-                }}
-              >
-                {watermarkText || "Enter text"}
-                <div
-                  className="absolute bottom-0 right-0 bg-white cursor-se-resize border border-gray-500"
-                  style={{ width: "12px", height: "12px" }}
-                  onMouseDown={handleResizeStart}
-                />
-              </div>
             </div>
+            <canvas ref={canvasRef} className="hidden" />
 
-            {/* Controls */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Watermark Text</label>
-                <input
-                  type="text"
-                  value={watermarkText}
-                  onChange={(e) => setWatermarkText(e.target.value)}
-                  className="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500"
-                  placeholder="Enter watermark text"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Font Family</label>
-                <select
-                  value={fontFamily}
-                  onChange={(e) => setFontFamily(e.target.value)}
-                  className="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500"
+            {/* Watermark Controls */}
+            <div className="space-y-4">
+              {/* Watermark Type Selection */}
+              <div className="flex gap-4">
+                <button
+                  onClick={() => setWatermarkType('text')}
+                  className={`flex-1 py-2 px-4 rounded-md flex items-center justify-center ${
+                    watermarkType === 'text' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'
+                  }`}
                 >
-                  <option value="Arial">Arial</option>
-                  <option value="Times New Roman">Times New Roman</option>
-                  <option value="Helvetica">Helvetica</option>
-                  <option value="Courier New">Courier New</option>
-                  <option value="Georgia">Georgia</option>
-                </select>
+                  <FaTextHeight className="mr-2" /> Text
+                </button>
+                <button
+                  onClick={() => setWatermarkType('image')}
+                  className={`flex-1 py-2 px-4 rounded-md flex items-center justify-center ${
+                    watermarkType === 'image' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'
+                  }`}
+                >
+                  <FaImage className="mr-2" /> Image
+                </button>
               </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Font Size ({fontSize}px)</label>
-                <input
-                  type="range"
-                  min="10"
-                  max="100"
-                  value={fontSize}
-                  onChange={(e) => setFontSize(parseInt(e.target.value))}
-                  className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-500"
-                />
+
+              {/* Watermark Settings */}
+              {watermarkType === 'text' ? (
+                <>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Watermark Text</label>
+                    <input
+                      type="text"
+                      value={textWatermark}
+                      onChange={(e) => setTextWatermark(e.target.value || '')} // Ensure always defined
+                      className="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Font Size ({fontSize}px)</label>
+                    <input
+                      type="range"
+                      min="10"
+                      max="100"
+                      value={fontSize}
+                      onChange={(e) => setFontSize(parseInt(e.target.value))}
+                      className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Color</label>
+                    <input
+                      type="color"
+                      value={color}
+                      onChange={(e) => setColor(e.target.value)}
+                      className="w-full h-10 border rounded-md cursor-pointer"
+                    />
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Watermark Image</label>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      ref={watermarkInputRef}
+                      onChange={handleWatermarkImageUpload}
+                      className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                    />
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Width (px)</label>
+                      <input
+                        type="number"
+                        min="10"
+                        value={watermarkSize.width}
+                        onChange={(e) => handleWatermarkSizeChange('width', e.target.value)}
+                        className="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Height (px)</label>
+                      <input
+                        type="number"
+                        min="10"
+                        value={watermarkSize.height}
+                        onChange={(e) => handleWatermarkSizeChange('height', e.target.value)}
+                        className="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500"
+                      />
+                    </div>
+                  </div>
+                </>
+              )}
+
+              {/* Position Controls */}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">X Position (%)</label>
+                  <input
+                    type="number"
+                    min="0"
+                    max="100"
+                    value={position.xPercent}
+                    onChange={(e) => handlePositionChange('xPercent', e.target.value)}
+                    className="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Y Position (%)</label>
+                  <input
+                    type="number"
+                    min="0"
+                    max="100"
+                    value={position.yPercent}
+                    onChange={(e) => handlePositionChange('yPercent', e.target.value)}
+                    className="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
               </div>
+
+              {/* Opacity Control */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Opacity ({opacity})</label>
                 <input
@@ -195,41 +304,22 @@ const ImageWatermarker = () => {
                   className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-500"
                 />
               </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Color</label>
-                <input
-                  type="color"
-                  value={color}
-                  onChange={(e) => setColor(e.target.value)}
-                  className="w-full h-10 rounded-md cursor-pointer"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Rotation ({rotation}°)</label>
-                <input
-                  type="range"
-                  min="-180"
-                  max="180"
-                  value={rotation}
-                  onChange={(e) => setRotation(parseInt(e.target.value))}
-                  className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-500"
-                />
-              </div>
             </div>
 
             {/* Action Buttons */}
             <div className="flex flex-col sm:flex-row gap-4">
               <button
-                onClick={handleDownload}
-                className="flex-1 py-2 px-4 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors flex items-center justify-center"
-              >
-                <FaDownload className="mr-2" /> Download
-              </button>
-              <button
-                onClick={reset}
+                onClick={handleReset}
                 className="flex-1 py-2 px-4 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors flex items-center justify-center"
               >
                 <FaSync className="mr-2" /> Reset
+              </button>
+              <button
+                onClick={handleDownload}
+                disabled={!watermarkedImage}
+                className="flex-1 py-2 px-4 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors flex items-center justify-center"
+              >
+                <FaDownload className="mr-2" /> Download
               </button>
             </div>
           </div>
@@ -246,12 +336,12 @@ const ImageWatermarker = () => {
         <div className="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
           <h3 className="font-semibold text-blue-700 mb-2">Features</h3>
           <ul className="list-disc list-inside text-blue-600 text-sm space-y-1">
-            <li>Draggable and resizable watermark</li>
-            <li>Customizable text, font, size, color, and opacity</li>
-            <li>Rotation support</li>
-            <li>Download as PNG</li>
-            <li>Responsive design with Tailwind CSS</li>
+            <li>Add text or image watermarks</li>
+            <li>Adjust position with percentage controls</li>
+            <li>Customize image watermark width and height</li>
+            <li>Control opacity, text size, and color</li>
             <li>Real-time preview</li>
+            <li>Download watermarked image as PNG</li>
           </ul>
         </div>
       </div>

@@ -242,16 +242,36 @@ const SplitPDF = () => {
           )}
         </div>
 
-        {/* Features */}
-        <div className="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
+         {/* How it works Section */}
+         <div className="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
           <h3 className="font-semibold text-blue-700 mb-2">Features</h3>
           <ul className="list-disc list-inside text-blue-600 text-sm space-y-1">
-            <li>Split PDF into individual page images</li>
-            <li>Adjustable preview scale</li>
-            <li>Select multiple pages for download</li>
-            <li>Responsive design with Tailwind CSS</li>
-            <li>Thumbnail previews with navigation</li>
-            <li>Download individual or selected pages</li>
+            <li>Upload a PDF document using the input above.</li>
+            <li>
+              Adjust the desired output quality/scale{" "}
+              <span className="font-bold">before</span> uploading.
+            </li>
+            <li>
+              The tool processes the PDF entirely{" "}
+              <span className="font-bold">in your browser</span>. Your files are
+              not sent to any server.
+            </li>
+            <li>
+              Preview each page in the main viewer and use thumbnails for
+              navigation.
+            </li>
+            <li>
+              Use checkboxes on thumbnails (or click "Download Current") to
+              select pages for download.
+            </li>
+            <li>
+              Click "Download" to save the selected page(s) as individual PNG
+              images.
+            </li>
+            <li>
+              Click "Reset" to clear everything and upload a new file or change
+              the scale.
+            </li>
           </ul>
         </div>
       </div>

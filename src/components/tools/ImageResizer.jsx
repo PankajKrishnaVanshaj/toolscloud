@@ -321,7 +321,6 @@ const ImageResizer = () => {
             <li>Rotate and flip (horizontal/vertical)</li>
             <li>Choose output format (PNG/JPEG) and quality</li>
             <li>Real-time preview</li>
-            <li>Responsive design with Tailwind CSS</li>
           </ul>
         </div>
       </div>
