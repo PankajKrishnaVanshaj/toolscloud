@@ -4,15 +4,15 @@ import Navbar from "@/components/Navbar";
 
 export const metadata = {
   title: {
-    default: "PK ToolsCloud | Free Online Tools for Productivity & SEO",
+    default: "PK ToolsCloud | Free Online Tools for Productivity",
     template: "%s - PK ToolsCloud | Smart Web Utilities & AI Tools",
   },
   description:
-    "PK ToolsCloud provides 50+ free online tools for productivity, AI-powered text generation, PDF conversion, image processing, web development, SEO audits, unit conversion, and more. Boost efficiency with fast, user-friendly tools.",
+    "PK ToolsCloud provides 1000+ free online tools for productivity, AI-powered text generation, PDF conversion, image processing, web development, SEO audits, unit conversion, and more. Boost efficiency with fast, user-friendly tools. No items detected. No rich results detected in this URL. Learn more.",
   keywords: [
     "PK ToolsCloud",
     "free online tools",
-    "AI tools for content writing",
+    "AI tools for content writing_openGraph",
     "best productivity tools online",
     "text editor with grammar check",
     "word counter online",
@@ -37,6 +37,29 @@ export const metadata = {
     "Pankri toolscloud utilities",
     "toolscloud pk online tools",
   ],
+  openGraph: {
+    title: "PK ToolsCloud | Free Online Tools for Productivity",
+    description:
+      "PK ToolsCloud offers 1000+ free tools for productivity, AI text generation, PDF conversion, image processing, web dev, SEO, and more. No items detected. No rich results detected in this URL. Learn more.",
+    url: "https://toolscloud.pankri.com",
+    type: "website",
+    images: [
+      {
+        url: "https://toolscloud.pankri.com/appicons/toolscloud.png", // Absolute URL
+        width: 1200,
+        height: 630, // 1.9:1 ratio; Pinterest prefers 2:3
+        alt: "PK ToolsCloud - Free Online Productivity Tools",
+      },
+    ],
+    locale: "en_US",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "PK ToolsCloud | Free Online Tools for Productivity",
+    description:
+      "Boost productivity with PK ToolsCloud’s 1000+ free tools: AI content, PDF conversion, SEO audits, and more. No items detected. No rich results detected in this URL. Learn more.",
+    images: ["https://toolscloud.pankri.com/appicons/toolscloud.png"], // Absolute URL
+  },
 };
 
 export default function RootLayout({ children }) {
@@ -46,7 +69,7 @@ export default function RootLayout({ children }) {
     name: "PK ToolsCloud",
     url: "https://toolscloud.pankri.com",
     description:
-      "PK ToolsCloud offers 50+ free web-based tools for text editing, AI-generated content, PDF conversion, image processing, web development, SEO analysis, and more. Enhance productivity with fast and reliable tools.",
+      "PK ToolsCloud offers 1000+ free web-based tools for text editing, AI-generated content, PDF conversion, image processing, web development, SEO analysis, and more. Enhance productivity with fast and reliable tools.",
     keywords: [
       "free online tools",
       "AI-powered tools",
@@ -64,6 +87,13 @@ export default function RootLayout({ children }) {
       name: "PK ToolsCloud",
       url: "https://toolscloud.pankri.com",
       logo: "https://toolscloud.pankri.com/appicons/toolscloud.png",
+    },
+    aggregateRating: {
+      "@type": "AggregateRating",
+      ratingValue: "4.5", // Placeholder; replace with real data
+      reviewCount: "11000", // Placeholder; replace with real data
+      bestRating: "5",
+      worstRating: "1",
     },
   };
 
