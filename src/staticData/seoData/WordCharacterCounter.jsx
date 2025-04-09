@@ -1,44 +1,48 @@
 export default {
-  title: "Word & Character Counter | Free Online Writing Assistant",
+  title: "Word & Character Counter | Free Real-Time Writing Assistant",
   description:
-    "Count words, characters, sentences, and paragraphs instantly with our free online Word & Character Counter tool. Ideal for writers, students, bloggers, and SEO professionals.",
+    "Accurate word, character, sentence, and paragraph count with our real-time Word & Character Counter. Boost your writing with this free online tool for students, bloggers, and SEO experts.",
   keywords:
-    "PK ToolsCloud, Pankri ToolsCloud, PK ToolsCloud word counter, Pankri ToolsCloud word counter, word counter, character counter, text analysis tool, free online word counter, letter counter, sentence counter, paragraph counter, writing tool, SEO content optimization, copywriting assistant",
+    "Word counter, Character counter, Online word counter, Free writing assistant, Sentence counter, Paragraph counter, SEO text analyzer, Blogging tool, Academic writing helper, Real-time text analysis, PK ToolsCloud, Pankri ToolsCloud",
+
   url: "https://toolscloud.pankri.com/word-character-counter/tool",
   image: "https://toolscloud.pankri.com/appicons/toolscloud.png",
   type: "website",
-  category: "Writing Tools, Content Optimization",
+  category: "Writing Tools, SEO Content Optimization",
   author: "PK ToolsCloud",
   language: "en",
   robots: "index, follow",
   published_date: "2024-02-09",
   modified_date: "2024-02-09",
-  target_audience: "Writers, Bloggers, Content Creators, SEO Experts, Students",
+  target_audience:
+    "Writers, Bloggers, Content Creators, SEO Experts, Copywriters, Students",
 
   openGraph: {
-    title: "Word & Character Counter - Real-Time Text Analysis",
+    title: "Word & Character Counter | Real-Time Text Analyzer",
     description:
-      "Easily count words, characters, and more with our free Word & Character Counter tool. Perfect for writers, students, bloggers, and SEO professionals.",
+      "Free and accurate tool to count words, characters, sentences, and paragraphs. Perfect for content creators, bloggers, students, and SEO professionals.",
     url: "https://toolscloud.pankri.com/word-character-counter/tool",
     image: "https://toolscloud.pankri.com/appicons/toolscloud.png",
-    type: "article",
+    type: "website",
   },
 
   twitter: {
     card: "summary_large_image",
-    title: "Word & Character Counter | Free Online Writing Tool",
+    title: "Word & Character Counter | Instant Text Analysis Tool",
     description:
-      "Instantly count words, characters, and sentences with our free online tool. Great for SEO, blogging, and academic writing!",
+      "Count words, characters, and more in real-time! Ideal for bloggers, writers, and SEO optimization. 100% free online tool.",
     image: "https://toolscloud.pankri.com/appicons/toolscloud.png",
     creator: "@pankri",
   },
 
   structuredData: {
     "@context": "https://schema.org",
-    "@type": "WebPage",
+    "@type": "SoftwareApplication",
     name: "Word & Character Counter",
     description:
-      "Analyze your text effortlessly with our free Word & Character Counter tool. Get real-time word, character, sentence, and paragraph counts for SEO, blogging, and academic writing.",
+      "Get real-time counts of words, characters, sentences, and paragraphs. Ideal for writers, bloggers, students, and SEO professionals.",
+    applicationCategory: "UtilitiesApplication",
+    operatingSystem: "All",
     url: "https://toolscloud.pankri.com/word-character-counter/tool",
     image: "https://toolscloud.pankri.com/appicons/toolscloud.png",
     datePublished: "2024-02-09",
@@ -54,27 +58,30 @@ export default {
       url: "https://toolscloud.pankri.com",
     },
     keywords: [
-      "PK ToolsCloud",
-      "Pankri ToolsCloud",
-      "PK ToolsCloud word counter",
-      "Pankri ToolsCloud word counter",
       "word counter",
       "character counter",
-      "online text analysis",
+      "online word tool",
+      "real-time writing tool",
+      "SEO content analysis",
+      "blogging tools",
       "writing assistant",
-      "SEO content tool",
-      "blogging assistant",
-      "academic writing helper",
+      "PK ToolsCloud",
+      "Pankri ToolsCloud"
     ],
+    offers: {
+      "@type": "Offer",
+      price: "0",
+      priceCurrency: "USD"
+    },
     audience: {
-      "@type": "EducationalAudience",
-      educationalRole: [
+      "@type": "Audience",
+      audienceType: [
         "Students",
         "Writers",
-        "Content Creators",
-        "SEO Experts",
         "Bloggers",
-      ],
-    },
-  },
+        "Content Creators",
+        "SEO Experts"
+      ]
+    }
+  }
 };
