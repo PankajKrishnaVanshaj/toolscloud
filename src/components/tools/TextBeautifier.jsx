@@ -56,49 +56,62 @@ const TextBeautifier = () => {
 
   const transformations = {
     beautify: () => applyTransformation(beautifyText, "Beautify"),
-    toUpperCase: () => applyTransformation(t => t.toUpperCase(), "Uppercase"),
-    toLowerCase: () => applyTransformation(t => t.toLowerCase(), "Lowercase"),
+    toUpperCase: () => applyTransformation((t) => t.toUpperCase(), "Uppercase"),
+    toLowerCase: () => applyTransformation((t) => t.toLowerCase(), "Lowercase"),
     toTitleCase: () =>
       applyTransformation(
-        t => t.toLowerCase().replace(/\b\w/g, char => char.toUpperCase()),
+        (t) => t.toLowerCase().replace(/\b\w/g, (char) => char.toUpperCase()),
         "Title Case"
       ),
     toSentenceCase: () =>
       applyTransformation(
-        t => t.toLowerCase().replace(/(^\s*\w|[.!?]\s*\w)/g, char => char.toUpperCase()),
+        (t) =>
+          t
+            .toLowerCase()
+            .replace(/(^\s*\w|[.!?]\s*\w)/g, (char) => char.toUpperCase()),
         "Sentence Case"
       ),
     reverseText: () =>
-      applyTransformation(t => t.split("").reverse().join(""), "Reverse"),
+      applyTransformation((t) => t.split("").reverse().join(""), "Reverse"),
     removeExtraSpaces: () =>
-      applyTransformation(t => t.replace(/\s+/g, " ").trim(), "Remove Spaces"),
+      applyTransformation(
+        (t) => t.replace(/\s+/g, " ").trim(),
+        "Remove Spaces"
+      ),
     removeLineBreaks: () =>
-      applyTransformation(t => t.replace(/\n+/g, " "), "Remove Line Breaks"),
+      applyTransformation((t) => t.replace(/\n+/g, " "), "Remove Line Breaks"),
     alternateCase: () =>
       applyTransformation(
-        t =>
+        (t) =>
           t
             .split("")
-            .map((char, i) => (i % 2 === 0 ? char.toUpperCase() : char.toLowerCase()))
+            .map((char, i) =>
+              i % 2 === 0 ? char.toUpperCase() : char.toLowerCase()
+            )
             .join(""),
         "Alternate Case"
       ),
     randomCase: () =>
       applyTransformation(
-        t =>
+        (t) =>
           t
             .split("")
-            .map(char => (Math.random() > 0.5 ? char.toUpperCase() : char.toLowerCase()))
+            .map((char) =>
+              Math.random() > 0.5 ? char.toUpperCase() : char.toLowerCase()
+            )
             .join(""),
         "Random Case"
       ),
     removeNumbers: () =>
-      applyTransformation(t => t.replace(/\d+/g, ""), "Remove Numbers"),
+      applyTransformation((t) => t.replace(/\d+/g, ""), "Remove Numbers"),
     removeSpecialChars: () =>
-      applyTransformation(t => t.replace(/[^\w\s]/gi, ""), "Remove Special Chars"),
+      applyTransformation(
+        (t) => t.replace(/[^\w\s]/gi, ""),
+        "Remove Special Chars"
+      ),
     toCamelCase: () =>
       applyTransformation(
-        t =>
+        (t) =>
           t
             .toLowerCase()
             .replace(/(?:^\w|[A-Z]|\b\w)/g, (word, i) =>
@@ -108,11 +121,16 @@ const TextBeautifier = () => {
         "Camel Case"
       ),
     toSnakeCase: () =>
-      applyTransformation(t => t.toLowerCase().replace(/\s+/g, "_"), "Snake Case"),
+      applyTransformation(
+        (t) => t.toLowerCase().replace(/\s+/g, "_"),
+        "Snake Case"
+      ),
     toKebabCase: () =>
-      applyTransformation(t => t.toLowerCase().replace(/\s+/g, "-"), "Kebab Case"),
-    addQuotes: () =>
-      applyTransformation(t => `"${t.trim()}"`, "Add Quotes"),
+      applyTransformation(
+        (t) => t.toLowerCase().replace(/\s+/g, "-"),
+        "Kebab Case"
+      ),
+    addQuotes: () => applyTransformation((t) => `"${t.trim()}"`, "Add Quotes"),
   };
 
   const handleFindReplace = () => {
@@ -228,7 +246,10 @@ const TextBeautifier = () => {
                   type="checkbox"
                   checked={options.caseSensitiveReplace}
                   onChange={() =>
-                    setOptions(prev => ({ ...prev, caseSensitiveReplace: !prev.caseSensitiveReplace }))
+                    setOptions((prev) => ({
+                      ...prev,
+                      caseSensitiveReplace: !prev.caseSensitiveReplace,
+                    }))
                   }
                   className="mr-1"
                 />
@@ -239,7 +260,10 @@ const TextBeautifier = () => {
                   type="checkbox"
                   checked={options.regexReplace}
                   onChange={() =>
-                    setOptions(prev => ({ ...prev, regexReplace: !prev.regexReplace }))
+                    setOptions((prev) => ({
+                      ...prev,
+                      regexReplace: !prev.regexReplace,
+                    }))
                   }
                   className="mr-1"
                 />
@@ -375,9 +399,7 @@ const TextBeautifier = () => {
           >
             <FaDownload /> Download
           </button>
-          <label
-            className="flex items-center gap-2 px-3 py-2 sm:px-4 sm:py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition text-xs sm:text-sm flex-1 min-w-[120px] cursor-pointer"
-          >
+          <label className="flex items-center gap-2 px-3 py-2 sm:px-4 sm:py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition text-xs sm:text-sm flex-1 min-w-[120px] cursor-pointer">
             <FaUpload /> Import
             <input
               type="file"

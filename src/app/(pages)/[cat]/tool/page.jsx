@@ -2,6 +2,7 @@ import ToolList from "@/staticData/ToolList";
 import ToolSuggestion from "@/components/ToolSuggestion";
 import Link from "next/link";
 import DynamicTool from "@/components/DynamicTool";
+import DynamicBlogData from "@/components/DynamicBlogData";
 import loadSeoData from "@/components/DynamicSeoData";
 import { ShareButton } from "@/components/ShareButton";
 
@@ -72,6 +73,9 @@ const Tool = async ({ params }) => {
 
         <div className="mt-6 p-4 lg:p-6 bg-gray-50 rounded-lg shadow-inner">
           <DynamicTool code={matchedTool.code} />
+        </div>
+        <div className="mt-6 p-4 lg:p-6 bg-gray-50 rounded-lg shadow-inner">
+          <DynamicBlogData code={matchedTool.code} />
         </div>
 
         <div className="my-8">

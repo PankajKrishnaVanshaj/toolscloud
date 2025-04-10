@@ -26,10 +26,10 @@ const TextReverser = () => {
   });
 
   const updateHistory = useCallback((newText) => {
-    const newHistory = history.slice(0, historyIndex + 1);
+      const newHistory = history.slice(0, historyIndex + 1);
     newHistory.push({ input: inputText, options: { ...options }, output: newText });
-    setHistory(newHistory.slice(-10)); // Limit to 10 entries
-    setHistoryIndex(newHistory.length - 1);
+      setHistory(newHistory.slice(-10)); // Limit to 10 entries
+      setHistoryIndex(newHistory.length - 1);
   }, [history, historyIndex, inputText, options]);
 
   const reverseText = (text) => {

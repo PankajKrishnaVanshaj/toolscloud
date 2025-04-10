@@ -27,30 +27,40 @@ const TextCaseConverter = () => {
       setPrevText(text);
       const newText = convertFn(text);
       setText(newText);
-      setHistory(prev => [...prev, { text: text, operation: label }].slice(-5));
+      setHistory((prev) =>
+        [...prev, { text: text, operation: label }].slice(-5)
+      );
     },
     [text]
   );
 
-  const toUpperCase = () => applyConversion(t => t.toUpperCase(), "Uppercase");
-  const toLowerCase = () => applyConversion(t => t.toLowerCase(), "Lowercase");
+  const toUpperCase = () =>
+    applyConversion((t) => t.toUpperCase(), "Uppercase");
+  const toLowerCase = () =>
+    applyConversion((t) => t.toLowerCase(), "Lowercase");
   const toTitleCase = () =>
     applyConversion(
-      t => t.toLowerCase().replace(/\b\w/g, char => char.toUpperCase()),
+      (t) => t.toLowerCase().replace(/\b\w/g, (char) => char.toUpperCase()),
       "Title Case"
     );
   const toSentenceCase = () =>
     applyConversion(
-      t => t.toLowerCase().replace(/(^\s*\w|[.!?]\s*\w)/g, char => char.toUpperCase()),
+      (t) =>
+        t
+          .toLowerCase()
+          .replace(/(^\s*\w|[.!?]\s*\w)/g, (char) => char.toUpperCase()),
       "Sentence Case"
     );
   const toReverseText = () =>
-    applyConversion(t => t.split("").reverse().join(""), "Reverse Text");
+    applyConversion((t) => t.split("").reverse().join(""), "Reverse Text");
   const removeExtraSpaces = () =>
-    applyConversion(t => t.replace(/\s+/g, " ").trim(), "Remove Extra Spaces");
+    applyConversion(
+      (t) => t.replace(/\s+/g, " ").trim(),
+      "Remove Extra Spaces"
+    );
   const toCamelCase = () =>
     applyConversion(
-      t =>
+      (t) =>
         t
           .toLowerCase()
           .replace(/[^a-zA-Z0-9]+(.)/g, (_, char) => char.toUpperCase()),
@@ -58,20 +68,32 @@ const TextCaseConverter = () => {
     );
   const toSnakeCase = () =>
     applyConversion(
-      t => t.replace(/\s+/g, "_").replace(/([A-Z])/g, "_$1").toLowerCase().replace(/^_/, ""),
+      (t) =>
+        t
+          .replace(/\s+/g, "_")
+          .replace(/([A-Z])/g, "_$1")
+          .toLowerCase()
+          .replace(/^_/, ""),
       "Snake Case"
     );
   const toKebabCase = () =>
     applyConversion(
-      t => t.replace(/\s+/g, "-").replace(/([A-Z])/g, "-$1").toLowerCase().replace(/^-/, ""),
+      (t) =>
+        t
+          .replace(/\s+/g, "-")
+          .replace(/([A-Z])/g, "-$1")
+          .toLowerCase()
+          .replace(/^-/, ""),
       "Kebab Case"
     );
   const toRandomCase = () =>
     applyConversion(
-      t =>
+      (t) =>
         t
           .split("")
-          .map(char => (Math.random() > 0.5 ? char.toUpperCase() : char.toLowerCase()))
+          .map((char) =>
+            Math.random() > 0.5 ? char.toUpperCase() : char.toLowerCase()
+          )
           .join(""),
       "Random Case"
     );
@@ -85,7 +107,9 @@ const TextCaseConverter = () => {
   const clearText = () => {
     setPrevText(text);
     setText("");
-    setHistory(prev => [...prev, { text: text, operation: "Clear" }].slice(-5));
+    setHistory((prev) =>
+      [...prev, { text: text, operation: "Clear" }].slice(-5)
+    );
   };
 
   const undoLast = () => {
@@ -119,7 +143,9 @@ const TextCaseConverter = () => {
 
         {/* Stats */}
         <div className="text-gray-600 mt-2 text-xs sm:text-sm">
-          <span>Words: {text.trim() ? text.trim().split(/\s+/).length : 0} | </span>
+          <span>
+            Words: {text.trim() ? text.trim().split(/\s+/).length : 0} |{" "}
+          </span>
           <span>Characters: {text.length}</span>
         </div>
 
@@ -220,17 +246,23 @@ const TextCaseConverter = () => {
               <FaHistory className="mr-2" /> Recent Conversions (Last 5)
             </h3>
             <ul className="mt-2 text-xs sm:text-sm text-gray-600 space-y-2">
-              {history.slice().reverse().map((entry, index) => (
-                <li key={index} className="flex items-center justify-between">
-                  <span>{entry.operation}: "{entry.text.slice(0, 20)}{entry.text.length > 20 ? "..." : ""}"</span>
-                  <button
-                    onClick={() => setText(entry.text)}
-                    className="text-purple-500 hover:text-purple-700"
-                  >
-                    <FaUndo />
-                  </button>
-                </li>
-              ))}
+              {history
+                .slice()
+                .reverse()
+                .map((entry, index) => (
+                  <li key={index} className="flex items-center justify-between">
+                    <span>
+                      {entry.operation}: "{entry.text.slice(0, 20)}
+                      {entry.text.length > 20 ? "..." : ""}"
+                    </span>
+                    <button
+                      onClick={() => setText(entry.text)}
+                      className="text-purple-500 hover:text-purple-700"
+                    >
+                      <FaUndo />
+                    </button>
+                  </li>
+                ))}
             </ul>
           </div>
         )}

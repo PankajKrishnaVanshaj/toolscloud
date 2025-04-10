@@ -247,23 +247,23 @@ const TextFindandReplace = () => {
             </h3>
             <ul className="mt-2 text-xs sm:text-sm text-gray-600 space-y-2">
               {history.slice().reverse().map((entry, index) => (
-                <li key={index} className="flex items-center justify-between">
-                  <span>
-                    Find: "{entry.find}" → Replace: "{entry.replace}"
-                  </span>
-                  <button
-                    onClick={() => {
-                      setText(entry.text);
-                      setFindWord(entry.find);
-                      setReplaceWord(entry.replace);
-                      setOptions(entry.options);
-                    }}
-                    className="text-blue-500 hover:text-blue-700"
-                  >
-                    <FaUndo />
-                  </button>
-                </li>
-              ))}
+                  <li key={index} className="flex items-center justify-between">
+                    <span>
+                      Find: "{entry.find}" → Replace: "{entry.replace}"
+                    </span>
+                    <button
+                      onClick={() => {
+                        setText(entry.text);
+                        setFindWord(entry.find);
+                        setReplaceWord(entry.replace);
+                        setOptions(entry.options);
+                      }}
+                      className="text-blue-500 hover:text-blue-700"
+                    >
+                      <FaUndo />
+                    </button>
+                  </li>
+                ))}
             </ul>
           </div>
         )}

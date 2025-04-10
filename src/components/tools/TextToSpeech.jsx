@@ -285,24 +285,24 @@ const TextToSpeech = () => {
             </h3>
             <ul className="mt-2 text-xs sm:text-sm text-gray-600 space-y-2">
               {history.slice().reverse().map((entry, index) => (
-                <li key={index} className="flex items-center justify-between">
-                  <span>
+                  <li key={index} className="flex items-center justify-between">
+                    <span>
                     "{entry.text.slice(0, 20)}{entry.text.length > 20 ? "..." : ""}" ({entry.voice}, Rate: {entry.rate})
-                  </span>
-                  <button
-                    onClick={() => {
-                      setText(entry.text);
-                      setSelectedVoice(entry.voice);
-                      setSpeechRate(entry.rate);
-                      setPitch(entry.pitch);
-                      setVolume(entry.volume);
-                    }}
-                    className="text-green-500 hover:text-green-700"
-                  >
-                    <FaVolumeUp />
-                  </button>
-                </li>
-              ))}
+                    </span>
+                    <button
+                      onClick={() => {
+                        setText(entry.text);
+                        setSelectedVoice(entry.voice);
+                        setSpeechRate(entry.rate);
+                        setPitch(entry.pitch);
+                        setVolume(entry.volume);
+                      }}
+                      className="text-green-500 hover:text-green-700"
+                    >
+                      <FaVolumeUp />
+                    </button>
+                  </li>
+                ))}
             </ul>
           </div>
         )}

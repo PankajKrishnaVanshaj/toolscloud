@@ -134,7 +134,7 @@ const GrammarChecker = () => {
 
       const action = prompt(
         `Issue: ${suggestion.message}\nSuggestions: ${suggestion.suggestions.join(", ") || "None"}\n` +
-        "Enter correction:",
+          "Enter correction:",
         suggestion.suggestions[0] || suggestion.badText
       );
 
@@ -344,9 +344,9 @@ const GrammarChecker = () => {
             {customRules.map((rule, index) => (
               <li key={index}>
                 "{rule.pattern}" → "{rule.replacement}": {rule.message}
-              </li>
+          </li>
             ))}
-          </ul>
+        </ul>
         ) : (
           <p className="text-blue-600 text-sm">No custom rules added yet.</p>
         )}

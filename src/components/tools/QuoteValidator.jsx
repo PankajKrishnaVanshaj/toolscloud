@@ -74,7 +74,11 @@ const validateBrackets = (text, bracketType) => {
   if (stack.length > 0) {
     errors.push({
       message: `Unmatched opening ${bracketType} bracket(s) found.`,
-      positions: stack.map((s) => ({ type: "open", char: s.char, index: s.index })),
+      positions: stack.map((s) => ({
+        type: "open",
+        char: s.char,
+        index: s.index,
+      })),
     });
   }
 
@@ -109,22 +113,40 @@ const QuoteValidator = () => {
     }
 
     if (options.quotes) {
-      validationErrors = [...validationErrors, ...validateQuotes(processedText)];
+      validationErrors = [
+        ...validationErrors,
+        ...validateQuotes(processedText),
+      ];
     }
     if (options.brackets) {
-      validationErrors = [...validationErrors, ...validateBrackets(processedText, "all")];
+      validationErrors = [
+        ...validationErrors,
+        ...validateBrackets(processedText, "all"),
+      ];
     }
     if (options.parentheses) {
-      validationErrors = [...validationErrors, ...validateBrackets(processedText, "parentheses")];
+      validationErrors = [
+        ...validationErrors,
+        ...validateBrackets(processedText, "parentheses"),
+      ];
     }
     if (options.curly) {
-      validationErrors = [...validationErrors, ...validateBrackets(processedText, "curly")];
+      validationErrors = [
+        ...validationErrors,
+        ...validateBrackets(processedText, "curly"),
+      ];
     }
     if (options.square) {
-      validationErrors = [...validationErrors, ...validateBrackets(processedText, "square")];
+      validationErrors = [
+        ...validationErrors,
+        ...validateBrackets(processedText, "square"),
+      ];
     }
     if (options.angle) {
-      validationErrors = [...validationErrors, ...validateBrackets(processedText, "angle")];
+      validationErrors = [
+        ...validationErrors,
+        ...validateBrackets(processedText, "angle"),
+      ];
     }
 
     setErrors(validationErrors);
@@ -176,7 +198,10 @@ const QuoteValidator = () => {
       "Errors:",
       errors.length > 0
         ? errors
-            .map((e) => `- ${e.message} (Positions: ${e.positions.map((p) => p.index).join(", ")})`)
+            .map(
+              (e) =>
+                `- ${e.message} (Positions: ${e.positions.map((p) => p.index).join(", ")})`
+            )
             .join("\n")
         : "No errors found.",
     ].join("\n");
@@ -191,7 +216,9 @@ const QuoteValidator = () => {
   return (
     <div className="mx-auto p-6 bg-white shadow-xl rounded-2xl">
       <div className="flex justify-between items-center mb-4">
-        <h2 className="text-xl font-semibold text-gray-800">Quote & Bracket Validator</h2>
+        <h2 className="text-xl font-semibold text-gray-800">
+          Quote & Bracket Validator
+        </h2>
         <button
           onClick={() => setShowDetails(!showDetails)}
           className="p-2 text-blue-500 hover:text-blue-700"
@@ -207,7 +234,7 @@ const QuoteValidator = () => {
         </label>
         <div className="grid grid-cols-2 gap-4">
           {[
-            { label: 'Quotes (" \')', value: "quotes" },
+            { label: "Quotes (\" ')", value: "quotes" },
             { label: "All Brackets", value: "brackets" },
             { label: "Parentheses ( )", value: "parentheses" },
             { label: "Curly Braces { }", value: "curly" },
@@ -215,7 +242,10 @@ const QuoteValidator = () => {
             { label: "Angle Brackets < >", value: "angle" },
             { label: "Ignore Code Blocks (```)", value: "ignoreCodeBlocks" },
           ].map(({ label, value }) => (
-            <label key={value} className="flex items-center space-x-2 text-sm text-gray-600">
+            <label
+              key={value}
+              className="flex items-center space-x-2 text-sm text-gray-600"
+            >
               <input
                 type="checkbox"
                 className="accent-blue-500"

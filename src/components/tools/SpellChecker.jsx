@@ -1,7 +1,13 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { FaSpellCheck, FaClipboard, FaEraser, FaPlus, FaDownload } from "react-icons/fa";
+import {
+  FaSpellCheck,
+  FaClipboard,
+  FaEraser,
+  FaPlus,
+  FaDownload,
+} from "react-icons/fa";
 import debounce from "lodash/debounce"; // You'll need to install lodash: npm install lodash
 
 const SpellChecker = () => {
@@ -28,9 +34,12 @@ const SpellChecker = () => {
     setError(null);
 
     try {
-      const response = await fetch(`${API_URL}?text=${encodeURIComponent(inputText)}&key=${API_KEY}`, {
-        method: "GET",
-      });
+      const response = await fetch(
+        `${API_URL}?text=${encodeURIComponent(inputText)}&key=${API_KEY}`,
+        {
+          method: "GET",
+        }
+      );
 
       if (!response.ok) throw new Error("API request failed");
 
@@ -79,7 +88,7 @@ const SpellChecker = () => {
 
       const action = prompt(
         `Word: "${word}"\nSuggestions: ${suggestionList.join(", ") || "None"}\n` +
-        "Enter correction or type 'add' to add to dictionary:",
+          "Enter correction or type 'add' to add to dictionary:",
         suggestionList[0] || word
       );
 
@@ -89,7 +98,9 @@ const SpellChecker = () => {
           setText((prev) => prev); // Trigger recheck
           checkSpellingAPI(text);
         } else {
-          setText((prev) => prev.replace(new RegExp(`\\b${word}\\b`, "g"), action));
+          setText((prev) =>
+            prev.replace(new RegExp(`\\b${word}\\b`, "g"), action)
+          );
         }
       }
     }
@@ -198,12 +209,15 @@ const SpellChecker = () => {
           <ul className="list-disc list-inside text-gray-600">
             {Object.entries(suggestions).map(([word, suggs]) => (
               <li key={word}>
-                "{word}": {suggs.length > 0 ? suggs.join(", ") : "No suggestions"}
+                "{word}":{" "}
+                {suggs.length > 0 ? suggs.join(", ") : "No suggestions"}
               </li>
             ))}
           </ul>
         ) : (
-          <p className="text-gray-500">No spelling issues found or text not checked yet.</p>
+          <p className="text-gray-500">
+            No spelling issues found or text not checked yet.
+          </p>
         )}
       </div>
 
