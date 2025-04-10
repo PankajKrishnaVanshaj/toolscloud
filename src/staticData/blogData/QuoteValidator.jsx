@@ -92,7 +92,7 @@ const QuoteValidator = () => {
         Using this <strong>quote checker tool</strong> is straightforward:
       </p>
       <ol className="list-decimal list-inside mb-4 text-sm">
-        <li><strong>Enter Text</strong>: Type or paste your text (e.g., `"Hello {world}"`).</li>
+        <li><strong>Enter Text</strong>: Type or paste your text (e.g., `"Hello {`world`}"`).</li>
         <li><strong>Set Options</strong>: Check boxes for quotes, brackets, or code block ignoring.</li>
         <li><strong>Validate</strong>: Click "Validate" or watch real-time updates.</li>
         <li><strong>Review</strong>: See highlighted errors and detailed messages.</li>
@@ -113,7 +113,7 @@ const QuoteValidator = () => {
         Programmers and Developers
       </h3>
       <p className="mb-4 text-sm">
-        Catch syntax errors in code snippets like `"print('Hello {world}')"` or {`{x: [1, 2]}`}. The "ignore code blocks" option ensures markdown-style documentation stays untouched.
+        Catch syntax errors in code snippets like `"print('Hello {`world`}')"` or {`{x: [1, 2]}`}. The "ignore code blocks" option ensures markdown-style documentation stays untouched.
       </p>
 
       <h3 className="text-lg font-medium mb-2 text-blue-700">

@@ -6880,13 +6880,6 @@ const ToolList = [
         code: "UnitPriceComparator",
       },
       {
-        name: "Text Translator",
-        slug: "text-translator",
-        icon: <MdTranslate />,
-        desc: "Translate text into multiple languages instantly.",
-        code: "TextTranslator",
-      },
-      {
         name: "File Size Analyzer",
         slug: "file-size-analyzer",
         icon: <MdInsertDriveFile />,

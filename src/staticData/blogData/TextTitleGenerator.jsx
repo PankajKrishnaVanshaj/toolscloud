@@ -68,7 +68,7 @@ const TextTitleGenerator = () => {
         4. Custom Templates
       </h3>
       <p className="mb-4 text-sm">
-        Want a unique structure? Input a custom template like “{keyword} for Beginners” and watch it turn “SEO” into “SEO for Beginners”—perfect for niche content.
+        Want a unique structure? Input a custom template like “{`keyword`} for Beginners” and watch it turn “SEO” into “SEO for Beginners”—perfect for niche content.
       </p>
 
       <h3 className="text-lg font-medium mb-2 text-purple-700">
@@ -141,7 +141,7 @@ const TextTitleGenerator = () => {
         Tone-Based Templates
       </h3>
       <p className="mb-4 text-sm">
-        Predefined templates like “{keyword}: A Complete Guide” adapt to your tone. The algorithm randomly selects and fills them with your keywords, ensuring variety and relevance.
+        Predefined templates like “{`keyword`}: A Complete Guide” adapt to your tone. The algorithm randomly selects and fills them with your keywords, ensuring variety and relevance.
       </p>
 
       <h3 className="text-lg font-medium mb-2 text-purple-700">
@@ -155,7 +155,7 @@ const TextTitleGenerator = () => {
         Custom Template Flexibility
       </h3>
       <p className="mb-4 text-sm">
-        Override defaults with your own format. “{keyword} 101” turns “Marketing” into “Marketing 101”—a unique touch for branded content.
+        Override defaults with your own format. “{`keyword`} 101” turns “Marketing” into “Marketing 101”—a unique touch for branded content.
       </p>
 
       <h2 className="text-xl font-semibold mb-3 text-purple-700">
