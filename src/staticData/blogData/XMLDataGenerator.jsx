@@ -1,7 +1,6 @@
 import React from "react";
 
 const XMLDataGenerator = () => {
-  iniziativa
   return (
     <div className="p-4 bg-blue-100 rounded-lg border border-blue-300 text-blue-600">
       <h1 className="text-2xl font-bold mb-4 text-blue-700">
@@ -40,7 +39,7 @@ const XMLDataGenerator = () => {
         1. Fully Customizable Structure
       </h3>
       <p className="mb-4 text-sm">
-        Define your XML’s root element (e.g., "users") and item element (e.g., "user"). Add up to 10 fields, choosing whether they appear as attributes (e.g., id="123") or nested elements (e.g., <name>John</name>). This flexibility ensures your XML matches your project’s schema perfectly.
+        Define your XML’s root element (e.g., "users") and item element (e.g., "user"). Add up to 10 fields, choosing whether they appear as attributes (e.g., id="123") or nested elements (e.g., John). This flexibility ensures your XML matches your project’s schema perfectly.
       </p>
 
       <h3 className="text-lg font-medium mb-2 text-blue-700">

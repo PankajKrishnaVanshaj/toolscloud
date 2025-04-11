@@ -758,27 +758,6 @@ const ToolList = [
         code: "TokenGenerator",
       },
       {
-        name: "CSS Gradient Generator",
-        slug: "css-gradient-generator",
-        icon: <MdGradient />,
-        desc: "Create custom CSS gradient codes for web design.",
-        code: "CSSGradientGenerator",
-      },
-      {
-        name: "JSON Data Generator",
-        slug: "json-data-generator",
-        icon: <MdCode />,
-        desc: "Generate random JSON data structures for testing.",
-        code: "JSONDataGenerator",
-      },
-      {
-        name: "XML Data Generator",
-        slug: "xml-data-generator",
-        icon: <MdCode />,
-        desc: "Produce random XML data for development purposes.",
-        code: "XMLDataGenerator",
-      },
-      {
         name: "Credit Card Number Generator",
         slug: "credit-card-number-generator",
         icon: <MdCreditCard />,
@@ -891,13 +870,6 @@ const ToolList = [
         code: "RegexGenerator",
       },
       {
-        name: "CSV Data Generator",
-        slug: "csv-data-generator",
-        icon: <MdOutlineTableChart />,
-        desc: "Generate random CSV data for spreadsheets.",
-        code: "CSVDataGenerator",
-      },
-      {
         name: "Random Name Generator",
         slug: "random-name-generator",
         icon: <MdOutlinePerson />,
@@ -994,13 +966,6 @@ const ToolList = [
         icon: <MdOutlineEmojiEmotions />,
         desc: "Generate random sets of emojis.",
         code: "RandomEmojiGenerator",
-      },
-      {
-        name: "JWT Generator",
-        slug: "jwt-generator",
-        icon: <MdSecurity />,
-        desc: "Generate JSON Web Tokens for authentication.",
-        code: "JWTGenerator",
       },
       {
         name: "Random UUID Batch Generator",
@@ -1165,33 +1130,13 @@ const ToolList = [
         code: "JWTDecoder",
        },
       {
-        name: "Hash Generator",
-        slug: "hash-generator",
-        icon: <MdFingerprint />,
-        desc: "Generate hashes (MD5, SHA) from text or files.",
-        code: "HashGenerator",
-       },
-      {
-        name: "UUID Generator",
-        slug: "uuid-generator",
-        icon: <MdAutorenew />,
-        desc: "Generate unique UUIDs for identifiers.",
-        code: "UUIDGenerator",
-       },
-      {
         name: "Color Picker",
         slug: "color-picker",
         icon: <MdPalette />,
         desc: "Pick and convert colors between HEX, RGB, and HSL.",
         code: "ColorPicker",
        },
-      {
-        name: "Lorem Ipsum Generator",
-        slug: "lorem-ipsum-generator",
-        icon: <MdTextFields />,
-        desc: "Generate placeholder text for mockups and testing.",
-        code: "LoremIpsumGenerator",
-       },
+    
       {
         name: "Code Snippet Generator",
         slug: "code-snippet-generator",
@@ -1220,13 +1165,7 @@ const ToolList = [
         desc: "Look up and explain HTTP status codes.",
         code: "HTTPStatusCodeChecker",
        },
-      {
-        name: "CSS Gradient Generator",
-        slug: "css-gradient-generator",
-        icon: <MdGradient />,
-        desc: "Create custom CSS gradients with previews.",
-        code: "CSSGradientGenerator",
-       },
+      
       {
         name: "GraphQL Schema Generator",
         slug: "graphql-schema-generator",
@@ -1347,27 +1286,6 @@ const ToolList = [
         code: "CsvToJson",
        },
       {
-        name: "QR Code Generator",
-        slug: "qr-code-generator",
-        icon: <MdQrCode2 />,
-        desc: "Generate QR codes for URLs, text, or data.",
-        code: "QRCodeGenerator",
-       },
-      {
-        name: "Barcode Generator",
-        slug: "barcode-generator",
-        icon: <MdCode />,
-        desc: "Create barcodes for various formats.",
-        code: "BarcodeGenerator",
-       },
-      {
-        name: "Slug Generator",
-        slug: "slug-generator",
-        icon: <MdLink />,
-        desc: "Generate URL-friendly slugs from text.",
-        code: "SlugGenerator",
-       },
-      {
         name: "Diff Viewer",
         slug: "diff-viewer",
         icon: <MdCompare />,
@@ -1480,13 +1398,6 @@ const ToolList = [
         code: "JSONSchemaGenerator",
        },
       {
-        name: "Fake Data Generator",
-        slug: "fake-data-generator",
-        icon: <MdAutorenew />,
-        desc: "Generate mock data for testing applications.",
-        code: "FakeDataGenerator",
-       },
-      {
         name: "Code Profiler",
         slug: "code-profiler",
         icon: <MdSpeed />,
@@ -1522,13 +1433,6 @@ const ToolList = [
         code: "ByteSizeConverter",
        },
       {
-        name: "Regex Generator",
-        slug: "regex-generator",
-        icon: <MdCode />,
-        desc: "Generate regular expressions from patterns.",
-        code: "RegexGenerator",
-       },
-      {
         name: "HTML Entity Encoder",
         slug: "html-entity-encoder",
         icon: <MdCode />,
@@ -1550,13 +1454,6 @@ const ToolList = [
         code: "CURLCommandGenerator",
        },
       {
-        name: "ASCII Art Generator",
-        slug: "ascii-art-generator",
-        icon: <MdImage />,
-        desc: "Generate ASCII art from text or images.",
-        code: "ASCIIArtGenerator",
-       },
-      {
         name: "Code Comment Generator",
         slug: "code-comment-generator",
         icon: <MdCode />,
@@ -1569,27 +1466,6 @@ const ToolList = [
         icon: <MdFingerprint />,
         desc: "Compute and verify file hashes (MD5, SHA).",
         code: "FileHashChecker",
-       },
-      {
-        name: "GUID Generator",
-        slug: "guid-generator",
-        icon: <MdAutorenew />,
-        desc: "Generate Globally Unique Identifiers.",
-        code: "GUIDGenerator",
-       },
-      {
-        name: "Random String Generator",
-        slug: "random-string-generator",
-        icon: <MdTextFields />,
-        desc: "Generate random strings with custom parameters.",
-        code: "RandomStringGenerator",
-       },
-      {
-        name: "Token Generator",
-        slug: "token-generator",
-        icon: <MdSecurity />,
-        desc: "Create random tokens for authentication.",
-        code: "TokenGenerator",
        },
       {
         name: "SQL Injection Tester",
@@ -4730,13 +4606,6 @@ const ToolList = [
         code: "DecryptionTool",
        },
       {
-        name: "Hash Generator",
-        slug: "hash-generator",
-        icon: <MdFingerprint />,
-        desc: "Create hashes (e.g., MD5, SHA) from text or files.",
-        code: "HashGenerator",
-       },
-      {
         name: "Hash Verifier",
         slug: "hash-verifier",
         icon: <MdFingerprint />,
@@ -4798,13 +4667,6 @@ const ToolList = [
         icon: <MdLockOpen />,
         desc: "Decrypt encrypted files with the appropriate key.",
         code: "FileDecryptionTool",
-       },
-      {
-        name: "API Key Generator",
-        slug: "api-key-generator",
-        icon: <MdVpnKey />,
-        desc: "Generate secure API keys for application authentication.",
-        code: "APIKeyGenerator",
        },
       {
         name: "Secure Random Number Generator",
@@ -4882,13 +4744,6 @@ const ToolList = [
         icon: <MdDraw />,
         desc: "Verify the authenticity of digital signatures.",
         code: "DigitalSignatureVerifier",
-       },
-      {
-        name: "Token Generator",
-        slug: "token-generator",
-        icon: <MdVpnKey />,
-        desc: "Generate secure tokens for session management or APIs.",
-        code: "TokenGenerator",
        },
       {
         name: "Token Validator",
@@ -5869,6 +5724,13 @@ const ToolList = [
         desc: "Generate an interactive color wheel with complementary colors.",
         code: "ColorWheelGenerator",
       },
+      {
+        name: "CSS Gradient Generator",
+        slug: "css-gradient-generator",
+        icon: <MdGradient />,
+        desc: "Create custom CSS gradients with previews.",
+        code: "CSSGradientGenerator",
+       },
       {
         name: "Color Temperature Converter",
         slug: "color-temperature-converter",
@@ -6859,13 +6721,6 @@ const ToolList = [
         code: "YouTubeToText",
       },
       {
-        name: "Random Name Generator",
-        slug: "random-name-generator",
-        icon: <MdPersonOutline />,
-        desc: "Generate random names for characters, usernames, or projects.",
-        code: "RandomNameGenerator",
-      },
-      {
         name: "Weather Forecast Viewer",
         slug: "weather-forecast-viewer",
         icon: <MdWbSunny />,
@@ -6962,13 +6817,6 @@ const ToolList = [
         icon: <MdVolumeUp />,
         desc: "Generate audio tones at specific frequencies.",
         code: "SoundFrequencyGenerator",
-      },
-      {
-        name: "Random Quote Generator",
-        slug: "random-quote-generator",
-        icon: <MdFormatQuote />,
-        desc: "Generate random quotes for inspiration or fun.",
-        code: "RandomQuoteGenerator",
       },
       {
         name: "Screen Resolution Tester",
@@ -7130,13 +6978,6 @@ const ToolList = [
         icon: <MdKeyboard />,
         desc: "Find keyboard shortcuts for popular applications.",
         code: "KeyboardShortcutFinder",
-      },
-      {
-        name: "Random Emoji Generator",
-        slug: "random-emoji-generator",
-        icon: <MdEmojiEmotions />,
-        desc: "Generate random sets of emojis for fun or messaging.",
-        code: "RandomEmojiGenerator",
       },
       {
         name: "File Type Identifier",
