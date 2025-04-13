@@ -170,7 +170,7 @@ const VirtualRulerTool = () => {
           <p>Adjust DPI and unit for accurate measurements. Rotate as needed.</p>
           <p className="text-xs mt-2 italic">Note: Measurements depend on screen DPI accuracy.</p>
         </div>
-      </div>
+      
 
       {/* Ruler */}
       <div
@@ -215,6 +215,7 @@ const VirtualRulerTool = () => {
           <li>Lock/unlock position</li>
           <li>Reset functionality</li>
         </ul>
+      </div>
       </div>
     </div>
   );

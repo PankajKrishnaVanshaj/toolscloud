@@ -100,8 +100,8 @@ const RandomMoviePicker = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
-      <div className="w-full max-w-3xl bg-white rounded-xl shadow-lg p-6 sm:p-8">
+    <div className="min-h-screen flex items-center justify-center">
+      <div className="w-full bg-white rounded-xl shadow-lg p-6 sm:p-8">
         <h1 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-6 text-center">
           Advanced Movie Picker
         </h1>

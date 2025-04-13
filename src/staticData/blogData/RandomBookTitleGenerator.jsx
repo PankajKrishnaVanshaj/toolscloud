@@ -66,7 +66,7 @@ const RandomBookTitleGenerator = () => {
         4. Dynamic Title Structures
       </h3>
       <p className="mb-4 text-sm">
-        Our tool uses varied structures like "The {{adjective}} {{noun}} {{theme}}" or "A {{noun}} of {{adjective}} Dreams" to keep titles diverse and engaging. This randomness mimics the creativity of human brainstorming.
+        Our tool uses varied structures like "The {`{adjective}`} {`{noun}`} {`{theme}`}" or "A {`{noun}`} of {`{adjective}`} Dreams" to keep titles diverse and engaging. This randomness mimics the creativity of human brainstorming.
       </p>
 
       <h3 className="text-lg font-medium mb-2 text-blue-700">
@@ -145,7 +145,7 @@ const RandomBookTitleGenerator = () => {
         Varied Title Structures
       </h3>
       <p className="mb-4 text-sm">
-        Using seven unique templates, the tool avoids repetitive titles. For example, "The {{noun}} {{theme}}" might yield "The Throne of Secrets," while "A {{adjective}} {{noun}}" could give "A Silent Realm."
+        Using seven unique templates, the tool avoids repetitive titles. For example, "The {`{noun}`} {`{theme}`}" might yield "The Throne of Secrets," while "A {`{adjective}`} {`{noun}`}" could give "A Silent Realm."
       </p>
 
       <h3 className="text-lg font-medium mb-2 text-blue-700">
