@@ -1,53 +1,94 @@
 "use client";
 import React, { useState, useCallback } from "react";
 import { FaDice, FaShareAlt, FaBook, FaHistory } from "react-icons/fa";
+import axios from "axios";
 
 const RandomScienceFactGenerator = () => {
   const [currentFact, setCurrentFact] = useState(null);
   const [categoryFilter, setCategoryFilter] = useState("All");
   const [history, setHistory] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState(null);
 
-  const scienceFacts = [
-    { fact: "The shortest war in history lasted 38 minutes.", category: "History/Science" },
-    { fact: "A day on Venus is longer than its year.", category: "Astronomy" },
-    { fact: "Octopuses have three hearts and can change color to blend into their surroundings.", category: "Biology" },
-    { fact: "The human body contains about 0.2 milligrams of gold, most of it in the blood.", category: "Human Biology" },
-    { fact: "Light travels at 299,792 kilometers per second (about 186,282 miles per second).", category: "Physics" },
-    { fact: "Honey never spoils; archeologists have found pots of honey in ancient Egyptian tombs that are over 3,000 years old and still edible.", category: "Chemistry" },
-    { fact: "The shortest bone in the human body is the stapes bone in the ear, measuring about 2.8 millimeters.", category: "Human Biology" },
-    { fact: "A single bolt of lightning contains enough energy to toast 100,000 slices of bread.", category: "Physics" },
-    { fact: "The largest known volcano in the solar system is Olympus Mons on Mars, standing at 22 kilometers (13.6 miles) high.", category: "Astronomy" },
-    { fact: "Water expands by about 9% when it freezes into ice.", category: "Chemistry" },
-    { fact: "Bamboo can grow up to 91 centimeters (35 inches) in a single day.", category: "Botany" },
-    { fact: "The Earth's core is as hot as the surface of the Sun, about 5,500°C (9,932°F).", category: "Geology" },
+  const categories = [
+    "All",
+    "Astronomy",
+    "Biology",
+    "Human Biology",
+    "Physics",
+    "Chemistry",
+    "Botany",
+    "Geology",
+    "History/Science",
+    "General Science",
   ];
 
-  const categories = ["All", ...new Set(scienceFacts.map(fact => fact.category))];
+  // Keyword-based categorization
+  const categorizeFact = (factText) => {
+    const lowerFact = factText.toLowerCase();
+    if (lowerFact.includes("planet") || lowerFact.includes("star") || lowerFact.includes("galaxy"))
+      return "Astronomy";
+    if (lowerFact.includes("cell") || lowerFact.includes("animal") || lowerFact.includes("organism"))
+      return "Biology";
+    if (lowerFact.includes("human") || lowerFact.includes("body") || lowerFact.includes("blood"))
+      return "Human Biology";
+    if (lowerFact.includes("energy") || lowerFact.includes("light") || lowerFact.includes("motion"))
+      return "Physics";
+    if (lowerFact.includes("chemical") || lowerFact.includes("acid") || lowerFact.includes("water"))
+      return "Chemistry";
+    if (lowerFact.includes("plant") || lowerFact.includes("tree") || lowerFact.includes("flower"))
+      return "Botany";
+    if (lowerFact.includes("earth") || lowerFact.includes("rock") || lowerFact.includes("volcano"))
+      return "Geology";
+    if (lowerFact.includes("history") || lowerFact.includes("ancient"))
+      return "History/Science";
+    return "General Science";
+  };
 
   // Generate a random fact with category filter
-  const generateFact = useCallback(() => {
+  const generateFact = useCallback(async () => {
     setIsLoading(true);
-    setTimeout(() => { // Simulate a delay for effect
-      const filteredFacts = categoryFilter === "All"
-        ? scienceFacts
-        : scienceFacts.filter(fact => fact.category === categoryFilter);
-      
-      if (filteredFacts.length === 0) {
+    setError(null);
+
+    // Simulate delay for effect
+    await new Promise((resolve) => setTimeout(resolve, 500));
+
+    try {
+      let factData = null;
+      let attempts = 0;
+      const maxAttempts = 5; // Limit attempts to avoid infinite loops
+
+      // Fetch facts until one matches the category (or any for "All")
+      while (attempts < maxAttempts) {
+        const response = await axios.get("https://uselessfacts.jsph.pl/api/v2/facts/random");
+        const factText = response.data.text;
+        const factCategory = categorizeFact(factText);
+
+        if (categoryFilter === "All" || factCategory === categoryFilter) {
+          factData = { fact: factText, category: factCategory };
+          break;
+        }
+        attempts++;
+      }
+
+      if (!factData) {
+        setError(`No suitable fact found for ${categoryFilter}. Try another category!`);
         setCurrentFact(null);
         setIsLoading(false);
         return;
       }
 
-      const randomIndex = Math.floor(Math.random() * filteredFacts.length);
-      const newFact = filteredFacts[randomIndex];
-      setCurrentFact(newFact);
-      setHistory(prev => [newFact, ...prev].slice(0, 5)); // Keep last 5 facts
+      setCurrentFact(factData);
+      setHistory((prev) => [factData, ...prev].slice(0, 5)); // Keep last 5 facts
+    } catch (err) {
+      setError("Failed to fetch a fact. Please try again.");
+      setCurrentFact(null);
+    } finally {
       setIsLoading(false);
-    }, 500);
-  }, [categoryFilter, scienceFacts]);
+    }
+  }, [categoryFilter]);
 
-  // Share fact (simulated)
+  // Share fact
   const shareFact = () => {
     if (currentFact) {
       const shareText = `${currentFact.fact} (Category: ${currentFact.category})`;
@@ -58,8 +99,8 @@ const RandomScienceFactGenerator = () => {
           url: window.location.href,
         }).catch(console.error);
       } else {
-        alert("Copied to clipboard: " + shareText);
         navigator.clipboard.writeText(shareText);
+        alert("Copied to clipboard: " + shareText);
       }
     }
   };
@@ -72,10 +113,10 @@ const RandomScienceFactGenerator = () => {
 
   return (
     <div className="min-h-screen  flex items-center justify-center ">
-      <div className="w-full  bg-white rounded-xl shadow-lg p-6 sm:p-8">
-        <h1 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-6 text-center">
-          Random Science Fact Generator
-        </h1>
+    <div className="w-full  bg-white rounded-xl shadow-lg p-6 sm:p-8">
+      <h1 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-6 text-center">
+        Random Science Fact Generator
+      </h1>
 
         {/* Controls */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
@@ -89,7 +130,9 @@ const RandomScienceFactGenerator = () => {
               className="w-full p-2 border rounded-md focus:ring-2 focus:ring-green-500"
             >
               {categories.map((cat) => (
-                <option key={cat} value={cat}>{cat}</option>
+                <option key={cat} value={cat}>
+                  {cat}
+                </option>
               ))}
             </select>
           </div>
@@ -114,7 +157,11 @@ const RandomScienceFactGenerator = () => {
         </div>
 
         {/* Current Fact */}
-        {currentFact ? (
+        {error ? (
+          <div className="text-center p-6 bg-red-50 rounded-lg">
+            <p className="text-red-600">{error}</p>
+          </div>
+        ) : currentFact ? (
           <div className="bg-gray-50 p-4 rounded-lg text-center">
             <p className="text-lg text-gray-800 mb-2">{currentFact.fact}</p>
             <p className="text-sm text-gray-600">Category: {currentFact.category}</p>
@@ -159,6 +206,7 @@ const RandomScienceFactGenerator = () => {
             <li>Category filtering</li>
             <li>Fact history (last 5 facts)</li>
             <li>Share facts via Web Share API or clipboard</li>
+            <li>Fresh facts from an external API</li>
           </ul>
         </div>
 

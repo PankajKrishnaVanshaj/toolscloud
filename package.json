@@ -17,6 +17,7 @@
     "@prettier/plugin-xml": "^3.4.1",
     "@types/leaflet": "^1.9.16",
     "@zxing/library": "^0.21.3",
+    "axios": "^1.8.4",
     "babel-loader": "^10.0.0",
     "bson": "^4.7.2",
     "buffer": "^6.0.3",

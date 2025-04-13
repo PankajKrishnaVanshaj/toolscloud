@@ -15,7 +15,7 @@ const RandomCharityFinder = () => {
       description: "Provides emergency assistance, disaster relief, and preparedness education worldwide.",
       website: "https://www.redcross.org",
       category: "Disaster Relief",
-      donationLink: "https://www.redcross.org/donate",
+      donationLink: "#",
       location: "Global",
     },
     {
@@ -23,7 +23,7 @@ const RandomCharityFinder = () => {
       description: "Delivers medical aid to people affected by conflict, epidemics, or disasters.",
       website: "https://www.doctorswithoutborders.org",
       category: "Medical",
-      donationLink: "https://donate.doctorswithoutborders.org",
+      donationLink: "#",
       location: "Global",
     },
     {
@@ -31,7 +31,7 @@ const RandomCharityFinder = () => {
       description: "Works to conserve nature and reduce threats to the diversity of life on Earth.",
       website: "https://www.worldwildlife.org",
       category: "Environment",
-      donationLink: "https://support.worldwildlife.org",
+      donationLink: "#",
       location: "Global",
     },
     {
@@ -39,7 +39,7 @@ const RandomCharityFinder = () => {
       description: "Protects children's rights, helps meet basic needs, and expands opportunities.",
       website: "https://www.unicef.org",
       category: "Children",
-      donationLink: "https://www.unicef.org/donate",
+      donationLink: "#",
       location: "Global",
     },
     {
@@ -47,7 +47,7 @@ const RandomCharityFinder = () => {
       description: "Builds and repairs homes to provide affordable housing solutions.",
       website: "https://www.habitat.org",
       category: "Housing",
-      donationLink: "https://www.habitat.org/donate",
+      donationLink: "#",
       location: "Global",
     },
     {
@@ -55,7 +55,7 @@ const RandomCharityFinder = () => {
       description: "Nationwide network of food banks fighting hunger in the United States.",
       website: "https://www.feedingamerica.org",
       category: "Food Security",
-      donationLink: "https://www.feedingamerica.org/donate",
+      donationLink: "#",
       location: "USA",
     },
     {
@@ -63,7 +63,7 @@ const RandomCharityFinder = () => {
       description: "Works to end global poverty through humanitarian aid and advocacy.",
       website: "https://www.oxfam.org",
       category: "Poverty",
-      donationLink: "https://www.oxfam.org/en/donate",
+      donationLink: "#",
       location: "Global",
     },
   ];
@@ -172,7 +172,7 @@ const RandomCharityFinder = () => {
                 Visit Website
               </a>
               <a
-                href={selectedCharity.donationLink}
+                href={selectedCharity.website}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center px-4 py-2 bg-yellow-500 text-white rounded-md hover:bg-yellow-600 transition-colors"

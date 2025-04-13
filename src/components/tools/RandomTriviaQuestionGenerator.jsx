@@ -1,6 +1,7 @@
 "use client";
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useEffect } from "react";
 import { FaSync, FaQuestionCircle, FaDownload } from "react-icons/fa";
+import axios from "axios";
 
 const RandomTriviaQuestionGenerator = () => {
   const [trivia, setTrivia] = useState(null);
@@ -8,136 +9,75 @@ const RandomTriviaQuestionGenerator = () => {
   const [selectedCategory, setSelectedCategory] = useState("random");
   const [difficulty, setDifficulty] = useState("medium");
   const [score, setScore] = useState({ correct: 0, total: 0 });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
-  const categories = {
-    Science: {
-      easy: [
-        {
-          question: "What gas do plants use to make food?",
-          options: ["Oxygen", "Nitrogen", "Carbon Dioxide", "Helium"],
-          answer: "Carbon Dioxide",
-        },
-      ],
-      medium: [
-        {
-          question: "What gas makes up most of the Earth's atmosphere?",
-          options: ["Oxygen", "Nitrogen", "Carbon Dioxide", "Helium"],
-          answer: "Nitrogen",
-        },
-        {
-          question: "What is the largest organ in the human body?",
-          options: ["Liver", "Brain", "Skin", "Heart"],
-          answer: "Skin",
-        },
-      ],
-      hard: [
-        {
-          question: "What element has the atomic number 1?",
-          options: ["Helium", "Hydrogen", "Lithium", "Beryllium"],
-          answer: "Hydrogen",
-        },
-      ],
-    },
-    History: {
-      easy: [
-        {
-          question: "Who discovered America?",
-          options: ["Columbus", "Vespucci", "Magellan", "Drake"],
-          answer: "Columbus",
-        },
-      ],
-      medium: [
-        {
-          question: "Who was the first President of the United States?",
-          options: ["Lincoln", "Washington", "Jefferson", "Adams"],
-          answer: "Washington",
-        },
-        {
-          question: "In which year did World War II end?",
-          options: ["1945", "1939", "1941", "1950"],
-          answer: "1945",
-        },
-      ],
-      hard: [
-        {
-          question: "Who was the first Roman Emperor?",
-          options: ["Julius Caesar", "Augustus", "Nero", "Caligula"],
-          answer: "Augustus",
-        },
-      ],
-    },
-    Geography: {
-      easy: [
-        {
-          question: "What is the largest continent?",
-          options: ["Africa", "Asia", "Europe", "Australia"],
-          answer: "Asia",
-        },
-      ],
-      medium: [
-        {
-          question: "What is the largest desert in the world?",
-          options: ["Sahara", "Gobi", "Antarctic", "Kalahari"],
-          answer: "Antarctic",
-        },
-        {
-          question: "Which country has the most islands?",
-          options: ["Indonesia", "Sweden", "Japan", "Philippines"],
-          answer: "Sweden",
-        },
-      ],
-      hard: [
-        {
-          question: "What is the longest river in South America?",
-          options: ["Amazon", "Paraná", "Orinoco", "Madeira"],
-          answer: "Amazon",
-        },
-      ],
-    },
-    PopCulture: {
-      easy: [
-        {
-          question: "Who sings 'Shake It Off'?",
-          options: ["Taylor Swift", "Beyoncé", "Katy Perry", "Lady Gaga"],
-          answer: "Taylor Swift",
-        },
-      ],
-      medium: [
-        {
-          question: "Who played Iron Man in the MCU?",
-          options: ["Evans", "Downey Jr.", "Hemsworth", "Ruffalo"],
-          answer: "Downey Jr.",
-        },
-        {
-          question: "What is the fictional continent in Game of Thrones?",
-          options: ["Westeros", "Middle-earth", "Narnia", "Panem"],
-          answer: "Westeros",
-        },
-      ],
-      hard: [
-        {
-          question: "Who directed 'Pulp Fiction'?",
-          options: ["Spielberg", "Tarantino", "Nolan", "Scorsese"],
-          answer: "Tarantino",
-        },
-      ],
-    },
+  // Category mapping for OpenTDB API
+  const categories = [
+    { name: "Random", id: "" },
+    { name: "Science", id: "17" }, // Science & Nature
+    { name: "History", id: "23" },
+    { name: "Geography", id: "22" },
+    { name: "PopCulture", id: "11" }, // Entertainment: Film
+  ];
+
+  // Helper function to decode HTML entities
+  const decodeHtml = (text) => {
+    const textarea = document.createElement("textarea");
+    textarea.innerHTML = text;
+    return textarea.value;
   };
 
-  const generateTrivia = useCallback(() => {
+  // Fetch trivia from OpenTDB API
+  const generateTrivia = useCallback(async () => {
     setShowAnswer(false);
-    const categoryKeys = selectedCategory === "random" ? Object.keys(categories) : [selectedCategory];
-    const randomCategory = categoryKeys[Math.floor(Math.random() * categoryKeys.length)];
-    const questions = categories[randomCategory][difficulty];
-    const randomQuestion = questions[Math.floor(Math.random() * questions.length)];
+    setLoading(true);
+    setError(null);
 
-    setTrivia({
-      category: randomCategory,
-      question: randomQuestion.question,
-      options: randomQuestion.options,
-      answer: randomQuestion.answer,
-    });
+    try {
+      const categoryId = categories.find((cat) => cat.name === selectedCategory).id;
+      const response = await axios.get("https://opentdb.com/api.php", {
+        params: {
+          amount: 1,
+          category: categoryId || undefined, // Empty for random
+          difficulty: difficulty.toLowerCase(),
+          type: "multiple", // Multiple-choice questions
+        },
+      });
+
+      const questionData = response.data.results[0];
+      if (!questionData) {
+        setError("No questions available for this category and difficulty.");
+        setTrivia(null);
+        setLoading(false);
+        return;
+      }
+
+      // Combine and shuffle options
+      const options = [
+        ...questionData.incorrect_answers,
+        questionData.correct_answer,
+      ].map(decodeHtml);
+      const shuffledOptions = options.sort(() => Math.random() - 0.5);
+
+      setTrivia({
+        category: questionData.category,
+        question: decodeHtml(questionData.question),
+        options: shuffledOptions,
+        answer: decodeHtml(questionData.correct_answer),
+      });
+    } catch (err) {
+      setError("Failed to fetch trivia question. Please try again.");
+      setTrivia(null);
+    } finally {
+      setLoading(false);
+    }
   }, [selectedCategory, difficulty]);
+
+  // Initial fetch on component mount
+  useEffect(() => {
+    generateTrivia();
+  }, [generateTrivia]);
 
   const checkAnswer = (option) => {
     setShowAnswer(true);
@@ -151,6 +91,7 @@ const RandomTriviaQuestionGenerator = () => {
     setScore({ correct: 0, total: 0 });
     setTrivia(null);
     setShowAnswer(false);
+    generateTrivia();
   };
 
   const downloadTrivia = () => {
@@ -179,10 +120,9 @@ const RandomTriviaQuestionGenerator = () => {
               onChange={(e) => setSelectedCategory(e.target.value)}
               className="w-full p-2 border rounded-md focus:ring-2 focus:ring-purple-500"
             >
-              <option value="random">Random</option>
-              {Object.keys(categories).map((cat) => (
-                <option key={cat} value={cat}>
-                  {cat}
+              {categories.map((cat) => (
+                <option key={cat.name} value={cat.name}>
+                  {cat.name}
                 </option>
               ))}
             </select>
@@ -210,7 +150,8 @@ const RandomTriviaQuestionGenerator = () => {
           <div className="flex gap-2">
             <button
               onClick={generateTrivia}
-              className="px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition-colors flex items-center"
+              disabled={loading}
+              className="px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition-colors flex items-center disabled:bg-gray-400 disabled:cursor-not-allowed"
             >
               <FaQuestionCircle className="mr-2" /> New Question
             </button>
@@ -231,7 +172,15 @@ const RandomTriviaQuestionGenerator = () => {
         </div>
 
         {/* Trivia Display */}
-        {trivia ? (
+        {loading ? (
+          <div className="text-center p-6 bg-gray-50 rounded-lg">
+            <p className="text-gray-500 italic">Loading question...</p>
+          </div>
+        ) : error ? (
+          <div className="text-center p-6 bg-red-50 rounded-lg">
+            <p className="text-red-600">{error}</p>
+          </div>
+        ) : trivia ? (
           <div className="bg-gray-50 p-4 rounded-lg">
             <h2 className="text-lg font-semibold mb-3 text-purple-600">
               {trivia.category} ({difficulty})
@@ -276,6 +225,7 @@ const RandomTriviaQuestionGenerator = () => {
             <li>Adjustable difficulty levels (Easy, Medium, Hard)</li>
             <li>Interactive answer checking with score tracking</li>
             <li>Download question as text file</li>
+            <li>Fresh questions from Open Trivia Database</li>
           </ul>
         </div>
       </div>

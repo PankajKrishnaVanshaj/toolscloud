@@ -1,6 +1,7 @@
 "use client";
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useEffect } from "react";
 import { FaDice, FaEye, FaEyeSlash, FaSync } from "react-icons/fa";
+import axios from "axios";
 
 const RandomRiddleGenerator = () => {
   const [riddle, setRiddle] = useState(null);
@@ -8,76 +9,66 @@ const RandomRiddleGenerator = () => {
   const [difficulty, setDifficulty] = useState("all");
   const [category, setCategory] = useState("all");
   const [history, setHistory] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
-  const riddleTemplates = [
-    // Easy
-    {
-      structure: "I am full of holes, yet I can hold water. I am used to clean, but I am not soap. What am I?",
-      answer: "A sponge",
-      difficulty: "easy",
-      category: "objects",
-    },
-    {
-      structure: "What has keys but can’t open locks?",
-      answer: "A piano",
-      difficulty: "easy",
-      category: "objects",
-    },
-    // Medium
-    {
-      structure: "I speak without a mouth and hear without ears. I have no body, but I come alive with wind. What am I?",
-      answer: "An echo",
-      difficulty: "medium",
-      category: "nature",
-    },
-    {
-      structure: "I’m tall when I’m young, and I’m short when I’m old. What am I?",
-      answer: "A candle",
-      difficulty: "medium",
-      category: "objects",
-    },
-    // Hard
-    {
-      structure: "The more you take, the more you leave behind. What am I?",
-      answer: "Footsteps",
-      difficulty: "hard",
-      category: "concepts",
-    },
-    {
-      structure: "I can fly without wings, cry without eyes, and be caught but never held. What am I?",
-      answer: "A cloud",
-      difficulty: "hard",
-      category: "nature",
-    },
-    {
-      structure: "What comes once in a minute, twice in a moment, but never in a thousand years?",
-      answer: "The letter M",
-      difficulty: "hard",
-      category: "words",
-    },
-  ];
+  const difficulties = ["easy", "medium", "hard"];
+  const categories = ["objects", "nature", "concepts", "words"];
+
+  // Helper to assign random difficulty and category
+  const assignAttributes = () => ({
+    difficulty: difficulties[Math.floor(Math.random() * difficulties.length)],
+    category: categories[Math.floor(Math.random() * categories.length)],
+  });
 
   // Filter and generate riddle
-  const generateRiddle = useCallback(() => {
-    let filteredRiddles = riddleTemplates;
-    if (difficulty !== "all") {
-      filteredRiddles = filteredRiddles.filter((r) => r.difficulty === difficulty);
-    }
-    if (category !== "all") {
-      filteredRiddles = filteredRiddles.filter((r) => r.category === category);
-    }
-
-    if (filteredRiddles.length === 0) {
-      alert("No riddles match your filters. Try different settings!");
-      return;
-    }
-
-    const randomIndex = Math.floor(Math.random() * filteredRiddles.length);
-    const newRiddle = filteredRiddles[randomIndex];
-    setRiddle(newRiddle);
+  const generateRiddle = useCallback(async () => {
     setShowAnswer(false);
-    setHistory((prev) => [...prev, newRiddle].slice(-5)); // Keep last 5 in history
+    setLoading(true);
+    setError(null);
+
+    try {
+      // Fetch random riddle from API
+      const response = await axios.get("https://riddles-api.vercel.app/random");
+      const { riddle: question, answer } = response.data;
+
+      if (!question || !answer) {
+        throw new Error("Invalid riddle data received.");
+      }
+
+      // Assign random difficulty and category
+      const attributes = assignAttributes();
+      const newRiddle = {
+        structure: question,
+        answer,
+        difficulty: attributes.difficulty,
+        category: attributes.category,
+      };
+
+      // Apply filters
+      if (
+        (difficulty !== "all" && newRiddle.difficulty !== difficulty) ||
+        (category !== "all" && newRiddle.category !== category)
+      ) {
+        // Fetch another riddle if filters don't match
+        generateRiddle();
+        return;
+      }
+
+      setRiddle(newRiddle);
+      setHistory((prev) => [...prev, newRiddle].slice(-5)); // Keep last 5
+    } catch (err) {
+      setError("Failed to fetch a riddle. Please try again.");
+      setRiddle(null);
+    } finally {
+      setLoading(false);
+    }
   }, [difficulty, category]);
+
+  // Initial fetch on mount
+  useEffect(() => {
+    generateRiddle();
+  }, [generateRiddle]);
 
   const toggleAnswer = () => setShowAnswer(!showAnswer);
 
@@ -88,11 +79,12 @@ const RandomRiddleGenerator = () => {
     setDifficulty("all");
     setCategory("all");
     setHistory([]);
+    generateRiddle();
   };
 
   return (
-    <div className="min-h-screen  flex items-center justify-center ">
-      <div className="w-full  bg-white rounded-xl shadow-lg p-6 sm:p-8">
+    <div className="min-h-screen flex items-center justify-center">
+      <div className="w-full max-w-2xl bg-white rounded-xl shadow-lg p-6 sm:p-8">
         <h1 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-6 text-center">
           Random Riddle Generator
         </h1>
@@ -132,7 +124,8 @@ const RandomRiddleGenerator = () => {
         <div className="flex flex-col sm:flex-row gap-4 mb-6">
           <button
             onClick={generateRiddle}
-            className="flex-1 py-2 px-4 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition-colors flex items-center justify-center"
+            disabled={loading}
+            className="flex-1 py-2 px-4 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition-colors flex items-center justify-center disabled:bg-gray-400 disabled:cursor-not-allowed"
           >
             <FaDice className="mr-2" /> Generate Riddle
           </button>
@@ -145,7 +138,15 @@ const RandomRiddleGenerator = () => {
         </div>
 
         {/* Riddle Display */}
-        {riddle ? (
+        {loading ? (
+          <div className="text-center p-6 bg-gray-50 rounded-lg">
+            <p className="text-gray-500 italic">Loading riddle...</p>
+          </div>
+        ) : error ? (
+          <div className="text-center p-6 bg-red-50 rounded-lg">
+            <p className="text-red-600">{error}</p>
+          </div>
+        ) : riddle ? (
           <div className="bg-gray-50 p-4 rounded-md text-center">
             <p className="text-gray-700 mb-4 text-lg">{riddle.structure}</p>
             <div className="flex justify-center items-center gap-4">
@@ -194,9 +195,10 @@ const RandomRiddleGenerator = () => {
           <ul className="list-disc list-inside text-purple-600 text-sm space-y-1">
             <li>Filter by difficulty (Easy, Medium, Hard)</li>
             <li>Filter by category (Objects, Nature, Concepts, Words)</li>
-            <li>Show/hide answers</li>
+            <li>Show bodem answer</li>
             <li>History of recent riddles (up to 5)</li>
             <li>Reset to default settings</li>
+            <li>Fresh riddles from an online API</li>
           </ul>
         </div>
       </div>
