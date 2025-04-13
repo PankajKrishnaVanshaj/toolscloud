@@ -4,7 +4,7 @@ export default  {
       "Convert text to numbers instantly using our free Text to Number Converter. Translate letters (A-Z) to their numeric equivalents (e.g., A → 1, B → 2). Ideal for cryptography, numerology, and coding tasks.",
     keywords:
       "PK ToolsCloud, Pankri ToolsCloud, text to number, convert letters to numbers, A to 1 converter, alphabet to number, online converter, numerology tool, cryptography helper, letter to digit converter",
-    url: "https://toolscloud.pankri.com/text-to-number-converter/tool",
+    url: "https://toolscloud.pankri.com/text-to-number/tool",
     image: "https://toolscloud.pankri.com/appicons/toolscloud.png",
     type: "website",
     category: "Text Tools, Educational Tools",
@@ -19,7 +19,7 @@ export default  {
       title: "Text to Number Converter - Convert A-Z Letters to Digits",
       description:
         "Easily convert letters into their numeric values with our Text to Number Converter. Great for learning, coding, and encryption.",
-      url: "https://toolscloud.pankri.com/text-to-number-converter/tool",
+      url: "https://toolscloud.pankri.com/text-to-number/tool",
       image: "https://toolscloud.pankri.com/appicons/toolscloud.png",
       type: "article",
     },
@@ -39,7 +39,7 @@ export default  {
       name: "Text to Number Converter",
       description:
         "Convert text to numbers quickly and easily. Turn A-Z letters into their numeric positions in the alphabet with our online Text to Number tool.",
-      url: "https://toolscloud.pankri.com/text-to-number-converter/tool",
+      url: "https://toolscloud.pankri.com/text-to-number/tool",
       image: "https://toolscloud.pankri.com/appicons/toolscloud.png",
       datePublished: "2024-02-10",
       dateModified: "2024-02-10",

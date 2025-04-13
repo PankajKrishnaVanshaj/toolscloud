@@ -207,6 +207,8 @@ import {
   MdShoppingCart,
   MdDataObject,
   MdSchema,
+  MdSpellcheck,
+  MdFunctions,
 } from "react-icons/md";
 import { LuScanBarcode } from "react-icons/lu";
 
