@@ -158,7 +158,7 @@ const HOCONDataGenerator = () => {
         Substitutions
       </h3>
       <p className="mb-4 text-sm">
-        HOCON’s substitution feature (<code>${variable}</code>) lets you define a value once and reuse it. For example, set <code>email = "test@example.com"</code> and reference it in multiple places—ideal for consistent configs.
+        HOCON’s substitution feature (<code>${`variable`}</code>) lets you define a value once and reuse it. For example, set <code>email = "test@example.com"</code> and reference it in multiple places—ideal for consistent configs.
       </p>
 
       <h3 className="text-lg font-medium mb-2 text-blue-700">
@@ -254,7 +254,7 @@ const HOCONDataGenerator = () => {
         users = [
         {`  {
             id: 5423 # number field
-            email: ${email} # email field
+            email: ${`email`} # email field
             active: true # boolean field
           }`},
           ...
