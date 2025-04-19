@@ -1,4 +1,3 @@
-// components/ImageBrightnessAdjuster.jsx
 "use client";
 import React, { useState, useRef, useEffect, useCallback } from "react";
 import { FaDownload, FaSync, FaUpload } from "react-icons/fa";

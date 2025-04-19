@@ -1,4 +1,3 @@
-// app/components/ImageToPDF.jsx
 "use client";
 import React, { useState, useRef, useCallback } from "react";
 import { Document, Page, pdfjs } from "react-pdf";

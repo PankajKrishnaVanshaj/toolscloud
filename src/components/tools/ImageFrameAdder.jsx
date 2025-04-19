@@ -1,4 +1,3 @@
-// components/ImageFrameAdder.jsx
 "use client";
 import React, { useState, useRef, useCallback } from "react";
 import { FaDownload, FaSync, FaUpload, FaBorderAll } from "react-icons/fa";

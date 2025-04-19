@@ -1,4 +1,3 @@
-// components/ImageHistogramViewer.jsx
 "use client";
 import React, { useState, useRef, useEffect, useCallback } from "react";
 import { Bar } from "react-chartjs-2";

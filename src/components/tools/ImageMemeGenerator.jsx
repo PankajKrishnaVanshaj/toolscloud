@@ -1,4 +1,3 @@
-// components/ImageMemeGenerator.jsx
 "use client";
 import React, { useState, useRef, useCallback, useEffect } from "react";
 import { FaDownload, FaSync, FaUpload, FaFont } from "react-icons/fa";

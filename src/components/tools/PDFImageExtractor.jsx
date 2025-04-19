@@ -1,4 +1,3 @@
-// app/components/PDFImageExtractor.jsx
 "use client";
 import React, { useState, useCallback, useRef } from "react";
 import { Document, Page, pdfjs } from "react-pdf";

@@ -1,4 +1,3 @@
-// app/components/HTMLToPDF.jsx
 "use client";
 import React, { useState, useRef, useCallback } from "react";
 import { jsPDF } from "jspdf";

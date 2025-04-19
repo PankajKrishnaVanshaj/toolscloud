@@ -1,4 +1,3 @@
-// app/components/PDFMetadataEditor.jsx
 "use client";
 import React, { useState, useCallback, useRef } from "react";
 import { PDFDocument } from "pdf-lib"; // For actual PDF editing

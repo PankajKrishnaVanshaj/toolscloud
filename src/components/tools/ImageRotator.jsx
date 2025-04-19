@@ -1,4 +1,3 @@
-// components/ImageRotator.jsx
 "use client";
 import React, { useState, useRef, useCallback } from "react";
 import { FaDownload, FaSync, FaUpload, FaRedo, FaUndo } from "react-icons/fa";

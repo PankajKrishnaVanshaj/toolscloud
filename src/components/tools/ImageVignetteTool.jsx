@@ -1,4 +1,3 @@
-// components/ImageVignetteTool.jsx
 "use client";
 import React, { useState, useRef, useCallback } from "react";
 import { FaDownload, FaSync, FaUpload, FaSpinner } from "react-icons/fa";

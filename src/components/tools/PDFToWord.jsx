@@ -3,7 +3,6 @@
 import { useState, useRef, useCallback } from "react";
 import * as pdfjsLib from "pdfjs-dist";
 import { FaDownload, FaSync, FaUpload, FaFont, FaImage } from "react-icons/fa";
-import html2canvas from "html2canvas"; // For image downloads
 
 const PDFToWord = () => {
   const [loading, setLoading] = useState(false);

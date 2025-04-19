@@ -1,4 +1,3 @@
-// app/components/PDFQRCodeGenerator.jsx
 "use client";
 import React, { useState, useRef, useCallback } from "react";
 import dynamic from "next/dynamic";

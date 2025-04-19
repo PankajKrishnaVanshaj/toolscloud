@@ -1,4 +1,3 @@
-// app/components/PDFTableExtractor.jsx
 "use client";
 import React, { useState, useCallback, useRef } from "react";
 import { Document, Page } from "react-pdf";

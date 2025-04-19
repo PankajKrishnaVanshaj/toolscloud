@@ -1,4 +1,3 @@
-// app/components/ExcelToPDF.jsx
 "use client";
 import React, { useState, useCallback, useRef } from "react";
 import * as XLSX from "xlsx";

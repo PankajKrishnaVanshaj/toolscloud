@@ -1,4 +1,3 @@
-// app/components/PDFTextExtractor.jsx
 "use client";
 import React, { useState, useCallback, useRef } from "react";
 import * as pdfjsLib from "pdfjs-dist";

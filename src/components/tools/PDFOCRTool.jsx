@@ -1,4 +1,3 @@
-// app/components/PDFOCRTool.jsx
 "use client";
 import React, { useState, useRef, useCallback } from "react";
 import { Document, Page } from "react-pdf";

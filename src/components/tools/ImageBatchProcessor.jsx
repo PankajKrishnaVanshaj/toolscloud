@@ -1,4 +1,3 @@
-// components/ImageBatchProcessor.jsx
 "use client";
 import React, { useState, useRef, useCallback } from "react";
 import { FaDownload, FaSync, FaUpload, FaTrash } from "react-icons/fa";

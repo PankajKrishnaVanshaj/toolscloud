@@ -1,4 +1,3 @@
-// app/components/PDFVersionConverter.jsx
 "use client";
 import React, { useState, useCallback } from "react";
 import { Document, Page, pdfjs } from "react-pdf";

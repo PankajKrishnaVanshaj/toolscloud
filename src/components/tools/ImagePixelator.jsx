@@ -1,4 +1,3 @@
-// components/ImagePixelator.jsx
 "use client";
 import React, { useState, useRef, useCallback } from "react";
 import { FaDownload, FaSync, FaUpload, FaCog } from "react-icons/fa";

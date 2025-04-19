@@ -1,4 +1,3 @@
-// components/PDFWatermark.jsx
 "use client";
 import React, { useState, useRef } from "react";
 import { PDFDocument } from "pdf-lib"; // For PDF manipulation
